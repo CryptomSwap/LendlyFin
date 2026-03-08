@@ -1,0 +1,284 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String?  @unique
+  image     String?
+  phoneNumber String?
+  city      String?
+
+  bookings  Booking[]
+  listings  Listing[]
+  messagesSent Message[]
+  reviewsGiven   Review[]  @relation("ReviewAuthor")
+  reviewsReceived Review[]  @relation("ReviewTarget")
+
+  kycStatus         KYCStatus?  @default(PENDING)
+  kycSelfieUrl      String?
+  kycIdUrl          String?
+  kycSubmittedAt    DateTime?
+  kycRejectedReason String?
+  isAdmin           Boolean     @default(false)
+
+  suspendedAt       DateTime?
+  suspensionReason  String?
+
+  createdAt         DateTime    @default(now())
+}
+
+enum ListingStatus {
+  DRAFT
+  PENDING_APPROVAL
+  ACTIVE
+  REJECTED
+  PAUSED
+}
+
+model Listing {
+  id                  String        @id @default(cuid())
+  ownerId             String?
+  owner               User?         @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  title               String
+  description         String?
+  pricePerDay         Int
+  deposit             Int
+  city                String
+  category            String
+  status              ListingStatus @default(PENDING_APPROVAL)
+  statusRejectionReason String?     // reason when status = REJECTED
+  valueEstimate       Int?
+  pickupNote          String?
+  rules               String?
+  lat                 Float?
+  lng                 Float?
+  bookings            Booking[]
+  images              ListingImage[]
+  blockedRanges       ListingBlockedRange[]
+  createdAt           DateTime      @default(now())
+
+  @@index([ownerId])
+}
+
+model ListingBlockedRange {
+  id        String   @id @default(cuid())
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  startDate DateTime
+  endDate   DateTime
+  createdAt DateTime @default(now())
+
+  @@index([listingId])
+}
+
+
+model Booking {
+  id         String   @id @default(cuid())
+  bookingRef String?  @unique // Human-readable ref for Bit/support: e.g. LND-A1B2C3
+  user       User     @relation(fields: [userId], references: [id])
+  userId     String
+  listing    Listing  @relation(fields: [listingId], references: [id])
+  listingId  String
+
+  rentalSubtotal  Int @default(0)
+  serviceFee      Int @default(0)
+  depositAmount   Int @default(0)
+  totalDue        Int @default(0)
+
+  paymentIntentId String?
+  paymentStatus   PaymentStatus   @default(PENDING)
+  depositStatus   DepositStatus   @default(PENDING)
+
+  paymentMethod            String?   // e.g. "MANUAL_BIT"
+  paymentLink              String?   // Bit payment link for redirect
+  paymentConfirmedAt       DateTime?
+  paymentConfirmedByAdminId String?
+  paymentNotes             String?
+
+  startDate DateTime
+  endDate   DateTime
+
+  status    BookingStatus
+
+  /// Snapshot of listing pickup instructions at booking creation (listing.pickupNote).
+  pickupInstructionsSnapshot String?
+
+  pickupChecklist   PickupChecklist?
+  returnChecklist   ReturnChecklist?
+  checklistPhotos   BookingChecklistPhoto[]
+  dispute           Dispute?
+  conversation      Conversation?
+  reviews           Review[]
+
+  createdAt DateTime @default(now())
+}
+
+model Review {
+  id           String   @id @default(cuid())
+  bookingId    String
+  booking      Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  authorId     String
+  author       User     @relation("ReviewAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  targetUserId String
+  targetUser   User     @relation("ReviewTarget", fields: [targetUserId], references: [id], onDelete: Cascade)
+  rating       Int      // 1-5
+  body         String?
+  createdAt    DateTime @default(now())
+
+  @@unique([bookingId, authorId])
+  @@index([bookingId])
+  @@index([targetUserId])
+}
+
+model Conversation {
+  id         String    @id @default(cuid())
+  bookingId String    @unique
+  booking   Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  messages  Message[]
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([bookingId])
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  sender         User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  body           String
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId])
+  @@index([senderId])
+}
+
+enum DisputeStatus {
+  OPEN
+  UNDER_REVIEW
+  RESOLVED_OWNER
+  RESOLVED_RENTER
+  RESOLVED_SPLIT
+  CLOSED
+}
+
+model Dispute {
+  id               String        @id @default(cuid())
+  bookingId        String        @unique
+  booking          Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  reason           String        // "damage" | "missing_items" | "manual"
+  status           DisputeStatus @default(OPEN)
+  openedByUserId   String?
+  adminNote        String?
+  resolutionNote   String?
+  resolvedAt       DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([status])
+  @@index([bookingId])
+}
+
+model PickupChecklist {
+  id                  String    @id @default(cuid())
+  bookingId           String    @unique
+  booking             Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  accessoriesConfirmed Boolean  @default(false)
+  conditionConfirmed   Boolean  @default(false)
+  notes                String?
+  completedAt          DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+}
+
+model ReturnChecklist {
+  id                  String    @id @default(cuid())
+  bookingId           String    @unique
+  booking             Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  conditionConfirmed  Boolean   @default(false)
+  damageReported      Boolean   @default(false)
+  missingItemsReported Boolean  @default(false)
+  notes               String?
+  completedAt         DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+}
+
+model BookingChecklistPhoto {
+  id        String   @id @default(cuid())
+  bookingId String
+  booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  type      String   // "pickup" | "return"
+  angle     String   // "front" | "side" | "accessories"
+  url       String
+  createdAt DateTime @default(now())
+
+  @@index([bookingId])
+  @@unique([bookingId, type, angle])
+}
+
+model ListingImage {
+  id        String   @id @default(cuid())
+  url       String
+  order     Int      @default(0)
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+}
+
+// Unified admin audit: KYC, listing moderation, user suspension, disputes, overrides
+model AuditLog {
+  id                String   @id @default(cuid())
+  entityType        String   // "KYC" | "LISTING" | "USER" | "DISPUTE" | "OVERRIDE"
+  entityId          String   // target entity id (userId for KYC, listingId for LISTING, etc.)
+  action            String   // e.g. "APPROVE" | "REJECT" | "approve" | "reject" | "pause" | "activate" | "suspend"
+  adminUserId       String
+  adminName         String
+  reason            String?
+  targetDisplayName String?  // optional display label (user name, listing title) to avoid joins
+  createdAt         DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([entityType, createdAt])
+  @@index([createdAt])
+}
+
+enum BookingStatus {
+  REQUESTED
+  CONFIRMED
+  ACTIVE
+  COMPLETED
+  DISPUTE
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}
+
+enum DepositStatus {
+  PENDING          // not yet paid / not held
+  HELD             // paid and held (pre-return or during dispute)
+  RELEASED_RENTER  // returned to renter (good return or dispute for renter)
+  RELEASED_OWNER   // released to owner (dispute resolved to owner)
+  SPLIT            // dispute resolved split
+}
+
+enum KYCStatus {
+  PENDING
+  IN_PROGRESS
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
+

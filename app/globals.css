@@ -1,0 +1,286 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+
+  /* Lendly Radius Tokens */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-card: 20px;
+
+  /* Lendly Shadow Tokens */
+  --shadow-soft: 0 4px 10px rgba(0,0,0,0.06);
+  --shadow-medium: 0 8px 20px rgba(0,0,0,0.10);
+  --shadow-card: 0 6px 16px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04);
+  --shadow-cta: 0 8px 24px rgba(80,200,120,0.3);
+  --shadow-cta-strip: 0 -8px 24px rgba(0,0,0,0.08);
+
+  --radius: 0.625rem;
+
+  /* Lendly brand & semantic colors */
+  --primary: #50C878;
+  --primary-foreground: #ffffff;
+  --accent: #7C3AED;
+  --accent-foreground: #ffffff;
+  --success: #10b981;
+  --success-foreground: #ffffff;
+  --warning: #f59e0b;
+  --warning-foreground: #ffffff;
+
+  /* Homepage brand gradient: light blue → mint (core visual motif) */
+  --home-gradient-start: #E6F4FF;
+  --home-gradient-end: #D9FBE8;
+  /* Primary CTA / accent on homepage */
+  --mint-accent: #2FBF9F;
+  --mint-accent-hover: #26A98C;
+
+  /* Base surfaces */
+  --background: #F8FAFA;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #0f172a;
+  --muted: #EAECEC;
+  --muted-foreground: #64748b;
+  --destructive: #ef4444;
+  --border: #EAECEC;
+  --input: #EAECEC;
+  --ring: #50C878;
+
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: #50C878;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: #EAECEC;
+  --sidebar-ring: #50C878;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-heebo), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+}
+
+@layer utilities {
+  .rounded-sm {
+    border-radius: var(--radius-sm);
+  }
+
+  .rounded-md {
+    border-radius: var(--radius-md);
+  }
+
+  .rounded-lg {
+    border-radius: var(--radius-lg);
+  }
+
+  .rounded-xl {
+    border-radius: var(--radius-xl);
+  }
+
+  .rounded-card {
+    border-radius: var(--radius-card);
+  }
+
+  .shadow-soft {
+    box-shadow: var(--shadow-soft);
+  }
+
+  .shadow-medium {
+    box-shadow: var(--shadow-medium);
+  }
+
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+
+  .shadow-cta {
+    box-shadow: var(--shadow-cta);
+  }
+
+  .shadow-cta-strip {
+    box-shadow: var(--shadow-cta-strip);
+  }
+
+  /* Section headers: consistent hierarchy across app */
+  .section-title {
+    @apply text-base font-semibold text-foreground;
+  }
+
+  /* Main page titles (single h1 per page) */
+  .page-title {
+    @apply text-xl font-semibold text-foreground;
+  }
+
+  /* Shared input look for forms that can't use Input component (e.g. select, textarea) */
+  .input-base {
+    @apply w-full rounded-lg border border-input bg-card text-foreground placeholder:text-muted-foreground px-3 py-2 text-sm transition-shadow outline-none focus:ring-2 focus:ring-ring focus:ring-offset-0 focus:border-primary/50 disabled:opacity-50 disabled:pointer-events-none;
+  }
+
+  /* Form presentation: use with Label or .form-label */
+  .form-label {
+    @apply block text-sm font-medium text-foreground mb-1;
+  }
+  .form-helper {
+    @apply text-xs text-muted-foreground mt-0.5;
+  }
+  .form-error {
+    @apply text-xs text-destructive mt-1;
+  }
+  .form-group {
+    @apply space-y-1;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Homepage brand gradient utility (light blue → mint) */
+  .home-gradient-bg {
+    background: linear-gradient(to right, var(--home-gradient-start), var(--home-gradient-end));
+  }
+  .home-gradient-bg-subtle {
+    background: linear-gradient(to right, color-mix(in srgb, var(--home-gradient-start) 35%, transparent), color-mix(in srgb, var(--home-gradient-end) 35%, transparent));
+  }
+
+  /* Hero above-the-fold: smooth fade from image to content (no visible seam) */
+  .hero-fade-overlay {
+    background: linear-gradient(
+      to right,
+      transparent 0%,
+      transparent 22%,
+      color-mix(in srgb, var(--background) 18%, transparent) 42%,
+      color-mix(in srgb, var(--background) 55%, transparent) 58%,
+      color-mix(in srgb, var(--background) 88%, transparent) 78%,
+      var(--background) 100%
+    );
+  }
+}
+
+/* Hero experience wallpaper: subtle zoom on desktop */
+@keyframes hero-wallpaper-zoom {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.03);
+  }
+}
+
+.dark {
+  --primary: #50C878;
+  --primary-foreground: #ffffff;
+  --accent: #8b5cf6;
+  --accent-foreground: #ffffff;
+  --success: #10b981;
+  --success-foreground: #ffffff;
+  --warning: #f59e0b;
+  --warning-foreground: #ffffff;
+  --background: #0f172a;
+  --foreground: #f8fafc;
+  --card: #1e293b;
+  --card-foreground: #f8fafc;
+  --popover: #1e293b;
+  --popover-foreground: #f8fafc;
+  --secondary: #334155;
+  --secondary-foreground: #f8fafc;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: #334155;
+  --input: #334155;
+  --ring: #50C878;
+  --sidebar: #0f172a;
+  --sidebar-foreground: #f8fafc;
+  --sidebar-primary: #50C878;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #334155;
+  --sidebar-accent-foreground: #f8fafc;
+  --sidebar-border: #334155;
+  --sidebar-ring: #50C878;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+body {
+  direction: rtl;
+  text-align: right;
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+/* Ensure all UI elements use the same font as the tagline (Heebo) */
+body,
+body input,
+body button,
+body select,
+body textarea {
+  font-family: inherit;
+}
+
