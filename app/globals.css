@@ -38,6 +38,13 @@
   --mint-accent: #2FBF9F;
   --mint-accent-hover: #26A98C;
 
+  /* Footer: desktop only */
+  --footer-bg: #2FBE9E;
+  --footer-heading: #f8fafc;
+  --footer-body: #e2e8f0;
+  --footer-muted: #94a3b8;
+  --footer-divider: rgba(248, 250, 252, 0.12);
+
   /* Base surfaces */
   --background: #F8FAFA;
   --foreground: #0f172a;
@@ -200,6 +207,21 @@
   }
   .home-gradient-bg-subtle {
     background: linear-gradient(to right, color-mix(in srgb, var(--home-gradient-start) 35%, transparent), color-mix(in srgb, var(--home-gradient-end) 35%, transparent));
+  }
+
+  /* Homepage: one soft page-level blue→mint wash (no bands, no grey) */
+  .home-page-bg {
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--home-gradient-start) 14%, var(--background)) 0%,
+      color-mix(in srgb, var(--home-gradient-end) 14%, var(--background)) 100%
+    );
+  }
+
+  /* Desktop footer: full-width background */
+  .footer-desktop-bg {
+    background: var(--footer-bg);
+    box-shadow: inset 0 1px 0 0 var(--footer-divider);
   }
 
   /* Hero above-the-fold: smooth fade from image to content (no visible seam) */

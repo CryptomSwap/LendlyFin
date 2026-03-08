@@ -6,7 +6,6 @@ import { WhyLendly } from "@/components/home/WhyLendly";
 import { HeroSection } from "@/components/home/HeroSection";
 import { DesktopCategoryDiscovery } from "@/components/home/DesktopCategoryDiscovery";
 import { FeaturedListings } from "@/components/home/FeaturedListings";
-import { OwnerCTA } from "@/components/home/OwnerCTA";
 import { FAQBlock } from "@/components/ui/faq-block";
 import {
   HOME_HELP_LINKS,
@@ -16,6 +15,7 @@ import {
 import { getCurrentUser } from "@/lib/admin";
 import { getFeaturedListings } from "@/lib/listings";
 import { Search } from "lucide-react";
+import DesktopFooter from "@/components/layout/desktop-footer";
 
 const PATH_ADD = "/add";
 const PATH_SIGNIN = "/signin";
@@ -30,7 +30,7 @@ export default async function HomePage() {
 
   return (
     <div
-      className="min-h-screen pb-6 md:pb-10 w-full"
+      className="min-h-screen pb-6 md:pb-10 w-full home-page-bg"
       dir="rtl"
     >
       {/* A. Hero — full-width on desktop, no inner max-width */}
@@ -38,9 +38,9 @@ export default async function HomePage() {
 
       {/* Page-level content band. Mobile: narrow; desktop: full width up to 7xl. */}
       <div className="w-full max-w-md md:max-w-7xl md:mx-auto pt-0">
-        {/* B. Category discovery — mobile only below hero */}
+        {/* B. Category discovery — mobile only below hero; card on page bg (no band) */}
         <section
-          className="-mt-6 md:mt-0 md:pt-0 md:hidden w-full rounded-2xl overflow-hidden home-gradient-bg-subtle shadow-[0_2px_12px_rgba(0,0,0,0.04)]"
+          className="-mt-6 md:mt-0 md:pt-0 md:hidden w-full rounded-2xl overflow-hidden bg-card shadow-[0_2px_12px_rgba(0,0,0,0.04)]"
           aria-label="גלה לפי קטגוריה"
         >
           <DesktopCategoryDiscovery />
@@ -69,9 +69,9 @@ export default async function HomePage() {
         </section>
       </div>
 
-      {/* G. Testimonials — full-width section, wider inner container, editorial asymmetric layout */}
+      {/* G. Testimonials — on page background (no band) */}
       <section
-        className="py-20 md:py-24 w-full home-gradient-bg-subtle"
+        className="py-20 md:py-24 w-full"
         aria-label="מה אומרים המשתמשים"
       >
         <div className="w-full max-w-md mx-auto md:max-w-[85rem] md:px-8 px-4">
@@ -79,38 +79,40 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Under-the-fold continues */}
-      <div className="w-full max-w-md md:max-w-7xl md:mx-auto pt-0">
-        {/* H. Why Lendly — editorial feature grid */}
+      {/* Under-the-fold continues — wide desktop container (90rem) so section feels confident */}
+      <div className="w-full max-w-md md:max-w-7xl lg:max-w-[90rem] md:mx-auto pt-0">
+        {/* H+J. Why Lendly + FAQ — on page background (no band) */}
         <section
-          className="py-20 md:py-24 -mx-4 px-4 md:-mx-8 md:px-8 bg-muted/25"
-          aria-label="למה להשתמש בלנדלי"
+          className="py-10 md:py-12 px-4 md:px-8"
+          aria-label="למה להשתמש בלנדלי ושאלות נפוצות"
         >
-          <div className="max-w-md md:max-w-7xl mx-auto">
-            <WhyLendly />
+          <div className="max-w-md md:max-w-7xl lg:max-w-[90rem] mx-auto">
+            <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[17fr_8fr] lg:gap-x-14 lg:gap-y-0 lg:items-start">
+              <div role="region" aria-label="למה להשתמש בלנדלי" className="min-w-0">
+                <WhyLendly />
+              </div>
+              <div
+                className="pt-6 md:pt-8 lg:pt-0 min-w-0"
+                role="region"
+                aria-label="שאלות נפוצות"
+              >
+                <FAQBlock
+                  title="שאלות נפוצות"
+                  items={HOME_FAQ_ITEMS}
+                  moreLink={{ href: "/help/faq", label: "כל השאלות והתשובות" }}
+                  className="lg:py-3"
+                />
+              </div>
+            </div>
           </div>
         </section>
 
-        {/* I. Owner CTA */}
-        <OwnerCTA isSignedIn={!!user} />
-
-        {/* J. FAQ — narrower for readable accordion */}
-        <section className="pt-6 md:pt-8" aria-label="שאלות נפוצות">
-          <div className="max-w-3xl mx-auto">
-            <FAQBlock
-              title="שאלות נפוצות"
-              items={HOME_FAQ_ITEMS}
-              moreLink={{ href: "/help/faq", label: "כל השאלות והתשובות" }}
-            />
-          </div>
-        </section>
-
-        {/* K. Final CTA — gradient band, clear final action */}
+        {/* K. Final CTA — soft integrated block (no full-width band) */}
         <section
-          className="mt-10 md:mt-12 py-16 md:py-20 -mx-4 px-4 md:-mx-8 md:px-8 home-gradient-bg rounded-2xl md:rounded-2xl"
+          className="mt-6 md:mt-8"
           aria-label="פעולה ועזרה"
         >
-          <div className="max-w-2xl mx-auto text-center space-y-5">
+          <div className="max-w-2xl mx-auto rounded-2xl border border-[var(--mint-accent)]/15 bg-[var(--mint-accent)]/5 py-16 md:py-20 px-6 md:px-8 text-center space-y-5 shadow-[0_2px_16px_rgba(47,191,159,0.08)]">
             <h2 className="text-xl font-semibold text-foreground md:text-2xl">
               מוכנים להתחיל?
             </h2>
@@ -129,7 +131,7 @@ export default async function HomePage() {
               </Button>
             </div>
           </div>
-          <div className="space-y-2 pt-8 max-w-2xl mx-auto text-center">
+          <div className="space-y-2 pt-8 max-w-2xl mx-auto text-center px-6 md:px-8">
           <p className="text-xs text-muted-foreground">
             השכרה בין אנשים · גלו ציוד בקרבתכם
           </p>
@@ -152,6 +154,9 @@ export default async function HomePage() {
         </div>
         </section>
       </div>
+
+      {/* Desktop footer: full-width bottom section, hidden on mobile */}
+      <DesktopFooter />
     </div>
   );
 }
