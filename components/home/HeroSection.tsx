@@ -43,17 +43,22 @@ export function HeroSection({ user }: HeroSectionProps) {
             </Link>
           )}
         </div>
-        <div className="relative z-10 flex-1 flex flex-col justify-center items-center px-4 md:pl-8 md:pr-14 pt-20 md:pt-20 md:pb-14 lg:pt-24 lg:pb-16">
+        <div className="relative z-10 flex-1 flex flex-col justify-center items-center px-4 md:pl-8 md:pr-14 pt-12 md:pt-14 md:pb-14 lg:pt-20 lg:pb-16">
           <div className="w-full max-w-2xl md:mx-auto md:text-center">
             <div className="flex flex-col gap-4 md:gap-6">
               <div className="min-w-0 space-y-3 md:space-y-4">
                 {/* Mobile: logo just above headline */}
                 <div className="flex justify-center md:hidden [&_img]:brightness-0 [&_img]:invert">
-                  <Logo size={56} linkToHome />
+                  <Logo size={112} linkToHome />
                 </div>
-                <h1 className="flex items-center justify-center text-xl font-bold tracking-tight text-white sm:text-2xl md:text-2xl lg:text-[1.85rem]">
-                  <span>שכרו ציוד מאנשים לידכם — או השכירו את שלכם</span>
-                </h1>
+                <div className="space-y-2 md:space-y-2.5">
+                  <h1 className="flex items-center justify-center text-2xl font-bold tracking-tight text-white sm:text-3xl md:text-3xl lg:text-4xl">
+                    <span>למה לקנות כשאפשר לשכור?</span>
+                  </h1>
+                  <p className="text-sm sm:text-base text-white/90 text-center font-normal max-w-md mx-auto">
+                    שכרו ציוד מאנשים לידכם — או השכירו את שלכם
+                  </p>
+                </div>
 
                 {/* Desktop: search — primary action area, clear hierarchy */}
                 <div className="hidden md:flex md:flex-col md:items-center md:space-y-4">

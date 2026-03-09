@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import SignOutButton from "@/components/sign-out-button";
+import { PageContainer, PageIntro } from "@/components/layout";
 import TrustBadges from "@/components/trust-badges";
 import { getUserTrustBadges } from "@/lib/trust/badges";
 import { VERIFICATION_REASSURANCE } from "@/lib/copy/help-reassurance";
@@ -49,9 +50,11 @@ export default async function ProfilePage() {
 
   if (!meData) {
     return (
-      <div className="space-y-3">
-        <h1 className="page-title">פרופיל</h1>
-        <p className="text-sm text-muted-foreground">לא נמצא משתמש במערכת (הרץ seed).</p>
+      <div className="min-h-screen pb-6 md:pb-10 w-full app-page-bg" dir="rtl">
+        <PageContainer noPadding>
+          <PageIntro title="פרופיל" />
+          <p className="text-sm text-muted-foreground">לא נמצא משתמש במערכת (הרץ seed).</p>
+        </PageContainer>
       </div>
     );
   }
@@ -69,9 +72,10 @@ export default async function ProfilePage() {
   });
 
   return (
-    <div className="space-y-4">
-      <h1 className="page-title">פרופיל</h1>
-
+    <div className="min-h-screen pb-6 md:pb-10 w-full app-page-bg" dir="rtl">
+      <PageContainer noPadding>
+        <PageIntro title="פרופיל" />
+        <div className="space-y-6">
       <Card>
         <CardHeader>
           <CardTitle>פרטים</CardTitle>
@@ -181,6 +185,8 @@ export default async function ProfilePage() {
         </Button>
         <SignOutButton />
       </div>
+        </div>
+      </PageContainer>
     </div>
   );
 }

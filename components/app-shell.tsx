@@ -12,6 +12,8 @@ import DevImpersonationSwitcher from "@/components/dev-impersonation-switcher";
 export default function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const isHomePage = pathname === "/home";
+  const isSearchPage = pathname === "/search";
+  const isHeroStyleHeader = isHomePage || isSearchPage;
 
   return (
     <div className="min-h-screen bg-background flex justify-center md:block" dir="rtl">
@@ -20,26 +22,37 @@ export default function AppShell({ children }: { children: ReactNode }) {
         <DevImpersonationSwitcher />
       </div>
       <div className="w-full max-w-md md:max-w-none bg-card md:bg-transparent min-h-screen pb-24 md:pb-8">
-        {/* Header: on /home desktop we hide it; on /home mobile we overlay (no logo — logo is in hero above headline). Other pages: normal sticky header. */}
+        {/* Header: /home = overlay + white logo (mobile only); /search = overlay + white logo (all sizes); other = sticky card header */}
         <header
           className={
             isHomePage
               ? "absolute top-0 left-0 right-0 z-40 min-h-[3.25rem] flex flex-col gap-2 shrink-0 md:hidden bg-gradient-to-b from-black/20 to-transparent border-0 shadow-none text-white [&_a]:text-white [&_a:hover]:text-white/90 [&_span]:text-white [&_img]:brightness-0 [&_img]:invert"
-              : `sticky top-0 z-40 bg-card border-b border-border shadow-soft min-h-[3.25rem] flex flex-col gap-2 shrink-0`
+              : isSearchPage
+                ? "absolute top-0 left-0 right-0 z-40 min-h-[3.25rem] flex flex-col gap-2 shrink-0 bg-gradient-to-b from-black/25 to-transparent border-0 shadow-none text-white [&_a]:text-white [&_a:hover]:text-white/90 [&_span]:text-white [&_img]:brightness-0 [&_img]:invert"
+                : "sticky top-0 z-40 bg-card border-b border-border shadow-soft min-h-[3.25rem] flex flex-col gap-2 shrink-0"
           }
           aria-label="כותרת"
         >
-          <div className={cn("w-full max-w-md md:max-w-7xl md:mx-auto px-4 md:px-8", isHomePage ? "pt-4 pb-3 md:py-4" : "py-3 md:py-4")}>
+          <div className={cn(
+            "w-full max-w-md md:max-w-7xl md:mx-auto px-4 md:px-8",
+            isHomePage ? "pt-4 pb-3 md:py-4" : "py-3 md:py-4"
+          )}>
             <div className="flex items-center justify-between gap-2 md:gap-4">
               <AuthHeaderLink />
-              {!isHomePage && <Logo size={36} linkToHome />}
               {isHomePage && <span className="flex-1 min-h-[2rem]" aria-hidden />}
+              {isSearchPage && <span className="flex-1 min-h-[2.25rem]" aria-hidden />}
+              {!isHomePage && !isSearchPage && <Logo size={36} linkToHome />}
               <HeaderNav />
             </div>
           </div>
         </header>
         <main
-          className={`px-4 md:px-8 flex-1 min-w-0 ${isHomePage ? "pt-0 md:pt-0 overflow-x-hidden" : "pt-5 md:pt-8"} md:overflow-visible`}
+          className={cn(
+            "flex-1 min-w-0 md:overflow-visible",
+            isHomePage && "pt-0 md:pt-0 overflow-x-hidden",
+            isSearchPage && "pt-0 px-0 overflow-x-hidden",
+            !isHomePage && !isSearchPage && "px-4 md:px-8 pt-5 md:pt-8"
+          )}
         >
           {children}
         </main>

@@ -51,6 +51,7 @@ model Listing {
   deposit             Int
   city                String
   category            String
+  subcategory         String?       // optional for backward compatibility; e.g. "photo", "hand"
   status              ListingStatus @default(PENDING_APPROVAL)
   statusRejectionReason String?     // reason when status = REJECTED
   valueEstimate       Int?

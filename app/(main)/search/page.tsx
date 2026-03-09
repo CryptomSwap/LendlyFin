@@ -12,15 +12,7 @@ function SearchFallback() {
 
 export default function SearchPage() {
   return (
-    <div className="min-h-screen pb-6" dir="rtl">
-      <header className="mb-6">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-          חיפוש
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1 max-w-md">
-          גלה ציוד להשכרה — חפש לפי קטגוריה, מחיר ומיון
-        </p>
-      </header>
+    <div className="min-h-screen pb-6 md:pb-10 w-full app-page-bg overflow-x-hidden" dir="rtl">
       <Suspense fallback={<SearchFallback />}>
         <SearchClient />
       </Suspense>

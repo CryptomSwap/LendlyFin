@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { getCategoryLabel } from "@/lib/constants";
+import { getCategoryDisplayLabel } from "@/lib/constants";
 import { formatMoneyIls } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
 import { CheckCircle2, ImageIcon } from "lucide-react";
@@ -16,6 +16,7 @@ export interface ListingCardProps {
   href: string;
   imageUrl?: string | null;
   category?: string | null;
+  subcategory?: string | null;
   /** Optional compact size for carousels; default is default */
   size?: "default" | "compact";
   /** Cap image height so card is wider but not taller (e.g. homepage featured grid) */
@@ -32,6 +33,7 @@ export default function ListingCard({
   href,
   imageUrl,
   category,
+  subcategory,
   size = "default",
   imageMaxHeight,
   trustBadges,
@@ -42,7 +44,7 @@ export default function ListingCard({
   const showImage = imageUrl && !imgError;
 
   const metaParts = [
-    category ? getCategoryLabel(category) : null,
+    category ? getCategoryDisplayLabel(category, subcategory ?? undefined) : null,
     location || null,
   ].filter(Boolean);
   const metaLine = metaParts.join(" · ");

@@ -13,6 +13,7 @@ export type FeaturedListingItem = {
   pricePerDay: number;
   city: string;
   category: string;
+  subcategory?: string | null;
   images: { url: string }[];
   owner: { id: string; kycStatus: string | null; phoneNumber: string | null } | null;
   completedBookingsCount: number;

@@ -134,6 +134,12 @@ export const HOME_TESTIMONIALS = [
   },
 ] as const;
 
+/** Homepage: why Lendly section — title and short supporting line */
+export const HOME_WHY_LENDLY_HEADING = {
+  title: "למה להשתמש בלנדלי",
+  subtitle: "יתרונות ברורים — השכרה בטוחה, פשוטה וקרובה אליכם.",
+} as const;
+
 /** Homepage: why Lendly — 6 editorial features (Secure deposits, Verified community, etc.) */
 export const HOME_WHY_LENDLY = [
   {

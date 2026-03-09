@@ -20,6 +20,12 @@ function getImageSrc(baseName: string, extensionIndex: number): string {
   return `/hero/${baseName}${EXTENSIONS[extensionIndex]}`;
 }
 
+function preloadImage(baseName: string, extensionIndex: number = 0) {
+  const src = getImageSrc(baseName, extensionIndex);
+  const img = new Image();
+  img.src = src;
+}
+
 function WallpaperLayer({
   baseName,
   extensionIndex,
@@ -63,39 +69,33 @@ export function HeroExperienceBackground() {
   const [phase, setPhase] = useState<"idle" | "transitioning">("idle");
   const [fallbackExt, setFallbackExt] = useState<Record<number, number>>({});
 
-  const completionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const phaseRef = useRef(phase);
-  const lastTransitionStartRef = useRef(0);
-
-  phaseRef.current = phase;
+  const rotateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const crossfadeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    const intervalId = setInterval(() => {
-      const now = Date.now();
-      const timeSinceLastStart = now - lastTransitionStartRef.current;
-      // Only start if idle; and if we've already run once, require a full interval since last start
-      if (phaseRef.current !== "idle") return;
-      if (lastTransitionStartRef.current > 0 && timeSinceLastStart < ROTATE_INTERVAL_MS) return;
+    EXPERIENCE_BASES.forEach((base) => preloadImage(base, 0));
+  }, []);
 
-      lastTransitionStartRef.current = now;
-      setPhase("transitioning");
+  useEffect(() => {
+    function scheduleNextRotation() {
+      rotateTimeoutRef.current = setTimeout(() => {
+        rotateTimeoutRef.current = null;
+        setPhase("transitioning");
 
-      if (completionTimeoutRef.current) clearTimeout(completionTimeoutRef.current);
-      completionTimeoutRef.current = setTimeout(() => {
-        setDisplayIndex((prev) => (prev + 1) % N);
-        // Switch back to layer 0 after React has applied the new displayIndex (next frame)
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            setPhase("idle");
-            completionTimeoutRef.current = null;
-          });
-        });
-      }, CROSSFADE_DURATION_MS);
-    }, ROTATE_INTERVAL_MS);
+        crossfadeTimeoutRef.current = setTimeout(() => {
+          crossfadeTimeoutRef.current = null;
+          setDisplayIndex((prev) => (prev + 1) % N);
+          setPhase("idle");
+          scheduleNextRotation();
+        }, CROSSFADE_DURATION_MS);
+      }, ROTATE_INTERVAL_MS);
+    }
+
+    scheduleNextRotation();
 
     return () => {
-      clearInterval(intervalId);
-      if (completionTimeoutRef.current) clearTimeout(completionTimeoutRef.current);
+      if (rotateTimeoutRef.current) clearTimeout(rotateTimeoutRef.current);
+      if (crossfadeTimeoutRef.current) clearTimeout(crossfadeTimeoutRef.current);
     };
   }, []);
 
@@ -112,6 +112,9 @@ export function HeroExperienceBackground() {
     });
   };
 
+  const transitionMs =
+    phase === "transitioning" ? CROSSFADE_DURATION_MS : 0;
+
   return (
     <div
       className="absolute inset-0 z-0 overflow-hidden pointer-events-none"
@@ -124,14 +127,14 @@ export function HeroExperienceBackground() {
           extensionIndex={fallbackExt[indexA] ?? 0}
           onError={() => handleError(0, indexA)}
           visible={showA}
-          transitionMs={CROSSFADE_DURATION_MS}
+          transitionMs={transitionMs}
         />
         <WallpaperLayer
           baseName={EXPERIENCE_BASES[indexB]}
           extensionIndex={fallbackExt[indexB] ?? 0}
           onError={() => handleError(1, indexB)}
           visible={showB}
-          transitionMs={CROSSFADE_DURATION_MS}
+          transitionMs={transitionMs}
         />
       </div>
     </div>

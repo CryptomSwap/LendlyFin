@@ -2,11 +2,12 @@ export const runtime = "nodejs";
 import Link from "next/link";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { PageContainer } from "@/components/layout";
 import { StatusPill } from "@/components/ui/status-pill";
 import { headers } from "next/headers";
 import CreateBookingCTA from "@/components/create-booking-cta";
 import ListingImageCarousel from "@/components/listing-image-carousel";
-import { getCategoryLabel } from "@/lib/constants";
+import { getCategoryDisplayLabel } from "@/lib/constants";
 import { formatMoneyIls } from "@/lib/pricing";
 import { getListingStatusLabel } from "@/lib/status-labels";
 import { getListingTrustBadges } from "@/lib/trust/badges";
@@ -34,6 +35,7 @@ async function getListing(id: string) {
     pricePerDay: number;
     deposit: number;
     category: string;
+    subcategory?: string | null;
     status: string;
     statusRejectionReason?: string | null;
     valueEstimate?: number | null;
@@ -83,12 +85,14 @@ export default async function ListingDetailsPage(props: {
 
   if (!listing) {
     return (
-      <div className="py-16 px-4 text-center" dir="rtl">
-        <p className="text-foreground font-medium">מודעה לא נמצאה</p>
-        <p className="text-sm text-muted-foreground mt-1">ייתכן שהמודעה הוסרה או שהקישור שגוי.</p>
-        <Link href="/search" className="inline-block mt-6 text-primary font-medium hover:underline">
-          חזרה לחיפוש
-        </Link>
+      <div className="min-h-screen w-full app-page-bg py-16" dir="rtl">
+        <div className="w-full max-w-md md:max-w-7xl mx-auto px-4 md:px-8 text-center">
+          <p className="text-foreground font-medium">מודעה לא נמצאה</p>
+          <p className="text-sm text-muted-foreground mt-1">ייתכן שהמודעה הוסרה או שהקישור שגוי.</p>
+          <Link href="/search" className="inline-block mt-6 text-primary font-medium hover:underline">
+            חזרה לחיפוש
+          </Link>
+        </div>
       </div>
     );
   }
@@ -98,14 +102,15 @@ export default async function ListingDetailsPage(props: {
   const isOwnerOrAdmin = !!me && (listing.ownerId === me.id || me.isAdmin);
 
   return (
-    <div className="pb-28" dir="rtl">
-      {/* Hero media — gallery with nav and dots */}
+    <div className="min-h-screen w-full app-page-bg pb-28" dir="rtl">
+      {/* Hero media — gallery with nav and dots (full-bleed) */}
       <section className="-mx-4 mb-6" aria-label="גלריית תמונות">
         <ListingImageCarousel images={listing.images ?? []} alt={listing.title} />
       </section>
 
-      {/* Main info — title, status, category */}
-      <section className="space-y-2 mb-6" aria-label="פרטי המודעה">
+      <PageContainer noPadding>
+        {/* Main info — title, status, category */}
+        <section className="space-y-2 mb-6" aria-label="פרטי המודעה">
         <div className="flex flex-wrap items-center gap-2">
           <StatusPill variant={statusToPillVariant(listing.status)}>
             {statusLabel}
@@ -115,7 +120,7 @@ export default async function ListingDetailsPage(props: {
           {listing.title}
         </h1>
         <p className="text-sm text-muted-foreground">
-          {getCategoryLabel(listing.category)}
+          {getCategoryDisplayLabel(listing.category, listing.subcategory)}
         </p>
         {listing.status === "REJECTED" && listing.statusRejectionReason && (
           <p className="text-sm text-destructive">
@@ -327,6 +332,7 @@ export default async function ListingDetailsPage(props: {
           המודעה ממתינה לאישור. אחרי האישור תוכלו להזמין.
         </p>
       )}
+      </PageContainer>
     </div>
   );
 }

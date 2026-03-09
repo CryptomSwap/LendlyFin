@@ -13,6 +13,7 @@ export async function GET(req: Request) {
   // Text + categorical filters
   const q = (searchParams.get("q") ?? "").trim();
   const category = (searchParams.get("category") ?? "").trim().toLowerCase();
+  const subcategory = (searchParams.get("subcategory") ?? "").trim().toLowerCase();
 
   // Raw numeric filters
   const minRaw = searchParams.get("min");
@@ -45,6 +46,7 @@ export async function GET(req: Request) {
         }
       : {}),
     ...(category ? { category } : {}),
+    ...(category && subcategory ? { subcategory } : {}),
     ...(min !== undefined || max !== undefined
       ? {
           pricePerDay: {

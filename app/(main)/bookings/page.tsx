@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 import { EmptyState } from "@/components/ui/empty-state";
 import { BookingsListSection } from "@/components/bookings/BookingsListSection";
+import { PageContainer, PageIntro } from "@/components/layout";
 import { CalendarDays } from "lucide-react";
 
 export const runtime = "nodejs";
@@ -34,23 +35,27 @@ export default async function BookingsPage() {
 
   if (bookings.length === 0) {
     return (
-      <div className="space-y-6" dir="rtl">
-        <h1 className="section-title">הזמנות</h1>
-        <EmptyState
-          icon={<CalendarDays className="h-12 w-12 text-primary" aria-hidden />}
-          title="אין הזמנות עדיין"
-          subtitle="ההזמנות שלכם יופיעו כאן. גלו ציוד להשכרה והזמינו."
-          ctaLabel="חפשו השכרות"
-          ctaHref="/search"
-        />
+      <div className="min-h-screen pb-6 md:pb-10 w-full app-page-bg" dir="rtl">
+        <PageContainer noPadding>
+          <PageIntro title="הזמנות" />
+          <EmptyState
+            icon={<CalendarDays className="h-12 w-12 text-primary" aria-hidden />}
+            title="אין הזמנות עדיין"
+            subtitle="ההזמנות שלכם יופיעו כאן. גלו ציוד להשכרה והזמינו."
+            ctaLabel="חפשו השכרות"
+            ctaHref="/search"
+          />
+        </PageContainer>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4" dir="rtl">
-      <h1 className="section-title">הזמנות</h1>
-      <BookingsListSection bookings={bookings} />
+    <div className="min-h-screen pb-6 md:pb-10 w-full app-page-bg" dir="rtl">
+      <PageContainer noPadding>
+        <PageIntro title="הזמנות" />
+        <BookingsListSection bookings={bookings} />
+      </PageContainer>
     </div>
   );
 }

@@ -12,7 +12,7 @@ import {
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CATEGORY_LIST, CITIES } from "@/lib/constants";
+import { CATEGORY_LIST, CITIES, getSubcategoriesForCategory } from "@/lib/constants";
 import { formatMoneyIls } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
 import { ArrowLeft, ImagePlus } from "lucide-react";
@@ -31,6 +31,7 @@ const STEP_LABELS: Record<number, string> = {
 
 type WizardData = {
   category: string;
+  subcategory: string;
   title: string;
   description: string;
   pricePerDay: string;
@@ -44,6 +45,7 @@ type WizardData = {
 
 const emptyData: WizardData = {
   category: "",
+  subcategory: "",
   title: "",
   description: "",
   pricePerDay: "",
@@ -157,6 +159,7 @@ export default function AddListingPage() {
           title: data.title.trim(),
           description: data.description.trim() || undefined,
           category: data.category,
+          subcategory: data.subcategory.trim() || undefined,
           city: data.city.trim(),
           pricePerDay: Number(data.pricePerDay),
           deposit: Number(data.deposit),
@@ -240,7 +243,7 @@ export default function AddListingPage() {
                     <button
                       key={c.slug}
                       type="button"
-                      onClick={() => update({ category: c.slug })}
+                      onClick={() => update({ category: c.slug, subcategory: "" })}
                       className={cn(
                         "py-2.5 px-3 rounded-lg border text-sm text-right transition-colors",
                         data.category === c.slug
@@ -256,6 +259,29 @@ export default function AddListingPage() {
                 </div>
                 {errors.category && <p className="text-xs text-destructive mt-1" role="alert">נא לבחור קטגוריה</p>}
               </div>
+              {data.category && getSubcategoriesForCategory(data.category).length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium mb-2">תת־קטגוריה (אופציונלי)</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {getSubcategoriesForCategory(data.category).map((sub) => (
+                      <button
+                        key={sub.key}
+                        type="button"
+                        onClick={() => update({ subcategory: data.subcategory === sub.slug ? "" : sub.slug })}
+                        className={cn(
+                          "py-2.5 px-3 rounded-lg border text-sm text-right transition-colors",
+                          data.subcategory === sub.slug
+                            ? "border-[var(--mint-accent)] bg-[var(--mint-accent)]/10 text-[var(--mint-accent)]"
+                            : "border-border hover:border-[var(--mint-accent)]/50"
+                        )}
+                        aria-pressed={data.subcategory === sub.slug}
+                      >
+                        {sub.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-medium mb-1" htmlFor="add-desc">תיאור (אופציונלי)</label>
                 <textarea
@@ -452,7 +478,12 @@ export default function AddListingPage() {
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">קטגוריה</p>
-                    <p className="font-medium text-foreground">{(CATEGORY_LIST.find((c) => c.slug === data.category)?.labelHe) ?? (data.category || "—")}</p>
+                    <p className="font-medium text-foreground">
+                      {(CATEGORY_LIST.find((c) => c.slug === data.category)?.labelHe) ?? data.category || "—"}
+                      {data.subcategory
+                        ? ` · ${getSubcategoriesForCategory(data.category).find((s) => s.slug === data.subcategory)?.label ?? data.subcategory}`
+                        : ""}
+                    </p>
                   </div>
                   {data.description && (
                     <div>

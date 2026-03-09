@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/admin";
 import { needsOnboarding } from "@/lib/auth/onboarding";
-import { isValidCategorySlug } from "@/lib/constants";
+import { isValidCategorySlug, isValidSubcategorySlug } from "@/lib/constants";
 
 /** Public list: only ACTIVE listings (e.g. for home/feeds) */
 export async function GET() {
@@ -34,6 +34,7 @@ export async function POST(req: Request) {
     title: string;
     description?: string;
     category: string;
+    subcategory?: string | null;
     city: string;
     pricePerDay: number;
     deposit: number;
@@ -49,7 +50,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { title, description, category, city, pricePerDay, deposit, valueEstimate, pickupNote, rules, imageUrls } = body;
+  const { title, description, category, subcategory, city, pricePerDay, deposit, valueEstimate, pickupNote, rules, imageUrls } = body;
 
   if (!title?.trim()) {
     return NextResponse.json({ error: "title is required" }, { status: 400 });
@@ -72,6 +73,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid category" }, { status: 400 });
   }
 
+  const subcategorySlug =
+    subcategory != null && String(subcategory).trim() !== ""
+      ? String(subcategory).trim().toLowerCase()
+      : null;
+  if (subcategorySlug !== null && !isValidSubcategorySlug(categorySlug, subcategorySlug)) {
+    return NextResponse.json({ error: "Invalid subcategory for this category" }, { status: 400 });
+  }
+
   const urls = Array.isArray(imageUrls) ? imageUrls.filter((u): u is string => typeof u === "string") : [];
 
   const listing = await prisma.listing.create({
@@ -80,6 +89,7 @@ export async function POST(req: Request) {
       title: title.trim(),
       description: description?.trim() || null,
       category: categorySlug,
+      subcategory: subcategorySlug,
       city: city.trim(),
       pricePerDay: Math.round(pricePerDay),
       deposit: Math.round(deposit),

@@ -49,6 +49,7 @@ export function FeaturedListings({ listings }: FeaturedListingsProps) {
             href={`/listing/${item.id}`}
             imageUrl={item.images?.[0]?.url}
             category={item.category}
+            subcategory={item.subcategory ?? undefined}
             trustBadges={getListingTrustBadges({
               kycStatus: item.owner?.kycStatus ?? null,
               phoneNumber: item.owner?.phoneNumber ?? null,

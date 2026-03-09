@@ -27,7 +27,7 @@ export function HomeHeroNav() {
     >
       <div className="w-full px-4 md:px-8 flex justify-between items-center">
         <div className="mt-2 me-4 [&_img]:brightness-0 [&_img]:invert">
-          <Logo size={84} linkToHome />
+          <Logo size={120} linkToHome />
         </div>
         <div className="flex items-center gap-5 md:gap-6">
           <nav className="flex items-center gap-1" aria-label="ניווט ראשי">
