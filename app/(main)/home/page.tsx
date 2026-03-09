@@ -36,16 +36,16 @@ export default async function HomePage() {
       {/* A. Hero — full-width on desktop, no inner max-width */}
       <HeroSection user={user} />
 
+      {/* B. Category discovery — mobile only below hero; strong container (max-w-5xl) and card */}
+      <section
+        className="-mt-6 md:mt-0 md:pt-0 md:hidden w-full max-w-5xl mx-auto px-4 sm:px-6 rounded-2xl overflow-hidden bg-card shadow-[0_2px_12px_rgba(0,0,0,0.04)]"
+        aria-label="גלה לפי קטגוריה"
+      >
+        <DesktopCategoryDiscovery />
+      </section>
+
       {/* Page-level content band. Mobile: narrow; desktop: full width up to 7xl. */}
       <div className="w-full max-w-md md:max-w-7xl md:mx-auto pt-0">
-        {/* B. Category discovery — mobile only below hero; card on page bg (no band) */}
-        <section
-          className="-mt-6 md:mt-0 md:pt-0 md:hidden w-full rounded-2xl overflow-hidden bg-card shadow-[0_2px_12px_rgba(0,0,0,0.04)]"
-          aria-label="גלה לפי קטגוריה"
-        >
-          <DesktopCategoryDiscovery />
-        </section>
-
         {/* C. Trust one-liner — mobile only; desktop has it in hero */}
         <section className="pt-6 md:hidden" aria-label="אמון">
           <p className="text-center text-sm text-muted-foreground font-medium max-w-2xl mx-auto">

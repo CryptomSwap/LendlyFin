@@ -3,7 +3,15 @@
 import Link from "next/link";
 import { useState } from "react";
 import { CATEGORY_LIST } from "@/lib/constants";
-import { ChevronLeft } from "lucide-react";
+import {
+  Camera,
+  Wrench,
+  Headphones,
+  Tent,
+  Music,
+  CircleDot,
+  type LucideIcon,
+} from "lucide-react";
 
 type SegmentId = "all" | "media" | "outdoor";
 
@@ -16,6 +24,15 @@ const SEGMENTS: { id: SegmentId; label: string }[] = [
 const MEDIA_SLUGS = ["camera", "dj", "music"];
 const OUTDOOR_SLUGS = ["tools", "camping", "sports"];
 
+const CATEGORY_ICONS: Record<string, LucideIcon> = {
+  camera: Camera,
+  tools: Wrench,
+  dj: Headphones,
+  camping: Tent,
+  sports: CircleDot,
+  music: Music,
+};
+
 function getFilteredCategories(segment: SegmentId) {
   if (segment === "media") return CATEGORY_LIST.filter((c) => MEDIA_SLUGS.includes(c.slug));
   if (segment === "outdoor") return CATEGORY_LIST.filter((c) => OUTDOOR_SLUGS.includes(c.slug));
@@ -23,7 +40,7 @@ function getFilteredCategories(segment: SegmentId) {
 }
 
 /**
- * Category discovery. Desktop: hero sidebar (20% width). Mobile: full width below hero. Same component; premium hierarchy, mint accents, consistent radius.
+ * Category discovery. Desktop: hero sidebar (20% width). Mobile: full width below hero. Strong "Browse by category" section with grid and icons.
  */
 export function DesktopCategoryDiscovery() {
   const [segment, setSegment] = useState<SegmentId>("all");
@@ -32,27 +49,15 @@ export function DesktopCategoryDiscovery() {
   return (
     <div
       className="flex flex-col w-full h-full min-h-0 overflow-hidden home-gradient-bg-subtle"
-      aria-label="גלו לפי קטגוריה"
+      aria-label="חפשו לפי קטגוריות"
     >
-      <div className="p-5 md:p-6 flex flex-col min-h-0 flex-1">
-        <div className="flex flex-wrap items-baseline justify-between gap-2 mb-1">
-          <h2 className="text-lg font-semibold text-foreground tracking-tight">
-            גלו לפי קטגוריה
-          </h2>
-          <Link
-            href="/search"
-            className="inline-flex items-center gap-0.5 text-sm font-medium text-[var(--mint-accent)] hover:text-[var(--mint-accent-hover)] transition-colors"
-          >
-            גלוש בהכל
-            <ChevronLeft className="h-4 w-4 rtl:rotate-180" aria-hidden />
-          </Link>
-        </div>
-        <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-          בחרו קטגוריה וחפשו ציוד להשכרה בקרבתכם
-        </p>
-
+      <div className="w-full max-w-5xl mx-auto px-6 pt-36 pb-10 flex flex-col min-h-0 flex-1">
+        {/* Section hierarchy: title, segment tabs, grid */}
+        <h2 className="text-xl font-semibold text-foreground tracking-tight mb-2">
+          חפשו לפי קטגוריות
+        </h2>
         {/* Segment tabs — mint accent, matches search primary */}
-        <div className="flex flex-wrap gap-1.5 rounded-xl bg-white/60 dark:bg-black/10 p-1.5 mb-4" role="tablist" aria-label="סינון קטגוריות">
+        <div className="flex flex-wrap gap-1.5 rounded-xl bg-white/60 dark:bg-black/10 p-1.5 mb-6" role="tablist" aria-label="סינון קטגוריות">
           {SEGMENTS.map((s) => (
             <button
               key={s.id}
@@ -74,22 +79,27 @@ export function DesktopCategoryDiscovery() {
           ))}
         </div>
 
-        {/* Category pills — mint, consistent rounded-xl with search */}
-        <div className="flex flex-wrap gap-2 flex-1 content-start min-h-0">
-          {categories.map((c) => (
-            <Link
-              key={c.slug}
-              href={`/search?category=${encodeURIComponent(c.slug)}`}
-              className="
-                inline-flex items-center rounded-xl px-3.5 py-2.5 text-sm font-medium
-                bg-[var(--mint-accent)]/10 text-[var(--mint-accent)] border border-[var(--mint-accent)]/25
-                hover:bg-[var(--mint-accent)]/20 hover:border-[var(--mint-accent)]/40
-                transition-all duration-200
-              "
-            >
-              {c.labelHe}
-            </Link>
-          ))}
+        {/* Category grid — stacked icon + label, premium minimal style */}
+        <div
+          className="grid grid-cols-2 md:grid-cols-3 gap-4 min-w-0 flex-1 content-start"
+          role="navigation"
+          aria-label="קטגוריות לגלישה"
+        >
+          {categories.map((c) => {
+            const Icon = CATEGORY_ICONS[c.slug];
+            return (
+              <Link
+                key={c.slug}
+                href={`/search?category=${encodeURIComponent(c.slug)}`}
+                className="group flex flex-col items-center justify-center gap-2 rounded-xl px-4 py-4 text-sm font-medium border border-border/80 bg-card/80 text-foreground shadow-[0_6px_18px_rgba(0,0,0,0.06)] hover:bg-[var(--mint-accent)]/8 hover:border-[var(--mint-accent)]/25 hover:text-[var(--mint-accent)] transition-all duration-200"
+              >
+                {Icon ? (
+                  <Icon className="h-5 w-5 shrink-0 text-muted-foreground group-hover:text-[var(--mint-accent)]" aria-hidden />
+                ) : null}
+                <span className="text-center">{c.labelHe}</span>
+              </Link>
+            );
+          })}
         </div>
       </div>
     </div>

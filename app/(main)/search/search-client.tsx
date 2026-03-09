@@ -292,20 +292,14 @@ export default function SearchClient() {
             </div>
           )}
 
-          {/* ——— Results toolbar: mobile = 3 rows (count+toggle | sort+category | slider), desktop = single row ——— */}
+          {/* ——— Results toolbar: mobile = 3 rows. Desktop: right = sort/category/price/clear, left = count + list/map toggle ——— */}
           <div
             className="flex flex-col gap-4 mb-6 border-b border-border/60 pb-4 md:flex-row md:flex-wrap md:items-center md:justify-between md:gap-4"
             role="region"
             aria-label="תוצאות וסינון"
           >
-            {/* Row 1 (mobile): results count + list/map toggle. Desktop: count only (me-auto), toggle in filters row */}
-            <div className="flex items-center justify-between gap-3 md:contents">
-              <span className="text-base font-medium text-foreground md:me-auto">{resultsCountLabel}</span>
-              <div className="md:hidden">{viewToggle}</div>
-            </div>
-
-            {/* Row 2 (mobile): sort + category dropdowns + clear. Desktop: inline with slider + toggle */}
-            <div className="flex flex-col gap-2 md:flex-row md:flex-wrap md:items-center md:gap-3">
+            {/* Desktop: first = right in RTL (filters). Mobile: row 2. */}
+            <div className="flex flex-col gap-2 md:flex-row md:flex-wrap md:items-center md:gap-3 order-2 md:order-1">
               <select
                 value={sort}
                 onChange={(e) => {
@@ -353,7 +347,7 @@ export default function SearchClient() {
                   ))}
                 </select>
               )}
-              <div className="hidden md:flex items-center gap-2 min-w-0 flex-1" style={{ maxWidth: "12rem" }}>
+              <div className="hidden md:flex items-center gap-2 w-40 min-w-0 shrink-0">
                 <input
                   type="range"
                   min={0}
@@ -394,10 +388,15 @@ export default function SearchClient() {
                   נקה סינון
                 </button>
               )}
-              <div className="hidden md:block">{viewToggle}</div>
             </div>
 
-            {/* Row 3 (mobile only): price slider — full width */}
+            {/* Desktop: second = left in RTL (count + toggle). Mobile: row 1. */}
+            <div className="flex items-center justify-between gap-3 order-1 md:order-2">
+              <span className="text-base font-medium text-foreground">{resultsCountLabel}</span>
+              {viewToggle}
+            </div>
+
+            {/* Row 3 (mobile only): price slider */}
             <div className="flex items-center gap-2 min-w-0 w-full md:hidden">
               <input
                 type="range"
@@ -559,22 +558,6 @@ export default function SearchClient() {
                 </Link>
               </li>
             </ul>
-          </div>
-
-          {/* Open: Popular / inspiration — no card, airy pills */}
-          <div className="space-y-3">
-            <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">גלו לפי קטגוריה</h3>
-            <div className="flex flex-wrap gap-2">
-              {CATEGORY_LIST.map((c) => (
-                <Link
-                  key={c.slug}
-                  href={`/search?category=${encodeURIComponent(c.slug)}`}
-                  className="inline-flex items-center rounded-full border border-border/80 bg-card/60 px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:border-[var(--mint-accent)]/40 hover:bg-[var(--mint-accent)]/5 transition-colors"
-                >
-                  {c.labelHe}
-                </Link>
-              ))}
-            </div>
           </div>
         </aside>
           </div>
