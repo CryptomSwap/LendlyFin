@@ -32,9 +32,9 @@ export function HeroSection({ user }: HeroSectionProps) {
         <div className="hidden md:flex absolute bottom-4 right-4 z-10">
           {user ? (
             <Button asChild size="lg" variant="mint" className="gap-2 shadow-soft">
-              <Link href="/add" aria-label="השכר ציוד">
+              <Link href="/add" aria-label="פרסום מודעה להשכרה">
                 <DollarSign className="h-5 w-5 shrink-0" aria-hidden />
-                השכר ציוד
+                פרסום מודעה להשכרה
               </Link>
             </Button>
           ) : (
@@ -56,7 +56,7 @@ export function HeroSection({ user }: HeroSectionProps) {
                     <span>למה לקנות כשאפשר לשכור?</span>
                   </h1>
                   <p className="text-sm sm:text-base text-white/90 text-center font-normal max-w-md mx-auto">
-                    שכרו ציוד מאנשים לידכם — או השכירו את שלכם
+                    פשוט לשכור ציוד בסביבה, או להשכיר את שלך
                   </p>
                 </div>
 
@@ -72,10 +72,10 @@ export function HeroSection({ user }: HeroSectionProps) {
                           translucent
                         />
                       </div>
-                      <Link href="/search" className="inline-flex shrink-0 sm:self-stretch" aria-label="חפשו השכרות">
+                      <Link href="/search" className="inline-flex shrink-0 sm:self-stretch" aria-label="חיפוש">
                         <Button size="lg" variant="mint" className="w-full sm:w-auto sm:min-h-[2.75rem] sm:min-w-[2.75rem] rounded-xl font-semibold">
                           <Search className="h-4 w-4" aria-hidden />
-                          חפשו
+                          חיפוש
                         </Button>
                       </Link>
                     </div>

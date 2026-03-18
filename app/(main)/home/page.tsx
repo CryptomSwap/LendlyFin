@@ -14,7 +14,7 @@ import {
 } from "@/lib/copy/help-reassurance";
 import { getCurrentUser } from "@/lib/admin";
 import { getFeaturedListings } from "@/lib/listings";
-import { Search } from "lucide-react";
+import { Search, Upload } from "lucide-react";
 import DesktopFooter from "@/components/layout/desktop-footer";
 
 const PATH_ADD = "/add";
@@ -24,7 +24,7 @@ export default async function HomePage() {
   const user = await getCurrentUser();
   const featuredListings = await getFeaturedListings(12);
   const ctaHref = user ? PATH_ADD : PATH_SIGNIN;
-  const ctaLabel = user ? "העלו מודעה" : "התחברו להעלאה";
+  const ctaLabel = "פרסום ציוד";
   const ctaVariant = user ? "mint" : "outline";
   const ctaClassName = user ? "gap-2 shadow-cta" : "gap-2 bg-card opacity-90";
 
@@ -114,44 +114,23 @@ export default async function HomePage() {
         >
           <div className="max-w-2xl mx-auto rounded-2xl border border-[var(--mint-accent)]/15 bg-[var(--mint-accent)]/5 py-16 md:py-20 px-6 md:px-8 text-center space-y-5 shadow-[0_2px_16px_rgba(47,191,159,0.08)]">
             <h2 className="text-xl font-semibold text-foreground md:text-2xl">
-              מוכנים להתחיל?
+              אז מה שוכב לך בבית?
             </h2>
-            <p className="text-sm text-muted-foreground max-w-md mx-auto">
-              חפשו ציוד להשכרה או העלו מודעה — פשוט ובטוח.
-            </p>
             <div className="flex flex-col gap-3 sm:flex-row sm:justify-center sm:flex-wrap pt-2">
               <Button asChild size="lg" variant="mint" className="gap-2 shadow-cta">
                 <Link href="/search">
                   <Search className="h-4 w-4" aria-hidden />
-                  חפשו השכרות
+                  חיפוש
                 </Link>
               </Button>
               <Button asChild size="lg" variant={ctaVariant} className={ctaClassName}>
-                <Link href={ctaHref}>{ctaLabel}</Link>
+                <Link href={ctaHref}>
+                  <Upload className="h-4 w-4" aria-hidden />
+                  {ctaLabel}
+                </Link>
               </Button>
             </div>
           </div>
-          <div className="space-y-2 pt-8 max-w-2xl mx-auto text-center px-6 md:px-8">
-          <p className="text-xs text-muted-foreground">
-            השכרה בין אנשים · גלו ציוד בקרבתכם
-          </p>
-          <p className="text-xs text-muted-foreground">
-            {HOME_HELP_LINKS.line}{" "}
-            <Link
-              href={HOME_HELP_LINKS.helpHref}
-              className="text-primary font-medium hover:underline"
-            >
-              {HOME_HELP_LINKS.helpLabel}
-            </Link>
-            {" · "}
-            <Link
-              href={HOME_HELP_LINKS.faqHref}
-              className="text-primary font-medium hover:underline"
-            >
-              {HOME_HELP_LINKS.faqLabel}
-            </Link>
-          </p>
-        </div>
         </section>
       </div>
 

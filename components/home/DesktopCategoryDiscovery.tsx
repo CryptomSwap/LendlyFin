@@ -10,6 +10,7 @@ import {
   Tent,
   Music,
   CircleDot,
+  PartyPopper,
   type LucideIcon,
 } from "lucide-react";
 
@@ -18,11 +19,11 @@ type SegmentId = "all" | "media" | "outdoor";
 const SEGMENTS: { id: SegmentId; label: string }[] = [
   { id: "all", label: "כל הקטגוריות" },
   { id: "media", label: "צילום ומדיה" },
-  { id: "outdoor", label: "ספורט ופנאי" },
+  { id: "outdoor", label: "כלי עבודה" },
 ];
 
 const MEDIA_SLUGS = ["camera", "dj", "music"];
-const OUTDOOR_SLUGS = ["tools", "camping", "sports"];
+const OUTDOOR_SLUGS = ["tools"];
 
 const CATEGORY_ICONS: Record<string, LucideIcon> = {
   camera: Camera,
@@ -31,6 +32,7 @@ const CATEGORY_ICONS: Record<string, LucideIcon> = {
   camping: Tent,
   sports: CircleDot,
   music: Music,
+  events: PartyPopper,
 };
 
 function getFilteredCategories(segment: SegmentId) {
@@ -49,12 +51,12 @@ export function DesktopCategoryDiscovery() {
   return (
     <div
       className="flex flex-col w-full h-full min-h-0 overflow-hidden home-gradient-bg-subtle"
-      aria-label="חפשו לפי קטגוריות"
+      aria-label="חיפוש לפי קטגוריה"
     >
       <div className="w-full max-w-5xl mx-auto px-6 pt-36 pb-10 flex flex-col min-h-0 flex-1">
         {/* Section hierarchy: title, segment tabs, grid */}
         <h2 className="text-xl font-semibold text-foreground tracking-tight mb-2">
-          חפשו לפי קטגוריות
+          הקטגוריות הכי פופולריות
         </h2>
         {/* Segment tabs — mint accent, matches search primary */}
         <div className="flex flex-wrap gap-1.5 rounded-xl bg-white/60 dark:bg-black/10 p-1.5 mb-6" role="tablist" aria-label="סינון קטגוריות">

@@ -18,7 +18,7 @@ export function FeaturedListings({ listings }: FeaturedListingsProps) {
   if (listings.length === 0) {
     return (
       <section className="pt-6 md:pt-3" aria-label="השכרות מומלצות">
-        <h2 className="section-title mb-3 text-lg md:text-xl">השכרות אחרונות</h2>
+        <h2 className="section-title mb-3 text-lg md:text-xl">🔥 הושכר לאחרונה</h2>
         <EmptyState
           title="אין עדיין מודעות"
           subtitle="בקרוב יופיעו כאן השכרות. בינתיים חפשו לפי קטגוריה."
@@ -33,9 +33,9 @@ export function FeaturedListings({ listings }: FeaturedListingsProps) {
   return (
     <section className="pt-6 md:pt-3" aria-label="השכרות מומלצות">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-        <h2 className="section-title text-lg md:text-xl">השכרות אחרונות</h2>
+        <h2 className="section-title text-lg md:text-xl">🔥 הושכר לאחרונה</h2>
         <Link href="/search" className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline md:hidden">
-          כל ההשכרות
+          ההשכרות החמות
           <ChevronLeft className="h-4 w-4 rtl:rotate-180" aria-hidden />
         </Link>
       </div>
@@ -64,7 +64,7 @@ export function FeaturedListings({ listings }: FeaturedListingsProps) {
         <Button asChild variant="outline" size="lg" className="rounded-xl">
           <Link href="/search" className="gap-2">
             <ChevronLeft className="h-4 w-4 rtl:rotate-180" aria-hidden />
-            כל ההשכרות
+            ההשכרות החמות
           </Link>
         </Button>
       </div>

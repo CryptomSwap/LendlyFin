@@ -24,8 +24,8 @@ export interface TrustBadge {
 const BADGE_DEFINITIONS: Record<TrustBadgeKey, TrustBadge> = {
   identity: {
     key: "identity",
-    label: "מאומת זהות",
-    tooltip: "אימות זהות (KYC) אושר על ידי המערכת",
+    label: "מאומת",
+    tooltip: "המשכיר עבר אימות זהות (KYC) ואושר על ידי המערכת",
   },
   phone: {
     key: "phone",
@@ -63,10 +63,6 @@ export function getListingTrustBadges(input: ListingTrustInput): TrustBadge[] {
 
   if (input.kycStatus === "APPROVED") {
     badges.push(BADGE_DEFINITIONS.identity);
-  }
-
-  if (input.phoneNumber != null && String(input.phoneNumber).trim() !== "") {
-    badges.push(BADGE_DEFINITIONS.phone);
   }
 
   const completed = input.completedBookingsCount ?? 0;

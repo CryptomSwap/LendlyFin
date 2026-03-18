@@ -65,7 +65,7 @@ export function Testimonials() {
         {/* Main testimonial — text-first, focal point, softer surface */}
         <div className="order-2 lg:order-1">
           <h2 className="section-title text-lg md:text-xl mb-5">
-            מה אומרים המשתמשים
+            אנשים מספרים ❤️
           </h2>
           <blockquote className="text-xl md:text-2xl font-semibold text-foreground leading-relaxed mb-5">
             &ldquo;{primary.quote}&rdquo;

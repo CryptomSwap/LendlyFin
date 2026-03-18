@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import ListingCard from "@/components/listing-card";
@@ -17,7 +17,8 @@ import { SurfaceCard, SEARCH_PAGE_INNER_CLASS } from "@/components/layout";
 import { CATEGORY_LIST, getCategoryLabel, getSubcategoriesForCategory } from "@/lib/constants";
 import { getListingTrustBadges } from "@/lib/trust/badges";
 import { cn } from "@/lib/utils";
-import { LayoutList, Map, Search, SearchX } from "lucide-react";
+import { HOME_TESTIMONIALS } from "@/lib/copy/help-reassurance";
+import { ChevronLeft, ChevronRight, LayoutList, Map, Search, SearchX, Star } from "lucide-react";
 
 type SearchListing = {
   id: string;
@@ -210,7 +211,7 @@ export default function SearchClient() {
       {/* ——— Search Hero: full-width to top and sides (main has no padding on /search) ——— */}
       <div className="w-full">
         <SearchHero
-          title="מה בא לכם להשכיר היום?"
+          title="מה בא לך להשכיר היום?"
           subtitle=""
         >
           {/* Search row: logo + search bar, same column width */}
@@ -524,19 +525,7 @@ export default function SearchClient() {
 
         {/* ——— LEFT COLUMN: editorial support (varied treatment) ——— */}
         <aside className="lg:sticky lg:top-24 space-y-10" aria-label="מידע ועזרה">
-          {/* Strong: How renting works — one hero card with mint accent */}
-          <SurfaceCard padding="lg" className="border-t-4 border-t-[var(--mint-accent)]/40">
-            <h3 className="text-base font-semibold text-foreground mb-3">איך עובדת ההשכרה</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-              חפשו ציוד, הזמינו ושלמו ב-Bit, אספו והחזירו. הפיקדון מוחזר בהתאם למצב הפריט.
-            </p>
-            <Link
-              href="/help"
-              className="text-sm font-medium text-[var(--mint-accent)] hover:underline underline-offset-2"
-            >
-              קראו עוד →
-            </Link>
-          </SurfaceCard>
+          <TestimonialsCarousel />
 
           {/* Light: FAQ — minimal, link list only */}
           <div className="space-y-2">
@@ -564,5 +553,69 @@ export default function SearchClient() {
         </div>
       </div>
     </div>
+  );
+}
+
+function TestimonialsCarousel() {
+  const testimonials = useMemo(() => HOME_TESTIMONIALS, []);
+  const [idx, setIdx] = useState(0);
+  const t = testimonials[idx];
+
+  const prev = () => setIdx((i) => (i - 1 + testimonials.length) % testimonials.length);
+  const next = () => setIdx((i) => (i + 1) % testimonials.length);
+
+  return (
+    <SurfaceCard padding="lg" className="border-t-4 border-t-[var(--mint-accent)]/40">
+      <div className="flex items-center justify-between gap-3 mb-3">
+        <h3 className="text-base font-semibold text-foreground m-0">אנשים מספרים ❤️</h3>
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={prev}
+            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border/70 bg-card hover:bg-muted/30 transition-colors"
+            aria-label="ביקורת קודמת"
+          >
+            <ChevronRight className="h-4 w-4" aria-hidden />
+          </button>
+          <button
+            type="button"
+            onClick={next}
+            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border/70 bg-card hover:bg-muted/30 transition-colors"
+            aria-label="ביקורת הבאה"
+          >
+            <ChevronLeft className="h-4 w-4" aria-hidden />
+          </button>
+        </div>
+      </div>
+
+      <div className="flex gap-1 text-[var(--mint-accent)] mb-2" aria-hidden>
+        {[1, 2, 3, 4, 5].map((s) => (
+          <Star key={s} className="h-3.5 w-3.5 fill-current" />
+        ))}
+      </div>
+
+      <blockquote className="text-sm text-foreground leading-relaxed mb-3">
+        &ldquo;{t.quote}&rdquo;
+      </blockquote>
+
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <div
+            className="h-8 w-8 rounded-full bg-[var(--mint-accent)]/15 text-[var(--mint-accent)] font-semibold flex items-center justify-center text-xs shrink-0"
+            aria-hidden
+          >
+            {t.initial}
+          </div>
+          <div>
+            <p className="text-xs font-semibold text-foreground m-0">{t.name}</p>
+            <p className="text-xs text-muted-foreground m-0">{t.city}</p>
+          </div>
+        </div>
+
+        <p className="text-[11px] text-muted-foreground tabular-nums m-0">
+          {idx + 1}/{testimonials.length}
+        </p>
+      </div>
+    </SurfaceCard>
   );
 }

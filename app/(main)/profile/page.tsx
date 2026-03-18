@@ -140,7 +140,7 @@ export default async function ProfilePage() {
                   ✅ אימות הזהות שלך אושר בהצלחה.
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  מאומת זהות מסייע לרוכשים לבטוח במודעות שלך.
+                  מאומת מסייע לרוכשים לבטוח במודעות שלך.
                 </p>
               </>
             )}

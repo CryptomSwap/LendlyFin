@@ -153,6 +153,34 @@ export default async function ListingDetailsPage(props: {
               <p className="text-xs text-muted-foreground">
                 הפיקדון יוחזר בסיום ההשכרה אם הפריט מוחזר תקין
               </p>
+              <details className="pt-1 text-start" dir="rtl">
+                <summary className="text-xs text-primary underline underline-offset-4 cursor-pointer inline-flex items-center justify-center w-full list-none">
+                  <span>למה יש פיקדון?</span>
+                </summary>
+                <div className="mt-3 rounded-xl border border-border/70 bg-card/70 p-4 text-sm text-muted-foreground space-y-4 text-right">
+                  <div className="space-y-2">
+                    <p className="font-semibold text-foreground">למה יש פיקדון על הפריט הזה?</p>
+                    <p>הפיקדון נועד לשמור על החפץ ולגרום לכולם להרגיש בנוח.</p>
+                    <p>הוא מחושב אוטומטית לפי:</p>
+                    <ul className="list-disc ps-5 space-y-1">
+                      <li>סוג הפריט</li>
+                      <li>הערך שלו</li>
+                      <li>זמן ההשכרה</li>
+                    </ul>
+                    <p>אם הכל חוזר תקין, הפיקדון משתחרר אליך בסוף ההשכרה.</p>
+                  </div>
+
+                  <div className="h-px w-full bg-border/70" aria-hidden />
+
+                  <div className="space-y-2">
+                    <p className="font-semibold text-foreground">איך אנחנו שומרים על החפץ שלך?</p>
+                    <p>כשמישהו שוכר את הפריט שלך, לנדלי מחזיקה פיקדון.</p>
+                    <p>הפיקדון מחושב לפי סוג הפריט, הערך שלו והזמן שהוא מושכר.</p>
+                    <p>ככה אם משהו קורה, יש כיסוי מספק!</p>
+                    <p>ברוב המקרים הכל חוזר כמו שיצא, והפיקדון משתחרר 🙂</p>
+                  </div>
+                </div>
+              </details>
             </div>
           </CardContent>
         </Card>

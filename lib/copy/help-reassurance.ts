@@ -57,7 +57,7 @@ export const HOME_HELP_LINKS = {
 } as const;
 
 /** Homepage: short trust one-liner for hero area */
-export const HOME_TRUST_ONELINER = "מאומתים · פיקדון מגן · קהילה עם ביקורות ותמיכה" as const;
+export const HOME_TRUST_ONELINER = "*כל משכיר מאומת, כל שוכר שם פיקדון - הקהילה מעל הכל ❤️" as const;
 
 /** Homepage FAQ: trust, deposit, pickup/return, damage (3–5 items) */
 export const HOME_FAQ_ITEMS: FAQItem[] = [
@@ -103,25 +103,29 @@ export const BOOKING_HELP_CTA = {
 /** Homepage: testimonials section — conversational, specific, human */
 export const HOME_TESTIMONIALS = [
   {
-    quote: "הייתי צריך מקדחה ליום אחד לתיקון בבית. דני ענה מהר, האיסוף היה פשוט — והחזרתי באותו ערב. בדיוק מה שרציתי.",
-    name: "דני ל.",
+    quote:
+      "הייתי חייב מקדחה לסופ\"ש לתיקון אחד שקבעתי עם אשתי מזמן... יואל ענה מהר, האיסוף היה פשוט והחזרתי ביום ראשון. הציל אותי! הכל היה פשוט ויעיל",
+    name: "דניאל ש.",
     city: "תל אביב",
     initial: "ד",
   },
   {
-    quote: "השכרתי את המצלמה שלי לחתונה. המלווה היה ממש נחמד, הסביר איך להפעיל, והכל חזר חלק. ממליצה.",
+    quote:
+      "השכרתי את המצלמה שלי לחתונות במקום שהיא תשכב בבית. היא כבר הרוויחה יותר מהסכום שקניתי אותה",
     name: "מיה ר.",
     city: "חיפה",
     initial: "מ",
   },
   {
-    quote: "חיפשנו אוהל לטיול ברגע האחרון. מישהו מהשכונה — תאמנו באיסוף בערב, הכל זרם. חוסך קנייה לפעם בשנה.",
+    quote:
+      "חיפשנו אוהל, ולא רצינו לקנות עוד אחד שישכב בארון. מישהו מהשכונה לידנו העלה מודעה, תאמנו באותה שעה והכל זרם. חסך לנו מלא כסף לטיול של פעם בשנה",
     name: "יוסי כ.",
     city: "ירושלים",
     initial: "י",
   },
   {
-    quote: "תומר היה ממש זמין וענה מהר כשרציתי ציוד בדקה התשעים. הגענו להסכמה על המקום והשעה — פשוט ונעים.",
+    quote:
+      "ציוד מעולה ותקשורת אש!! כל פעם שאצטרך גנרטור במקומות בארץ אחפש בלנדלי",
     name: "רונית ש.",
     city: "רמת גן",
     initial: "ר",
@@ -136,34 +140,34 @@ export const HOME_TESTIMONIALS = [
 
 /** Homepage: why Lendly section — title and short supporting line */
 export const HOME_WHY_LENDLY_HEADING = {
-  title: "למה להשתמש בלנדלי",
-  subtitle: "יתרונות ברורים — השכרה בטוחה, פשוטה וקרובה אליכם.",
+  title: "למה לנדלי?",
+  subtitle: "",
 } as const;
 
 /** Homepage: why Lendly — 6 editorial features (Secure deposits, Verified community, etc.) */
 export const HOME_WHY_LENDLY = [
   {
     title: "פיקדון מגן",
-    description: "פיקדון מוחזר בהתאם למצב — שקוף ומגן על שני הצדדים.",
+    description: "בכל השכרה יש פיקדון מוסכם על המלווה והמשכיר, בטיחותי ושקוף.",
   },
   {
     title: "קהילה מאומתת",
-    description: "מלווים עוברים אימות. רואים בכל מודעה מי מאומת.",
+    description: "כל משכיר עובר אימות, הקהילה מעל הכל!",
   },
   {
     title: "חוסכים כסף",
-    description: "שוכרים רק כשצריך, בלי לרכוש ציוד יקר.",
+    description: "שוכרים במקום לקנות, או מרוויחים על החפצים שיש בבית",
   },
   {
-    title: "ציוד מקומי",
-    description: "מכירים שכנים ומלווים באזור — השכרה קרובה ונוחה.",
+    title: "שיתוף מקומי",
+    description: "עוזרים לקהילה או נהנים מהשכרה קרובה ונוחה",
   },
   {
-    title: "גמיש בתאריכים",
-    description: "בוחרים תאריכים שמתאימים — מחפשים ומזמינים בקלות.",
+    title: "תאריכים גמישים",
+    description: "בוחרים תאריכים מראש ומחפשים בקלות",
   },
   {
-    title: "שיתוף בר-קיימא",
-    description: "שימוש חוזר במקום קנייה — פחות בזבוז ויותר קיימות.",
+    title: "עולם ירוק",
+    description: "משתמשים במה שיש בסביבה שלך, ומצילים את הכדור מקנייה מבוזבזת",
   },
 ] as const;

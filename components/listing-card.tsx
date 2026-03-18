@@ -5,7 +5,7 @@ import Link from "next/link";
 import { getCategoryDisplayLabel } from "@/lib/constants";
 import { formatMoneyIls } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
-import { CheckCircle2, ImageIcon } from "lucide-react";
+import { ImageIcon } from "lucide-react";
 import TrustBadges from "@/components/trust-badges";
 import type { TrustBadge } from "@/lib/trust/badges";
 
@@ -71,15 +71,6 @@ export default function ListingCard({
         )}
         style={imageMaxHeight ? { height: imageMaxHeight } : undefined}
       >
-        {trustBadges?.some((b) => b.key === "identity") && (
-          <span
-            className="absolute top-2 start-2 z-[1] inline-flex items-center gap-0.5 rounded-full bg-[var(--mint-accent)] text-white px-1.5 py-0.5 text-[10px] font-medium shadow-sm"
-            aria-label="מאומת"
-          >
-            <CheckCircle2 className="h-3 w-3" aria-hidden />
-            מאומת
-          </span>
-        )}
         {trustBadges && trustBadges.length > 0 && (
           <div className="absolute top-2 end-2 z-[1]">
             <TrustBadges badges={trustBadges} size="compact" />

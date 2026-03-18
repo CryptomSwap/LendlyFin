@@ -479,7 +479,7 @@ export default function AddListingPage() {
                   <div>
                     <p className="text-xs text-muted-foreground">קטגוריה</p>
                     <p className="font-medium text-foreground">
-                      {(CATEGORY_LIST.find((c) => c.slug === data.category)?.labelHe) ?? data.category || "—"}
+                      {CATEGORY_LIST.find((c) => c.slug === data.category)?.labelHe ?? (data.category || "—")}
                       {data.subcategory
                         ? ` · ${getSubcategoriesForCategory(data.category).find((s) => s.slug === data.subcategory)?.label ?? data.subcategory}`
                         : ""}

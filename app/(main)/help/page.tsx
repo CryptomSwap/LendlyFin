@@ -16,7 +16,7 @@ export default function HelpPage() {
         <LifeBuoy className="h-16 w-16 mx-auto mb-4 text-primary" />
         <h1 className="page-title mb-2">מרכז עזרה</h1>
         <p className="text-sm text-muted-foreground">
-          מצא תשובות לשאלות נפוצות וקבל תמיכה
+          טיפים למשכיר ולשוכר בלנדלי
         </p>
       </div>
 

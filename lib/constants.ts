@@ -20,8 +20,13 @@ export type CategoryItem = {
 /** Full taxonomy: categories with optional subcategories */
 export const CATEGORY_TAXONOMY: CategoryItem[] = [
   {
+    key: "events",
+    label: "אירועים",
+    slug: "events",
+  },
+  {
     key: "camera",
-    label: "צילום ווידאו",
+    label: "צילום וידאו",
     slug: "camera",
     children: [
       { key: "camera_photo", label: "מצלמות צילום", slug: "photo", parentKey: "camera" },
