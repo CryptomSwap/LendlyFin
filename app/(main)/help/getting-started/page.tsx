@@ -14,9 +14,9 @@ export default function GettingStartedPage() {
     <div className="space-y-6 pb-24 max-w-4xl mx-auto">
       <div className="text-center mb-8">
         <Book className="h-16 w-16 mx-auto mb-4 text-primary" />
-        <h1 className="page-title mb-2">התחלה</h1>
+        <h1 className="page-title mb-2">איך להתחיל?</h1>
         <p className="text-sm text-muted-foreground">
-          למד איך להשתמש בפלטפורמה להשכרה או לפרסום מודעות
+          ככה משתמשים בפלטפורמה ומרוויחים כסף
         </p>
       </div>
 
@@ -27,18 +27,15 @@ export default function GettingStartedPage() {
               <PlusCircle className="h-5 w-5 text-primary" />
               איך ליצור מודעה
             </CardTitle>
-            <CardDescription>
-              מדריך שלב־אחר־שלב לפרסום פריטים להשכרה
-            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-3">
               {[
-                { step: 1, title: "התחבר לחשבון", desc: "צור חשבון או התחבר. תצטרך לאמת את זהותך כדי לפרסם מודעות." },
-                { step: 2, title: "לחץ על \"הוסף מודעה\"", desc: "עבור לדף המודעות ולחץ על \"הוסף מודעה\" או \"פרסם ציוד\"." },
-                { step: 3, title: "מלא פרטי פריט", desc: "ספק כותרת, תיאור, קטגוריה, תעריף יומי והעלה תמונות." },
-                { step: 4, title: "הגדר זמינות", desc: "השתמש בלוח השנה לסמן באילו תאריכים הפריט זמין." },
-                { step: 5, title: "שלח לאישור", desc: "לאחר השליחה המודעה תיבדק על ידי הצוות לפני פרסום. בדרך כלל 24–48 שעות." },
+                { step: 1, title: "התחברות לחשבון", desc: "יצירת חשבון או התחברות - צריך לאמת זהות כדי להתחיל לפרסם מודעות" },
+                { step: 2, title: "כפתור \"פרסום מודעה\"", desc: "אפשר בדף המודעות או בדף הבית" },
+                { step: 3, title: "מילוי פרטים", desc: "עדיף כמה שיותר פרטים כדי שהמשכיר יקבל את כל המידע שצריך לדעת לפני ההשכרה. פה זה גם המקום האישי שלך להיות יצירתי ואישי. תיאור, קטגוריה, תעריף יומי, תמונות \\ סרטונים וכו'." },
+                { step: 4, title: "הגדרת זמינות", desc: "אפשר להשתמש בלוח השנה כדי להגביל תאריכים, גם תוך כדי שהמודעה באוויר אפשר לשנות כמובן" },
+                { step: 5, title: "שליחה לאישור", desc: "הצוות שלנו יאשר את המודעה בדרך כלל תוך 24 שעות." },
               ].map(({ step, title, desc }) => (
                 <div key={step} className="flex gap-4">
                   <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-sm">
@@ -54,7 +51,7 @@ export default function GettingStartedPage() {
             <div className="pt-4 border-t border-border">
               <Link href="/add">
                 <Button className="w-full sm:w-auto">
-                  צור מודעה ראשונה
+                  יצירת מודעה ראשונה
                   <ArrowLeft className="me-2 h-4 w-4" />
                 </Button>
               </Link>
@@ -66,20 +63,16 @@ export default function GettingStartedPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
               <Calendar className="h-5 w-5 text-primary" />
-              איך להזמין פריט
+              איך להזמין?
             </CardTitle>
-            <CardDescription>
-              איך לשכור פריטים ממשתמשים אחרים
-            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-3">
               {[
-                { step: 1, title: "עיין בפריטים", desc: "השתמש בחיפוש או בקטגוריות. סנן לפי מיקום, מחיר וזמינות." },
-                { step: 2, title: "בחר תאריכים", desc: "בחר תאריכי התחלה וסיום בדף הפריט. וודא שהפריט זמין." },
-                { step: 3, title: "בדוק מחיר", desc: "בדוק את הסכום הכולל: תעריף יומי, פיקדון ביטחון וביטוח אופציונלי. הפיקדון מוחזר בהחזרה." },
-                { step: 4, title: "שלח בקשת הזמנה", desc: "לחץ \"הזמן עכשיו\". למשאיל יש עד 12 שעות לאשר או לדחות." },
-                { step: 5, title: "איסוף והחזרה", desc: "לאחר האישור תאם עם המשאיל לאיסוף. השלם צ'קליסט איסוף, השתמש בפריט והחזר באותו מצב." },
+                { step: 1, title: "חיפוש", desc: "חיפוש לפי קטגוריה, תאריכים, מיקום וכו'" },
+                { step: 2, title: "בחירת תאריכים", desc: "לפי הזמינות של המשכיר, חשוב לוודא איסוף והחזרה" },
+                { step: 3, title: "שליחת הזמנה ותשלום", desc: "למשכיר יש עד 12 שעות לאשר או לדחות את הבקשה" },
+                { step: 4, title: "איסוף והחזרה", desc: "לאחר האישור המשכיר יתאם איתך קשר לגבי איסוף והחזרה. יש לעקוב אחרי ההוראות" },
               ].map(({ step, title, desc }) => (
                 <div key={step} className="flex gap-4">
                   <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-sm">
@@ -95,7 +88,7 @@ export default function GettingStartedPage() {
             <div className="pt-4 border-t border-border">
               <Link href="/search">
                 <Button variant="outline" className="w-full sm:w-auto">
-                  עיין בפריטים זמינים
+                  מה יש לידך?
                   <ArrowLeft className="me-2 h-4 w-4" />
                 </Button>
               </Link>
@@ -107,7 +100,7 @@ export default function GettingStartedPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
               <Shield className="h-5 w-5 text-primary" />
-              הבנת פיקדונות
+              פקדונות
             </CardTitle>
             <CardDescription>
               איך פיקדונות ביטחון עובדים בפלטפורמה
