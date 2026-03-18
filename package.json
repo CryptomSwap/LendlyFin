@@ -4,7 +4,7 @@
   "private": true,
   "description": "Lendly final — production app",
   "scripts": {
-    "dev": "next dev -H localhost --webpack",
+    "dev": "next dev -H 0.0.0.0 --webpack",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
