@@ -11,7 +11,7 @@ import { Book, PlusCircle, Calendar, Shield, ArrowLeft } from "lucide-react";
 
 export default function GettingStartedPage() {
   return (
-    <div className="space-y-6 pb-24 max-w-4xl mx-auto">
+    <div className="min-h-screen w-full app-page-bg space-y-6 pb-24 max-w-4xl mx-auto" dir="rtl">
       <div className="text-center mb-8">
         <Book className="h-16 w-16 mx-auto mb-4 text-primary" />
         <h1 className="page-title mb-2">איך להתחיל?</h1>
@@ -37,7 +37,7 @@ export default function GettingStartedPage() {
                 { step: 4, title: "הגדרת זמינות", desc: "אפשר להשתמש בלוח השנה כדי להגביל תאריכים, גם תוך כדי שהמודעה באוויר אפשר לשנות כמובן" },
                 { step: 5, title: "שליחה לאישור", desc: "הצוות שלנו יאשר את המודעה בדרך כלל תוך 24 שעות." },
               ].map(({ step, title, desc }) => (
-                <div key={step} className="flex gap-4">
+                <div key={step} className="flex gap-3 sm:gap-4">
                   <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-sm">
                     {step}
                   </div>
@@ -74,7 +74,7 @@ export default function GettingStartedPage() {
                 { step: 3, title: "שליחת הזמנה ותשלום", desc: "למשכיר יש עד 12 שעות לאשר או לדחות את הבקשה" },
                 { step: 4, title: "איסוף והחזרה", desc: "לאחר האישור המשכיר יתאם איתך קשר לגבי איסוף והחזרה. יש לעקוב אחרי ההוראות" },
               ].map(({ step, title, desc }) => (
-                <div key={step} className="flex gap-4">
+                <div key={step} className="flex gap-3 sm:gap-4">
                   <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-sm">
                     {step}
                   </div>

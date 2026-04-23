@@ -9,7 +9,6 @@ import { FeaturedListings } from "@/components/home/FeaturedListings";
 import { FAQBlock } from "@/components/ui/faq-block";
 import {
   HOME_HELP_LINKS,
-  HOME_TRUST_ONELINER,
   HOME_FAQ_ITEMS,
 } from "@/lib/copy/help-reassurance";
 import { getCurrentUser } from "@/lib/admin";
@@ -43,16 +42,6 @@ export default async function HomePage() {
       >
         <DesktopCategoryDiscovery />
       </section>
-
-      {/* Page-level content band. Mobile: narrow; desktop: full width up to 7xl. */}
-      <div className="w-full max-w-md md:max-w-7xl md:mx-auto pt-0">
-        {/* C. Trust one-liner — mobile only; desktop has it in hero */}
-        <section className="pt-6 md:hidden" aria-label="אמון">
-          <p className="text-center text-sm text-muted-foreground font-medium max-w-2xl mx-auto">
-            {HOME_TRUST_ONELINER}
-          </p>
-        </section>
-      </div>
 
       {/* D. Featured listings — full-width so cards can be big */}
       <div className="w-full px-4 md:px-8">
@@ -129,6 +118,11 @@ export default async function HomePage() {
                   {ctaLabel}
                 </Link>
               </Button>
+              {user && (
+                <Button asChild size="lg" variant="outline" className="gap-2">
+                  <Link href="/owner">ניהול הזמנות</Link>
+                </Button>
+              )}
             </div>
           </div>
         </section>

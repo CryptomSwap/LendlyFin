@@ -10,7 +10,7 @@ export async function GET(
 ) {
   const { id: bookingId } = await ctx.params;
 
-  const { error: authError, booking: _ } = await requireBookingMessagesAccess(bookingId);
+  const { error: authError } = await requireBookingMessagesAccess(bookingId);
   if (authError) return authError;
 
   const booking = await prisma.booking.findUnique({

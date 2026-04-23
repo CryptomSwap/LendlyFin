@@ -5,9 +5,7 @@ import Link from "next/link";
 import { getCategoryDisplayLabel } from "@/lib/constants";
 import { formatMoneyIls } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
-import { ImageIcon } from "lucide-react";
-import TrustBadges from "@/components/trust-badges";
-import type { TrustBadge } from "@/lib/trust/badges";
+import { ImageIcon, Star } from "lucide-react";
 
 export interface ListingCardProps {
   title: string;
@@ -21,8 +19,9 @@ export interface ListingCardProps {
   size?: "default" | "compact";
   /** Cap image height so card is wider but not taller (e.g. homepage featured grid) */
   imageMaxHeight?: string;
-  /** Trust badges for the listing owner (computed from API) */
-  trustBadges?: TrustBadge[];
+  /** Owner review aggregate — shown as star + number when reviewsCount > 0 */
+  reviewsCount?: number;
+  averageRating?: number;
   className?: string;
 }
 
@@ -36,18 +35,24 @@ export default function ListingCard({
   subcategory,
   size = "default",
   imageMaxHeight,
-  trustBadges,
+  reviewsCount = 0,
+  averageRating = 0,
   className,
 }: ListingCardProps) {
   const isCompact = size === "compact";
   const [imgError, setImgError] = React.useState(false);
   const showImage = imageUrl && !imgError;
+  const showRating = reviewsCount > 0;
 
   const metaParts = [
     category ? getCategoryDisplayLabel(category, subcategory ?? undefined) : null,
     location || null,
   ].filter(Boolean);
   const metaLine = metaParts.join(" · ");
+
+  const ratingLabel = showRating
+    ? `דירוג ממוצע ${averageRating.toFixed(1)}, ${reviewsCount} ביקורות`
+    : undefined;
 
   return (
     <Link
@@ -71,11 +76,6 @@ export default function ListingCard({
         )}
         style={imageMaxHeight ? { height: imageMaxHeight } : undefined}
       >
-        {trustBadges && trustBadges.length > 0 && (
-          <div className="absolute top-2 end-2 z-[1]">
-            <TrustBadges badges={trustBadges} size="compact" />
-          </div>
-        )}
         {showImage ? (
           /* eslint-disable-next-line @next/next/no-img-element */
           <img
@@ -117,6 +117,24 @@ export default function ListingCard({
             )}
           >
             {metaLine}
+          </p>
+        ) : null}
+        {showRating ? (
+          <p
+            className={cn(
+              "inline-flex items-center gap-1 text-primary font-medium tabular-nums",
+              isCompact ? "text-[10px]" : "text-xs"
+            )}
+            aria-label={ratingLabel}
+          >
+            <Star
+              className={cn(
+                "shrink-0 fill-primary text-primary",
+                isCompact ? "h-3 w-3" : "h-3.5 w-3.5"
+              )}
+              aria-hidden
+            />
+            <span>{averageRating.toFixed(1)}</span>
           </p>
         ) : null}
         {/* Price — distinct row, MVP-style bold primary + /יום muted */}

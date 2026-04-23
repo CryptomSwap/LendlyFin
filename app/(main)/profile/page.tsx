@@ -3,9 +3,8 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import SignOutButton from "@/components/sign-out-button";
+import ThemeToggle from "@/components/theme-toggle";
 import { PageContainer, PageIntro } from "@/components/layout";
-import TrustBadges from "@/components/trust-badges";
-import { getUserTrustBadges } from "@/lib/trust/badges";
 import { VERIFICATION_REASSURANCE } from "@/lib/copy/help-reassurance";
 
 export const runtime = "nodejs";
@@ -38,9 +37,13 @@ async function getMe(): Promise<Me | null> {
   const host = h.get("host");
   if (!host) throw new Error("Missing host header");
   const proto = h.get("x-forwarded-proto") ?? "http";
+  const cookie = h.get("cookie") ?? "";
   const url = `${proto}://${host}/api/me`;
 
-  const res = await fetch(url, { cache: "no-store" });
+  const res = await fetch(url, {
+    cache: "no-store",
+    headers: cookie ? { cookie } : undefined,
+  });
   if (!res.ok) return null;
   return res.json();
 }
@@ -53,7 +56,17 @@ export default async function ProfilePage() {
       <div className="min-h-screen pb-6 md:pb-10 w-full app-page-bg" dir="rtl">
         <PageContainer noPadding>
           <PageIntro title="פרופיל" />
-          <p className="text-sm text-muted-foreground">לא נמצא משתמש במערכת (הרץ seed).</p>
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>מראה</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ThemeToggle />
+              </CardContent>
+            </Card>
+            <p className="text-sm text-muted-foreground">לא נמצא משתמש במערכת (הרץ seed).</p>
+          </div>
         </PageContainer>
       </div>
     );
@@ -62,14 +75,6 @@ export default async function ProfilePage() {
   // Handle both response formats (user object or flat)
   const me = meData.user || meData;
   const kycStatus = me.kycStatus || "PENDING";
-
-  const trustBadges = getUserTrustBadges({
-    kycStatus: me.kycStatus ?? null,
-    phoneNumber: me.phoneNumber ?? null,
-    completedBookingsCount: me.completedBookingsCount ?? 0,
-    reviewsCount: me.reviewsCount ?? 0,
-    averageRating: me.averageRating ?? 0,
-  });
 
   return (
     <div className="min-h-screen pb-6 md:pb-10 w-full app-page-bg" dir="rtl">
@@ -81,15 +86,19 @@ export default async function ProfilePage() {
           <CardTitle>פרטים</CardTitle>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground space-y-2">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
             <span className="text-muted-foreground">שם</span>
             <span>{me.name}</span>
           </div>
-          {trustBadges.length > 0 && (
-            <div className="pt-2">
-              <TrustBadges badges={trustBadges} size="default" />
-            </div>
-          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>מראה</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ThemeToggle />
         </CardContent>
       </Card>
 
@@ -200,7 +209,7 @@ function statusLabel(s: string) {
 }
 
 function statusColor(s: string) {
-  if (s === "APPROVED") return "text-green-600 font-medium";
-  if (s === "REJECTED") return "text-red-600 font-medium";
-  return "text-yellow-700 font-medium";
+  if (s === "APPROVED") return "text-success font-medium";
+  if (s === "REJECTED") return "text-destructive font-medium";
+  return "text-foreground font-medium";
 }

@@ -15,7 +15,6 @@ import { SearchHero } from "@/components/search/SearchHero";
 import Logo from "@/components/logo";
 import { SurfaceCard, SEARCH_PAGE_INNER_CLASS } from "@/components/layout";
 import { CATEGORY_LIST, getCategoryLabel, getSubcategoriesForCategory } from "@/lib/constants";
-import { getListingTrustBadges } from "@/lib/trust/badges";
 import { cn } from "@/lib/utils";
 import { HOME_TESTIMONIALS } from "@/lib/copy/help-reassurance";
 import { ChevronLeft, ChevronRight, LayoutList, Map, Search, SearchX, Star } from "lucide-react";
@@ -34,6 +33,11 @@ type SearchListing = {
   completedBookingsCount?: number;
   reviewsCount?: number;
   averageRating?: number;
+};
+
+type SearchApiResponse = {
+  items?: SearchListing[];
+  hasMore?: boolean;
 };
 
 const inputBase = "input-base";
@@ -110,7 +114,7 @@ export default function SearchClient() {
     if (minVal !== "") qs.set("min", minVal);
     if (maxVal !== "") qs.set("max", maxVal);
 
-    let data: any;
+    let data: SearchApiResponse;
     try {
       const res = await fetch(`/api/listings/search?${qs.toString()}`);
       if (!res.ok) {
@@ -240,12 +244,19 @@ export default function SearchClient() {
           {/* Category chips: horizontal scroll on mobile, wrap on desktop */}
           <div className="w-full px-0 md:px-0 -mx-4 md:mx-0">
             <div className="flex gap-2 overflow-x-auto whitespace-nowrap px-4 md:flex-wrap md:overflow-visible md:whitespace-normal md:gap-x-3 md:gap-y-3 md:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              <Link href="/search" className="flex-shrink-0">
+              <Link
+                href="/search"
+                className="flex-shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/75"
+              >
                 <Chip label="הכל" variant="category" selected={!category} className="border-white/30 text-white bg-white/10 hover:bg-white/15" />
               </Link>
               {CATEGORY_LIST.map((c) => (
-                <Link key={c.slug} href={`/search?category=${encodeURIComponent(c.slug)}`} className="flex-shrink-0">
-                  <Chip label={c.labelHe} variant="category" selected={category === c.slug} className={category === c.slug ? "border-white/50 text-white bg-white/15" : "border-white/30 text-white/90 bg-white/5 hover:bg-white/10"} />
+                <Link
+                  key={c.slug}
+                  href={`/search?category=${encodeURIComponent(c.slug)}`}
+                  className="flex-shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/75"
+                >
+                  <Chip label={c.labelHe} variant="category" selected={category === c.slug} className={category === c.slug ? "border-white/60 text-white bg-white/15" : "border-white/30 text-white/90 bg-white/5 hover:bg-white/10"} />
                 </Link>
               ))}
             </div>
@@ -481,13 +492,8 @@ export default function SearchClient() {
                 imageUrl={item.images?.[0]?.url}
                 category={item.category}
                 subcategory={item.subcategory ?? undefined}
-                trustBadges={getListingTrustBadges({
-                  kycStatus: item.owner?.kycStatus ?? null,
-                  phoneNumber: item.owner?.phoneNumber ?? null,
-                  completedBookingsCount: item.completedBookingsCount ?? 0,
-                  reviewsCount: item.reviewsCount ?? 0,
-                  averageRating: item.averageRating ?? 0,
-                })}
+                reviewsCount={item.reviewsCount}
+                averageRating={item.averageRating}
               />
             ))}
           </div>

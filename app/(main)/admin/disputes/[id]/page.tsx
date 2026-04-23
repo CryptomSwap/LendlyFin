@@ -7,13 +7,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatMoneyIls } from "@/lib/pricing";
 import { getDisputeStatusLabel, getDisputeReasonLabel } from "@/lib/status-labels";
 import ResolveDisputeForm from "./resolve-form";
+import { PageContainer } from "@/components/layout";
 
 async function getDispute(id: string) {
   const h = await headers();
   const host = h.get("host");
   if (!host) return null;
   const proto = h.get("x-forwarded-proto") ?? "http";
-  const res = await fetch(`${proto}://${host}/api/admin/disputes/${id}`, { cache: "no-store" });
+  const cookie = h.get("cookie") ?? "";
+  const res = await fetch(`${proto}://${host}/api/admin/disputes/${id}`, {
+    cache: "no-store",
+    headers: cookie ? { cookie } : undefined,
+  });
   if (!res.ok) return null;
   return res.json();
 }
@@ -23,7 +28,11 @@ async function ensureAdmin() {
   const host = h.get("host");
   if (!host) return false;
   const proto = h.get("x-forwarded-proto") ?? "http";
-  const res = await fetch(`${proto}://${host}/api/me`, { cache: "no-store" });
+  const cookie = h.get("cookie") ?? "";
+  const res = await fetch(`${proto}://${host}/api/me`, {
+    cache: "no-store",
+    headers: cookie ? { cookie } : undefined,
+  });
   if (!res.ok) return false;
   const data = await res.json();
   const me = data.user || data;
@@ -59,7 +68,8 @@ export default async function AdminDisputeDetailPage(props: {
   const returnPhotos = (booking.checklistPhotos ?? []).filter((p: { type: string }) => p.type === "return");
 
   return (
-    <div className="space-y-6 pb-24" dir="rtl">
+    <div className="min-h-screen w-full app-page-bg pb-24" dir="rtl">
+      <PageContainer width="wide" className="space-y-6">
       <div>
         <Link href="/admin/disputes" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
           <ArrowRight className="h-4 w-4" />
@@ -89,8 +99,23 @@ export default async function AdminDisputeDetailPage(props: {
           {dispute.adminNote && (
             <p><span className="font-medium text-foreground">הערת מנהל:</span> <span className="text-muted-foreground">{dispute.adminNote}</span></p>
           )}
+          {dispute.adminReasonCode && (
+            <p><span className="font-medium text-foreground">קוד סיבה מנהלי:</span> <span className="text-muted-foreground">{dispute.adminReasonCode}</span></p>
+          )}
+          {dispute.resolutionOutcome && (
+            <p><span className="font-medium text-foreground">תוצאת החלטה:</span> <span className="text-muted-foreground">{dispute.resolutionOutcome}</span></p>
+          )}
+          {dispute.financialActionNote && (
+            <p><span className="font-medium text-foreground">הערת פעולה פיננסית:</span> <span className="text-muted-foreground">{dispute.financialActionNote}</span></p>
+          )}
+          {dispute.resolvedByAdminId && (
+            <p><span className="font-medium text-foreground">נסגר ע״י מנהל:</span> <span className="text-muted-foreground">{dispute.resolvedByAdminId}</span></p>
+          )}
           {dispute.resolutionNote && (
             <p><span className="font-medium text-foreground">הערת סיום:</span> <span className="text-muted-foreground">{dispute.resolutionNote}</span></p>
+          )}
+          {dispute.evidenceChecklist && (
+            <p><span className="font-medium text-foreground">בסיס ראיות:</span> <span className="text-muted-foreground">{dispute.evidenceChecklist}</span></p>
           )}
         </CardContent>
       </Card>
@@ -163,6 +188,7 @@ export default async function AdminDisputeDetailPage(props: {
       {(dispute.status === "OPEN" || dispute.status === "UNDER_REVIEW") && (
         <ResolveDisputeForm disputeId={dispute.id} />
       )}
+      </PageContainer>
     </div>
   );
 }

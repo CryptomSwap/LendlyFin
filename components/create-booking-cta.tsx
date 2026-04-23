@@ -94,7 +94,7 @@ export default function CreateBookingCTA({ listingId }: { listingId: string }) {
             המשך עם Google ואז תוכלו להשלים את ההזמנה כאן.
           </p>
         </div>
-        <StickyCTA>
+        <StickyCTA width="narrow">
           <Button variant="gradient" className="w-full" asChild>
             <Link href={signInUrl}>המשך עם Google</Link>
           </Button>
@@ -109,36 +109,36 @@ export default function CreateBookingCTA({ listingId }: { listingId: string }) {
     
     return (
       <div className="space-y-4">
-        <div className={`${isRejected ? "bg-red-50 border-red-200" : "bg-yellow-50 border-yellow-200"} border rounded-lg p-4 space-y-3`}>
+        <div className={`${isRejected ? "bg-destructive/10 border-destructive/30" : "bg-primary/5 border-primary/20"} border rounded-lg p-4 space-y-3`}>
           <div className="flex items-start gap-2">
-            <span className="text-xl">{isRejected ? "❌" : "⚠️"}</span>
+            <span className={`text-xl ${isRejected ? "text-destructive" : "text-primary"}`}>{isRejected ? "!" : "i"}</span>
             <div className="flex-1 space-y-2">
-              <h3 className={`font-semibold ${isRejected ? "text-red-900" : "text-yellow-900"}`}>
+              <h3 className={`font-semibold ${isRejected ? "text-destructive" : "text-foreground"}`}>
                 {isRejected ? "אימות זהות נדחה" : "נדרש אימות זהות"}
               </h3>
               {kycStatus === "PENDING" || kycStatus === "IN_PROGRESS" ? (
-                <p className="text-sm text-yellow-800">
+                <p className="text-sm text-muted-foreground">
                   להשלמת הזמנה נדרש אימות זהות. השלימו את התהליך וחזרו.
                 </p>
               ) : kycStatus === "SUBMITTED" ? (
-                <p className="text-sm text-yellow-800">
+                <p className="text-sm text-muted-foreground">
                   אימות הזהות בבדיקה. לאחר האישור תוכלו ליצור הזמנה.
                 </p>
               ) : kycStatus === "REJECTED" ? (
                 <div className="space-y-2">
-                  <p className="text-sm text-red-800">
+                  <p className="text-sm text-destructive">
                     אימות הזהות נדחה.
                   </p>
                   {kycRejectedReason && (
-                    <p className="text-xs text-red-700 bg-red-100 p-2 rounded">
+                    <p className="text-xs text-destructive bg-destructive/10 p-2 rounded">
                       <strong>סיבת דחייה:</strong> {kycRejectedReason}
                     </p>
                   )}
-                  <p className="text-sm text-red-800">
+                  <p className="text-sm text-destructive">
                     אם נראה שזו טעות,{" "}
                     <a 
                       href="mailto:landlysupport@gmail.com?subject=פנייה בנושא אימות זהות&body=היי, אני ניסיתי לבצע אימות זהות ללנדלי אך ללא הצלחה, אשמח לסיוע."
-                      className="underline font-medium hover:text-red-900"
+                      className="underline font-medium hover:text-destructive/80"
                     >
                       פנו לתמיכה
                     </a>
@@ -151,7 +151,7 @@ export default function CreateBookingCTA({ listingId }: { listingId: string }) {
         </div>
 
         {kycStatus === "PENDING" && (
-          <StickyCTA>
+          <StickyCTA width="narrow">
             <Button variant="gradient" className="w-full" asChild>
               <Link href="/profile/kyc">התחל אימות זהות</Link>
             </Button>
@@ -163,7 +163,7 @@ export default function CreateBookingCTA({ listingId }: { listingId: string }) {
 
   return (
     <>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <label className="text-sm text-foreground">
           התחלה
           <input
@@ -187,7 +187,7 @@ export default function CreateBookingCTA({ listingId }: { listingId: string }) {
         </label>
       </div>
 
-      <StickyCTA>
+      <StickyCTA width="narrow">
         <div className="space-y-3">
           <Button
             variant="gradient"

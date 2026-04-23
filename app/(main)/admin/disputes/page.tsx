@@ -2,11 +2,11 @@ export const runtime = "nodejs";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AdminNav } from "@/components/admin-nav";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getDisputeStatusLabel, getDisputeReasonLabel } from "@/lib/status-labels";
+import { PageContainer } from "@/components/layout";
 import { Scale } from "lucide-react";
 
 async function getDisputes(status?: string) {
@@ -14,8 +14,12 @@ async function getDisputes(status?: string) {
   const host = h.get("host");
   if (!host) return [];
   const proto = h.get("x-forwarded-proto") ?? "http";
+  const cookie = h.get("cookie") ?? "";
   const url = status ? `${proto}://${host}/api/admin/disputes?status=${encodeURIComponent(status)}` : `${proto}://${host}/api/admin/disputes`;
-  const res = await fetch(url, { cache: "no-store" });
+  const res = await fetch(url, {
+    cache: "no-store",
+    headers: cookie ? { cookie } : undefined,
+  });
   if (!res.ok) return [];
   const data = await res.json();
   return data.disputes ?? [];
@@ -26,7 +30,11 @@ async function ensureAdmin() {
   const host = h.get("host");
   if (!host) return false;
   const proto = h.get("x-forwarded-proto") ?? "http";
-  const res = await fetch(`${proto}://${host}/api/me`, { cache: "no-store" });
+  const cookie = h.get("cookie") ?? "";
+  const res = await fetch(`${proto}://${host}/api/me`, {
+    cache: "no-store",
+    headers: cookie ? { cookie } : undefined,
+  });
   if (!res.ok) return false;
   const data = await res.json();
   const me = data.user || data;
@@ -43,34 +51,35 @@ export default async function AdminDisputesPage(props: {
   const disputes = await getDisputes(statusFilter);
 
   return (
-    <div className="space-y-6 pb-24" dir="rtl">
+    <div className="min-h-screen w-full app-page-bg pb-24" dir="rtl">
+      <PageContainer width="wide" className="space-y-6">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <h1 className="page-title">מחלוקות – מנהל</h1>
         <AdminNav />
       </div>
 
       <section aria-label="סינון לפי סטטוס">
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-2 flex-wrap rounded-xl border border-border/70 bg-card p-2">
           <Link
             href="/admin/disputes"
-            className={`text-sm px-3 py-1.5 rounded-xl font-medium transition-colors ${
-              !statusFilter ? "bg-primary text-primary-foreground" : "bg-muted/50 text-muted-foreground hover:bg-muted border border-border"
+            className={`brand-chip ${
+              !statusFilter ? "brand-chip-active" : "brand-chip-idle"
             }`}
           >
             הכל
           </Link>
           <Link
             href="/admin/disputes?status=OPEN"
-            className={`text-sm px-3 py-1.5 rounded-xl font-medium transition-colors ${
-              statusFilter === "OPEN" ? "bg-primary text-primary-foreground" : "bg-muted/50 text-muted-foreground hover:bg-muted border border-border"
+            className={`brand-chip ${
+              statusFilter === "OPEN" ? "brand-chip-active" : "brand-chip-idle"
             }`}
           >
             פתוח
           </Link>
           <Link
             href="/admin/disputes?status=UNDER_REVIEW"
-            className={`text-sm px-3 py-1.5 rounded-xl font-medium transition-colors ${
-              statusFilter === "UNDER_REVIEW" ? "bg-primary text-primary-foreground" : "bg-muted/50 text-muted-foreground hover:bg-muted border border-border"
+            className={`brand-chip ${
+              statusFilter === "UNDER_REVIEW" ? "brand-chip-active" : "brand-chip-idle"
             }`}
           >
             בבדיקה
@@ -91,27 +100,30 @@ export default async function AdminDisputesPage(props: {
               className="py-8"
             />
           ) : (
-            <ul className="space-y-2 list-none p-0 m-0">
+            <ul className="space-y-3 list-none p-0 m-0">
               {disputes.map((d: { id: string; bookingId: string; reason: string; status: string; listingTitle: string; renterName: string; createdAt: string }) => (
-                <li key={d.id} className="flex items-center justify-between gap-4 py-3 border-b border-border last:border-b-0">
-                  <div className="text-sm min-w-0">
-                    <span className="font-medium text-foreground">{d.listingTitle}</span>
-                    <span className="text-muted-foreground"> · {d.renterName}</span>
-                    <span className="text-muted-foreground"> · {getDisputeReasonLabel(d.reason)}</span>
-                    <span className="text-muted-foreground"> · {getDisputeStatusLabel(d.status)}</span>
-                    <span className="text-muted-foreground text-xs mr-2">
-                      {" "}{new Date(d.createdAt).toLocaleDateString("he-IL")}
-                    </span>
+                <li key={d.id} className="rounded-xl border border-border/70 bg-card px-4 py-3">
+                  <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                    <div className="text-sm min-w-0">
+                      <p className="font-medium text-foreground truncate">{d.listingTitle}</p>
+                      <p className="text-muted-foreground">
+                        {d.renterName} · {getDisputeReasonLabel(d.reason)} · {getDisputeStatusLabel(d.status)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(d.createdAt).toLocaleDateString("he-IL")}
+                      </p>
+                    </div>
+                    <Link href={`/admin/disputes/${d.id}`} className="text-sm font-medium text-primary hover:underline shrink-0">
+                      צפה
+                    </Link>
                   </div>
-                  <Link href={`/admin/disputes/${d.id}`} className="text-sm font-medium text-primary hover:underline shrink-0">
-                    צפה
-                  </Link>
                 </li>
               ))}
             </ul>
           )}
         </CardContent>
       </Card>
+      </PageContainer>
     </div>
   );
 }

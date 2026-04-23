@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { unlink } from "fs/promises";
+import { join } from "path";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin";
 import { createAuditLog } from "@/lib/audit";
@@ -33,11 +35,18 @@ export async function POST(
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Update user's KYC status
+    const kycMedia = {
+      selfie: targetUser.kycSelfieUrl,
+      id: targetUser.kycIdUrl,
+    };
+
+    // Update user's KYC status and remove stored media references.
     const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: {
         kycStatus: action === "approve" ? "APPROVED" : "REJECTED",
+        kycSelfieUrl: null,
+        kycIdUrl: null,
         ...(action === "reject" && reason
           ? { kycRejectedReason: reason }
           : action === "approve"
@@ -51,6 +60,17 @@ export async function POST(
         kycRejectedReason: true,
       },
     });
+
+    const deleteLocalKycFile = async (url: string | null) => {
+      if (!url || !url.startsWith("/uploads/kyc/")) return;
+      const filePath = join(process.cwd(), "public", url);
+      try {
+        await unlink(filePath);
+      } catch {
+        // best effort retention cleanup; do not fail KYC decision.
+      }
+    };
+    await Promise.all([deleteLocalKycFile(kycMedia.selfie), deleteLocalKycFile(kycMedia.id)]);
 
     await createAuditLog({
       entityType: "KYC",

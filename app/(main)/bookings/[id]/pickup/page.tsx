@@ -2,6 +2,7 @@ export const runtime = "nodejs";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { PageContainer } from "@/components/layout";
 import PickupChecklistForm from "./pickup-form";
 
 async function getBooking(id: string) {
@@ -39,7 +40,8 @@ export default async function PickupPage(props: {
   }
 
   return (
-    <div className="space-y-6 pb-24" dir="rtl">
+    <div className="min-h-screen w-full app-page-bg pb-24" dir="rtl">
+      <PageContainer width="narrow" className="space-y-6">
       <div>
         <Link
           href={`/bookings/${id}`}
@@ -54,6 +56,7 @@ export default async function PickupPage(props: {
         {booking.listing?.title} · {new Date(booking.startDate).toLocaleDateString("he-IL")} – {new Date(booking.endDate).toLocaleDateString("he-IL")}
       </p>
       <PickupChecklistForm bookingId={id} />
+      </PageContainer>
     </div>
   );
 }

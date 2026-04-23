@@ -1,6 +1,5 @@
 import Link from "next/link";
 import ListingCard from "@/components/listing-card";
-import { getListingTrustBadges } from "@/lib/trust/badges";
 import type { FeaturedListingItem } from "@/lib/listings";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -35,7 +34,7 @@ export function FeaturedListings({ listings }: FeaturedListingsProps) {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         <h2 className="section-title text-lg md:text-xl">🔥 הושכר לאחרונה</h2>
         <Link href="/search" className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline md:hidden">
-          ההשכרות החמות
+          כל ההשכרות
           <ChevronLeft className="h-4 w-4 rtl:rotate-180" aria-hidden />
         </Link>
       </div>
@@ -50,13 +49,8 @@ export function FeaturedListings({ listings }: FeaturedListingsProps) {
             imageUrl={item.images?.[0]?.url}
             category={item.category}
             subcategory={item.subcategory ?? undefined}
-            trustBadges={getListingTrustBadges({
-              kycStatus: item.owner?.kycStatus ?? null,
-              phoneNumber: item.owner?.phoneNumber ?? null,
-              completedBookingsCount: item.completedBookingsCount ?? 0,
-              reviewsCount: item.reviewsCount ?? 0,
-              averageRating: item.averageRating ?? 0,
-            })}
+            reviewsCount={item.reviewsCount}
+            averageRating={item.averageRating}
           />
         ))}
       </div>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { AdminNav } from "@/components/admin-nav";
 import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageContainer } from "@/components/layout";
 
 async function getMetrics() {
   const h = await headers();
@@ -96,7 +97,8 @@ export default async function AdminMetricsPage() {
   const { users, listings, bookings, disputes, recent7d } = metrics;
 
   return (
-    <div className="space-y-6 pb-24" dir="rtl">
+    <div className="min-h-screen w-full app-page-bg pb-24" dir="rtl">
+      <PageContainer width="wide" className="space-y-6">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <h1 className="page-title">מדדים – מנהל</h1>
         <AdminNav />
@@ -123,7 +125,7 @@ export default async function AdminMetricsPage() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 xl:gap-8">
         {/* משתמשים */}
         <Card>
           <CardHeader>
@@ -191,6 +193,7 @@ export default async function AdminMetricsPage() {
           </CardContent>
         </Card>
       </div>
+      </PageContainer>
     </div>
   );
 }

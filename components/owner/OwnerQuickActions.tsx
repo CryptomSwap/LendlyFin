@@ -41,7 +41,7 @@ export default function OwnerQuickActions({ className }: OwnerQuickActionsProps)
       <CardHeader className="pb-2">
         <CardTitle className="text-base">פעולות מהירות</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-2">
+      <CardContent className="grid grid-cols-1 gap-2 md:grid-cols-2">
         {actions.map((action) => {
           const Icon = action.icon;
           return (

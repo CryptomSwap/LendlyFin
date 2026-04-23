@@ -42,7 +42,7 @@ function getFilteredCategories(segment: SegmentId) {
 }
 
 /**
- * Category discovery. Desktop: hero sidebar (20% width). Mobile: full width below hero. Strong "Browse by category" section with grid and icons.
+ * Category discovery. Desktop: hero sidebar (20% width). Mobile: full width below hero. Segment tabs + category grid (section label via aria-label on root).
  */
 export function DesktopCategoryDiscovery() {
   const [segment, setSegment] = useState<SegmentId>("all");
@@ -53,8 +53,7 @@ export function DesktopCategoryDiscovery() {
       className="flex flex-col w-full h-full min-h-0 overflow-hidden home-gradient-bg-subtle"
       aria-label="חיפוש לפי קטגוריה"
     >
-      <div className="w-full max-w-5xl mx-auto px-6 pt-36 pb-10 flex flex-col min-h-0 flex-1">
-        {/* Section hierarchy: title, segment tabs, grid */}
+      <div className="w-full max-w-5xl mx-auto px-4 pt-5 pb-8 sm:px-6 md:pt-36 md:pb-10 flex flex-col min-h-0 flex-1">
         <h2 className="text-xl font-semibold text-foreground tracking-tight mb-2">
           הקטגוריות הכי פופולריות
         </h2>

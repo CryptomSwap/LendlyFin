@@ -8,12 +8,12 @@ import BottomNav from "@/components/bottom-nav";
 import AuthHeaderLink from "@/components/auth-header-link";
 import HeaderNav from "@/components/header-nav";
 import DevImpersonationSwitcher from "@/components/dev-impersonation-switcher";
+import ReportBugButton from "@/components/report-bug-button";
 
 export default function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const isHomePage = pathname === "/home";
   const isSearchPage = pathname === "/search";
-  const isHeroStyleHeader = isHomePage || isSearchPage;
 
   return (
     <div className="min-h-screen bg-background flex justify-center md:block" dir="rtl">
@@ -29,7 +29,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
               ? "absolute top-0 left-0 right-0 z-40 min-h-[3.25rem] flex flex-col gap-2 shrink-0 md:hidden bg-gradient-to-b from-black/20 to-transparent border-0 shadow-none text-white [&_a]:text-white [&_a:hover]:text-white/90 [&_span]:text-white [&_img]:brightness-0 [&_img]:invert"
               : isSearchPage
                 ? "absolute top-0 left-0 right-0 z-40 min-h-[3.25rem] flex flex-col gap-2 shrink-0 bg-gradient-to-b from-black/25 to-transparent border-0 shadow-none text-white [&_a]:text-white [&_a:hover]:text-white/90 [&_span]:text-white [&_img]:brightness-0 [&_img]:invert"
-                : "sticky top-0 z-40 bg-card border-b border-border shadow-soft min-h-[3.25rem] flex flex-col gap-2 shrink-0"
+                : "sticky top-0 z-40 min-h-[3.25rem] flex flex-col gap-2 shrink-0 bg-gradient-to-r from-slate-900 via-slate-800 to-teal-800 border-b border-white/10 shadow-soft text-white [&_a]:text-white [&_a:hover]:text-white/90 [&_span]:text-white [&_img]:brightness-0 [&_img]:invert"
           }
           aria-label="כותרת"
         >
@@ -56,6 +56,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
         >
           {children}
         </main>
+        <ReportBugButton />
         <BottomNav />
       </div>
     </div>

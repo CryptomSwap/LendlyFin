@@ -7,6 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatMoneyIls } from "@/lib/pricing";
 import { getBookingStatusLabel, getPaymentStatusLabel, getDepositStatusLabel } from "@/lib/status-labels";
 import { AdminConfirmPaymentForm } from "./confirm-payment-form";
+import { AdminBookingOpsForm } from "./admin-booking-ops-form";
+import { PageContainer } from "@/components/layout";
 
 async function getBooking(id: string) {
   const h = await headers();
@@ -83,7 +85,8 @@ export default async function AdminBookingDetailPage(props: {
   const returnPhotos = allPhotos.filter((p: { type: string }) => p.type === "return");
 
   return (
-    <div className="space-y-6 pb-24" dir="rtl">
+    <div className="min-h-screen w-full app-page-bg pb-24" dir="rtl">
+      <PageContainer width="wide" className="space-y-6">
       <div>
         <Link
           href="/admin"
@@ -112,6 +115,27 @@ export default async function AdminBookingDetailPage(props: {
             {new Date(booking.startDate).toLocaleDateString("he-IL")} – {new Date(booking.endDate).toLocaleDateString("he-IL")}
           </p>
           <p><span className="font-medium">פיקדון:</span> {booking.listing ? formatMoneyIls(booking.listing.deposit) : "—"}</p>
+          {booking.returnedAt && (
+            <p>
+              <span className="font-medium">מועד החזרה:</span>{" "}
+              {new Date(booking.returnedAt).toLocaleString("he-IL")}
+            </p>
+          )}
+          {booking.disputeWindowEndsAt && (
+            <p>
+              <span className="font-medium">סיום חלון מחלוקת:</span>{" "}
+              {new Date(booking.disputeWindowEndsAt).toLocaleString("he-IL")}
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>פעולות תפעול פיילוט</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <AdminBookingOpsForm bookingId={booking.id} currentStatus={booking.status} />
         </CardContent>
       </Card>
 
@@ -155,7 +179,7 @@ export default async function AdminBookingDetailPage(props: {
         </CardContent>
       </Card>
 
-      {["CONFIRMED", "ACTIVE", "COMPLETED", "DISPUTE"].includes(booking.status) &&
+      {["CONFIRMED", "ACTIVE", "RETURNED", "COMPLETED", "IN_DISPUTE", "DISPUTE", "NON_RETURN_PENDING", "NON_RETURN_CONFIRMED"].includes(booking.status) &&
         booking.pickupInstructionsSnapshot?.trim() && (
           <Card>
             <CardHeader>
@@ -301,6 +325,7 @@ export default async function AdminBookingDetailPage(props: {
           </CardContent>
         </Card>
       )}
+      </PageContainer>
     </div>
   );
 }

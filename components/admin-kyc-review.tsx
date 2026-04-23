@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert } from "@/components/ui/alert";
 import Image from "next/image";
 
 type KYCUser = {
@@ -154,31 +155,31 @@ export default function AdminKYCReview() {
 
   if (loading) {
     return (
-      <div className="text-center py-8">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-blue-600"></div>
-        <p className="mt-2 text-gray-600">טוען...</p>
-      </div>
+      <Card className="shadow-soft">
+        <CardContent className="text-center py-8">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-border border-t-primary"></div>
+          <p className="mt-2 text-muted-foreground">טוען...</p>
+        </CardContent>
+      </Card>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-        <p className="text-red-800">{error}</p>
-      </div>
+      <Alert variant="error">{error}</Alert>
     );
   }
 
   return (
     <div className="space-y-4">
       {/* Tabs */}
-      <div className="flex gap-2 border-b">
+      <div className="flex gap-2 border-b border-border">
         <button
           onClick={() => setActiveTab("pending")}
           className={`px-4 py-2 font-medium ${
             activeTab === "pending"
-              ? "border-b-2 border-blue-600 text-blue-600"
-              : "text-gray-600"
+              ? "border-b-2 border-primary text-primary"
+              : "text-muted-foreground"
           }`}
         >
           בקשות ממתינות ({users.length})
@@ -187,8 +188,8 @@ export default function AdminKYCReview() {
           onClick={() => setActiveTab("audit")}
           className={`px-4 py-2 font-medium ${
             activeTab === "audit"
-              ? "border-b-2 border-blue-600 text-blue-600"
-              : "text-gray-600"
+              ? "border-b-2 border-primary text-primary"
+              : "text-muted-foreground"
           }`}
         >
           היסטוריית אישורים ({auditLogs.length})
@@ -199,7 +200,7 @@ export default function AdminKYCReview() {
         <div className="space-y-3">
           {auditLogs.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-gray-600">אין היסטוריית אישורים</p>
+              <p className="text-muted-foreground">אין היסטוריית אישורים</p>
             </div>
           ) : (
             auditLogs.map((log) => (
@@ -222,16 +223,16 @@ export default function AdminKYCReview() {
                             {log.targetUserName}
                           </span>
                         </div>
-                        <p className="text-xs text-gray-600 mt-1">
+                        <p className="text-xs text-muted-foreground mt-1">
                           על ידי: {log.adminName}
                         </p>
                         {log.reason && (
-                          <p className="text-xs text-gray-700 mt-1">
+                          <p className="text-xs text-muted-foreground mt-1">
                             סיבה: {log.reason}
                           </p>
                         )}
                       </div>
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-muted-foreground">
                         {formatDate(log.createdAt)}
                       </span>
                     </div>
@@ -247,7 +248,7 @@ export default function AdminKYCReview() {
         <>
           {users.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-gray-600">אין בקשות אימות ממתינות</p>
+              <p className="text-muted-foreground">אין בקשות אימות ממתינות</p>
             </div>
           ) : selectedUser ? (
         <div className="space-y-4">
@@ -267,24 +268,24 @@ export default function AdminKYCReview() {
             </CardHeader>
             <CardContent className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-gray-500">שם:</span>
+                <span className="text-muted-foreground">שם:</span>
                 <span>{selectedUser.name}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-500">תאריך שליחה:</span>
+                <span className="text-muted-foreground">תאריך שליחה:</span>
                 <span>{formatDate(selectedUser.kycSubmittedAt)}</span>
               </div>
             </CardContent>
           </Card>
 
-          <div className="grid grid-cols-1 gap-4">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <Card>
               <CardHeader>
                 <CardTitle>סלפי</CardTitle>
               </CardHeader>
               <CardContent>
                 {selectedUser.kycSelfieUrl ? (
-                  <div className="relative w-full aspect-square rounded-lg overflow-hidden border bg-gray-100">
+                  <div className="relative w-full aspect-square rounded-lg overflow-hidden border border-border bg-muted">
                     <Image
                       src={selectedUser.kycSelfieUrl}
                       alt="Selfie"
@@ -294,7 +295,7 @@ export default function AdminKYCReview() {
                     />
                   </div>
                 ) : (
-                  <p className="text-gray-500">לא זמין</p>
+                  <p className="text-muted-foreground">לא זמין</p>
                 )}
               </CardContent>
             </Card>
@@ -305,7 +306,7 @@ export default function AdminKYCReview() {
               </CardHeader>
               <CardContent>
                 {selectedUser.kycIdUrl ? (
-                  <div className="relative w-full aspect-square rounded-lg overflow-hidden border bg-gray-100">
+                  <div className="relative w-full aspect-square rounded-lg overflow-hidden border border-border bg-muted">
                     <Image
                       src={selectedUser.kycIdUrl}
                       alt="ID"
@@ -315,7 +316,7 @@ export default function AdminKYCReview() {
                     />
                   </div>
                 ) : (
-                  <p className="text-gray-500">לא זמין</p>
+                  <p className="text-muted-foreground">לא זמין</p>
                 )}
               </CardContent>
             </Card>
@@ -333,7 +334,7 @@ export default function AdminKYCReview() {
                 <textarea
                   value={rejectReason}
                   onChange={(e) => setRejectReason(e.target.value)}
-                  className="w-full rounded-lg border px-3 py-2 text-sm"
+                  className="input-base w-full"
                   rows={3}
                   placeholder="הזן סיבת דחייה..."
                 />
@@ -368,13 +369,13 @@ export default function AdminKYCReview() {
                   <div className="flex-1 space-y-2">
                     <div>
                       <h3 className="font-semibold">{user.name}</h3>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-muted-foreground">
                         נשלח: {formatDate(user.kycSubmittedAt)}
                       </p>
                     </div>
                     <div className="flex gap-2">
                       {user.kycSelfieUrl && (
-                        <div className="relative w-16 h-16 rounded border overflow-hidden bg-gray-100">
+                        <div className="relative w-16 h-16 rounded border border-border overflow-hidden bg-muted">
                           <Image
                             src={user.kycSelfieUrl}
                             alt="Selfie"
@@ -385,7 +386,7 @@ export default function AdminKYCReview() {
                         </div>
                       )}
                       {user.kycIdUrl && (
-                        <div className="relative w-16 h-16 rounded border overflow-hidden bg-gray-100">
+                        <div className="relative w-16 h-16 rounded border border-border overflow-hidden bg-muted">
                           <Image
                             src={user.kycIdUrl}
                             alt="ID"

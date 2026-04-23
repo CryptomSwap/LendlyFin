@@ -10,20 +10,22 @@ import ListingImageCarousel from "@/components/listing-image-carousel";
 import { getCategoryDisplayLabel } from "@/lib/constants";
 import { formatMoneyIls } from "@/lib/pricing";
 import { getListingStatusLabel } from "@/lib/status-labels";
-import { getListingTrustBadges } from "@/lib/trust/badges";
-import TrustBadges from "@/components/trust-badges";
 import { FAQBlock } from "@/components/ui/faq-block";
 import { DEPOSIT_DISPUTE_FAQ_ITEMS } from "@/lib/copy/help-reassurance";
-import { Star, CheckCircle2, MessageCircle, HelpCircle } from "lucide-react";
+import { Star, MessageCircle, HelpCircle } from "lucide-react";
 
 async function getListing(id: string) {
   const h = await headers();
   const host = h.get("host");
   if (!host) throw new Error("Missing host header");
   const proto = h.get("x-forwarded-proto") ?? "http";
+  const cookie = h.get("cookie") ?? "";
   const url = `${proto}://${host}/api/listings/${id}`;
 
-  const res = await fetch(url, { cache: "no-store" });
+  const res = await fetch(url, {
+    cache: "no-store",
+    headers: cookie ? { cookie } : undefined,
+  });
   if (!res.ok) return null;
 
   return res.json() as Promise<{
@@ -53,7 +55,11 @@ async function getMe(): Promise<{ id: string; isAdmin?: boolean } | null> {
   const host = h.get("host");
   if (!host) return null;
   const proto = h.get("x-forwarded-proto") ?? "http";
-  const res = await fetch(`${proto}://${host}/api/me`, { cache: "no-store" });
+  const cookie = h.get("cookie") ?? "";
+  const res = await fetch(`${proto}://${host}/api/me`, {
+    cache: "no-store",
+    headers: cookie ? { cookie } : undefined,
+  });
   if (!res.ok) return null;
   const data = await res.json();
   const user = data.user ?? data;
@@ -100,59 +106,33 @@ export default async function ListingDetailsPage(props: {
   const statusLabel = getListingStatusLabel(listing.status);
   const isActive = listing.status === "ACTIVE";
   const isOwnerOrAdmin = !!me && (listing.ownerId === me.id || me.isAdmin);
-
   return (
     <div className="min-h-screen w-full app-page-bg pb-28" dir="rtl">
-      {/* Hero media — gallery with nav and dots (full-bleed) */}
-      <section className="-mx-4 mb-6" aria-label="גלריית תמונות">
-        <ListingImageCarousel images={listing.images ?? []} alt={listing.title} />
-      </section>
-
-      <PageContainer noPadding>
-        {/* Main info — title, status, category */}
-        <section className="space-y-2 mb-6" aria-label="פרטי המודעה">
-        <div className="flex flex-wrap items-center gap-2">
-          <StatusPill variant={statusToPillVariant(listing.status)}>
-            {statusLabel}
-          </StatusPill>
-        </div>
-        <h1 className="text-2xl font-bold text-foreground leading-tight tracking-tight">
-          {listing.title}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          {getCategoryDisplayLabel(listing.category, listing.subcategory)}
-        </p>
-        {listing.status === "REJECTED" && listing.statusRejectionReason && (
-          <p className="text-sm text-destructive">
-            סיבת דחייה: {listing.statusRejectionReason}
-          </p>
-        )}
-      </section>
-
-      {/* Price & deposit — premium block */}
-      <section className="mb-6" aria-label="מחיר והפיקדון">
-        <Card variant="priceBox" className="py-6">
-          <CardHeader className="py-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground text-center">
-              מחיר ליום
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0 flex flex-col gap-4">
-            <div className="text-center">
-              <span className="text-3xl font-bold text-foreground">
-                {formatMoneyIls(listing.pricePerDay)}
-              </span>
-              <span className="text-lg font-medium text-muted-foreground me-1">
-                ליום
-              </span>
+      <PageContainer width="wide" className="space-y-6">
+        <section className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start" aria-label="פרטי המודעה ותמחור">
+          <div className="space-y-5">
+            <div className="rounded-card border border-border/70 bg-card p-3 md:p-4 shadow-card">
+              <ListingImageCarousel images={listing.images ?? []} alt={listing.title} />
             </div>
-            <div className="border-t border-primary/10 pt-4 space-y-1 text-center text-sm">
-              <p className="text-muted-foreground">
-                פיקדון מוחזר: <span className="font-semibold text-foreground">{formatMoneyIls(listing.deposit)}</span>
+
+            {/* Main info */}
+            <section className="rounded-card border border-border/70 bg-card p-4 md:p-6 shadow-soft space-y-2" aria-label="פרטי המודעה">
+              <div className="flex flex-wrap items-center gap-2">
+                <StatusPill variant={statusToPillVariant(listing.status)}>
+                  {statusLabel}
+                </StatusPill>
+              </div>
+              <h1 className="text-2xl font-bold text-foreground leading-tight tracking-tight">
+                {listing.title}
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                {getCategoryDisplayLabel(listing.category, listing.subcategory)}
               </p>
-              <p className="text-xs text-muted-foreground">
-                הפיקדון יוחזר בסיום ההשכרה אם הפריט מוחזר תקין
-              </p>
+              {listing.status === "REJECTED" && listing.statusRejectionReason && (
+                <p className="text-sm text-destructive">
+                  סיבת דחייה: {listing.statusRejectionReason}
+                </p>
+              )}
               <details className="pt-1 text-start" dir="rtl">
                 <summary className="text-xs text-primary underline underline-offset-4 cursor-pointer inline-flex items-center justify-center w-full list-none">
                   <span>למה יש פיקדון?</span>
@@ -181,10 +161,38 @@ export default async function ListingDetailsPage(props: {
                   </div>
                 </div>
               </details>
-            </div>
-          </CardContent>
-        </Card>
-      </section>
+            </section>
+          </div>
+
+          {/* Price & deposit */}
+          <aside className="lg:sticky lg:top-24 space-y-4" aria-label="מחיר והפיקדון">
+            <Card variant="priceBox" className="py-6">
+              <CardHeader className="py-0 pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground text-center">
+                  מחיר ליום
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0 flex flex-col gap-4">
+                <div className="text-center">
+                  <span className="text-3xl font-bold text-foreground">
+                    {formatMoneyIls(listing.pricePerDay)}
+                  </span>
+                  <span className="text-lg font-medium text-muted-foreground me-1">
+                    ליום
+                  </span>
+                </div>
+                <div className="border-t border-primary/10 pt-4 space-y-1 text-center text-sm">
+                  <p className="text-muted-foreground">
+                    פיקדון מוחזר: <span className="font-semibold text-foreground">{formatMoneyIls(listing.deposit)}</span>
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    הפיקדון יוחזר בסיום ההשכרה אם הפריט מוחזר תקין
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </aside>
+        </section>
 
       {/* Description */}
       {listing.description && (
@@ -273,12 +281,6 @@ export default async function ListingDetailsPage(props: {
               <p className="font-medium text-foreground">
                 {listing.owner?.name ?? "—"}
               </p>
-              {listing.owner?.kycStatus === "APPROVED" && (
-                <span className="inline-flex items-center gap-1 text-xs text-primary font-medium" aria-label="מאומת">
-                  <CheckCircle2 className="h-4 w-4" aria-hidden />
-                  מאומת
-                </span>
-              )}
               <Link href="/bookings" className="text-sm text-primary hover:underline inline-flex items-center gap-1 mr-auto">
                 <MessageCircle className="h-4 w-4" aria-hidden />
                 שאל שאלה / הודעות
@@ -304,18 +306,6 @@ export default async function ListingDetailsPage(props: {
                 <span>אין ביקורות עדיין</span>
               )}
             </p>
-            {(() => {
-              const badges = getListingTrustBadges({
-                kycStatus: listing.owner?.kycStatus ?? null,
-                phoneNumber: listing.owner?.phoneNumber ?? null,
-                completedBookingsCount: listing.completedBookingsCount ?? 0,
-                reviewsCount: listing.reviewsCount ?? 0,
-                averageRating: listing.averageRating ?? 0,
-              });
-              return badges.length > 0 ? (
-                <TrustBadges badges={badges} size="default" />
-              ) : null;
-            })()}
             <p className="text-xs text-muted-foreground pt-2 border-t border-border mt-2">
               הפיקדון יוחזר בהתאם למצב הפריט. תמיכה זמינה.
             </p>

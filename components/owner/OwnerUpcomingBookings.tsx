@@ -46,12 +46,12 @@ function ItemList({
         <Icon className="h-4 w-4 text-muted-foreground" />
         {title}
       </p>
-      <ul className="space-y-2">
+      <ul className="space-y-3">
         {items.map((b) => (
           <li key={b.id}>
             <Link
               href={`/bookings/${b.id}`}
-              className="block rounded-lg border border-border bg-card p-2.5 text-sm hover:bg-muted/30 transition-colors"
+              className="block rounded-lg border border-border bg-card p-3 md:p-4 text-sm hover:bg-muted/30 transition-colors"
             >
               <p className="font-medium text-foreground">{b.listingTitle}</p>
               <p className="text-muted-foreground text-xs">
@@ -81,7 +81,7 @@ export default function OwnerUpcomingBookings({
       <CardHeader className="pb-2">
         <CardTitle className="text-base">איסופים והחזרות קרובים</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-6 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-6">
         <ItemList
           items={upcomingPickups}
           emptyMessage="אין איסופים מתוכננים"

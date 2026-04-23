@@ -4,6 +4,7 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
+  color-scheme: light;
 
   /* Lendly Radius Tokens */
   --radius-sm: 8px;
@@ -209,6 +210,17 @@
     background: linear-gradient(to right, color-mix(in srgb, var(--home-gradient-start) 35%, transparent), color-mix(in srgb, var(--home-gradient-end) 35%, transparent));
   }
 
+  /* Shared segmented chip style for filters/nav tabs across app */
+  .brand-chip {
+    @apply inline-flex items-center justify-center whitespace-nowrap rounded-xl border px-3 py-1.5 text-sm font-medium transition-colors;
+  }
+  .brand-chip-active {
+    @apply border-primary bg-primary/10 text-primary;
+  }
+  .brand-chip-idle {
+    @apply border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground;
+  }
+
   /* Homepage: one soft page-level blue→mint wash (no bands, no grey) */
   .home-page-bg {
     background: linear-gradient(
@@ -299,6 +311,28 @@
   --sidebar-accent-foreground: #f8fafc;
   --sidebar-border: #334155;
   --sidebar-ring: #50C878;
+
+  color-scheme: dark;
+
+  /* Homepage / marketing — dark atmospheric wash */
+  --home-gradient-start: #0c1222;
+  --home-gradient-end: #0f2722;
+  --mint-accent: #3dd4b0;
+  --mint-accent-hover: #34c7a3;
+
+  /* Footer: desktop — deeper teal, same hierarchy */
+  --footer-bg: #145c4f;
+  --footer-heading: #f8fafc;
+  --footer-body: #e2e8f0;
+  --footer-muted: #94a3b8;
+  --footer-divider: rgba(248, 250, 252, 0.12);
+
+  /* Shadows tuned for dark surfaces */
+  --shadow-soft: 0 4px 14px rgba(0, 0, 0, 0.35);
+  --shadow-medium: 0 10px 28px rgba(0, 0, 0, 0.45);
+  --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.25);
+  --shadow-cta: 0 8px 28px rgba(80, 200, 120, 0.35);
+  --shadow-cta-strip: 0 -10px 28px rgba(0, 0, 0, 0.35);
 }
 
 @layer base {

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/admin";
+import { trackEvent } from "@/lib/analytics";
+import { recordSystemAlert } from "@/lib/observability";
 
 export const runtime = "nodejs";
 
@@ -83,11 +85,22 @@ export async function POST(req: Request) {
         kycSubmittedAt: updatedUser.kycSubmittedAt,
       },
     };
+    await trackEvent({
+      eventName: "kyc_submitted",
+      userId: user.id,
+      payload: { hasSelfieUrl: Boolean(selfieUrl), hasIdUrl: Boolean(idUrl) },
+    });
 
     console.log("[KYC Submit] Submission completed successfully");
     return NextResponse.json(response);
   } catch (error) {
     console.error("[KYC Submit] Error occurred:", error);
+    await recordSystemAlert({
+      level: "error",
+      source: "kyc.submit",
+      message: "KYC submission failed",
+      context: { error: error instanceof Error ? error.message : String(error) },
+    });
     
     // Provide more detailed error in development
     const isDev = process.env.NODE_ENV === "development";

@@ -10,6 +10,7 @@ import { Alert } from "@/components/ui/alert";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { FAQBlock } from "@/components/ui/faq-block";
 import { LoadingBlock } from "@/components/ui/loading-block";
+import { PageContainer } from "@/components/layout";
 import { formatMoneyIls } from "@/lib/pricing";
 import { PAYMENT_FAQ_ITEMS } from "@/lib/copy/help-reassurance";
 import { Copy, Check, ChevronDown } from "lucide-react";
@@ -92,19 +93,23 @@ export default function CheckoutPage() {
 
   if (!bookingId) {
     return (
-      <div className="space-y-4" dir="rtl">
+    <div className="min-h-screen w-full app-page-bg pb-24" dir="rtl">
+      <PageContainer width="narrow" className="space-y-4">
         <Alert variant="default">חסר פרטי הזמנה. יש לגשת מהזמנה או מהקישור שנשלח.</Alert>
-      </div>
+      </PageContainer>
+    </div>
     );
   }
   if (!summary) {
     return (
-      <div className="space-y-4" dir="rtl">
+    <div className="min-h-screen w-full app-page-bg pb-24" dir="rtl">
+      <PageContainer width="narrow" className="space-y-4">
         <h1 className="page-title">תשלום</h1>
         <div className="rounded-xl border border-border bg-card p-8 shadow-soft">
           <LoadingBlock message="טוען פרטי הזמנה..." variant="full" />
         </div>
-      </div>
+      </PageContainer>
+    </div>
     );
   }
 
@@ -123,7 +128,8 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="space-y-6 pb-24" dir="rtl">
+    <div className="min-h-screen w-full app-page-bg pb-24" dir="rtl">
+      <PageContainer width="narrow" className="space-y-6">
       <h1 className="page-title">תשלום</h1>
 
       {/* What to do — clear steps */}
@@ -154,7 +160,7 @@ export default function CheckoutPage() {
             <CardTitle className="text-base">מספר הזמנה (לציין ב-Bit)</CardTitle>
           </CardHeader>
           <CardContent className="text-sm space-y-3">
-            <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center">
               <p className="font-mono text-lg font-bold text-foreground" dir="ltr">
                 {ref}
               </p>
@@ -255,8 +261,23 @@ export default function CheckoutPage() {
         moreLink={{ href: "/help/faq", label: "כל השאלות והתשובות" }}
       />
 
-      <StickyCTA>
+      <StickyCTA width="narrow">
         <div className="space-y-3">
+          <p className="text-xs text-muted-foreground text-center">
+            בלחיצה על תשלום אתם מאשרים את{" "}
+            <Link href="/help/terms" className="underline underline-offset-2 hover:text-foreground">
+              תנאי השימוש
+            </Link>{" "}
+            ,{" "}
+            <Link href="/help/faq" className="underline underline-offset-2 hover:text-foreground">
+              מדיניות התמיכה
+            </Link>{" "}
+            ו{" "}
+            <Link href="/help/insurance-terms" className="underline underline-offset-2 hover:text-foreground">
+              תנאי הכיסוי
+            </Link>
+            .
+          </p>
           <Button className="w-full" onClick={handlePay} disabled={loading}>
             {loading ? "מעביר לתשלום..." : "לתשלום ב-Bit"}
           </Button>
@@ -266,6 +287,7 @@ export default function CheckoutPage() {
           <TrustCTARow />
         </div>
       </StickyCTA>
+      </PageContainer>
     </div>
   );
 }

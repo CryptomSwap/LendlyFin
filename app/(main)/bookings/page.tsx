@@ -8,7 +8,16 @@ export const runtime = "nodejs";
 
 type Booking = {
   id: string;
-  status: "REQUESTED" | "CONFIRMED" | "ACTIVE" | "COMPLETED" | "DISPUTE";
+  status:
+    | "REQUESTED"
+    | "CONFIRMED"
+    | "ACTIVE"
+    | "RETURNED"
+    | "IN_DISPUTE"
+    | "NON_RETURN_PENDING"
+    | "NON_RETURN_CONFIRMED"
+    | "COMPLETED"
+    | "DISPUTE";
   startDate: string;
   endDate: string;
   listing: { title: string };
@@ -21,8 +30,12 @@ async function getBookings(): Promise<Booking[]> {
   if (!host) throw new Error("Missing host header");
   const proto = h.get("x-forwarded-proto") ?? "http";
   const url = `${proto}://${host}/api/bookings`;
+  const cookie = h.get("cookie") ?? "";
 
-  const res = await fetch(url, { cache: "no-store" });
+  const res = await fetch(url, {
+    cache: "no-store",
+    headers: cookie ? { cookie } : undefined,
+  });
   if (!res.ok) {
     const text = await res.text();
     throw new Error(`Failed to load bookings: ${res.status} ${text}`);

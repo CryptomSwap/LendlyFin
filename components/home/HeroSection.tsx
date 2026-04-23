@@ -3,7 +3,6 @@ import SearchInput from "@/components/search-input";
 import Logo from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Search, Upload, DollarSign } from "lucide-react";
-import { HOME_TRUST_ONELINER } from "@/lib/copy/help-reassurance";
 import { HeroExperienceBackground } from "@/components/home/HeroExperienceBackground";
 import { DesktopCategoryDiscovery } from "@/components/home/DesktopCategoryDiscovery";
 import { HomeHeroNav } from "@/components/home/HomeHeroNav";
@@ -80,9 +79,6 @@ export function HeroSection({ user }: HeroSectionProps) {
                       </Link>
                     </div>
                   </div>
-                  <p className="text-sm text-white/90 font-medium text-center max-w-md">
-                    {HOME_TRUST_ONELINER}
-                  </p>
                 </div>
               </div>
 

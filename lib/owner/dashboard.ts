@@ -14,7 +14,7 @@ export interface OwnerDashboardData {
   completedBookingsCount: number;
   /** Sum of lender payout (rental - platform fee) for completed bookings with payment SUCCEEDED. */
   earningsIls: number;
-  /** Bookings requiring owner attention: REQUESTED (pending) or DISPUTE. */
+  /** Bookings requiring owner attention: pending requests or dispute states. */
   attentionBookings: AttentionBooking[];
   /** CONFIRMED bookings with startDate >= today, ordered by startDate. */
   upcomingPickups: UpcomingItem[];
@@ -48,8 +48,13 @@ export interface ListingOverviewItem {
   id: string;
   title: string;
   status: string;
+  city: string;
+  pricePerDay: number;
+  imageUrl: string | null;
   /** Count of bookings (any status) for this listing. */
   bookingsCount: number;
+  latestBookingStatus: string | null;
+  latestBookingRef: string | null;
 }
 
 export async function getOwnerDashboardData(userId: string): Promise<OwnerDashboardData> {
@@ -62,6 +67,18 @@ export async function getOwnerDashboardData(userId: string): Promise<OwnerDashbo
       id: true,
       title: true,
       status: true,
+      city: true,
+      pricePerDay: true,
+      images: {
+        select: { url: true },
+        orderBy: { order: "asc" },
+        take: 1,
+      },
+      bookings: {
+        select: { status: true, bookingRef: true, createdAt: true },
+        orderBy: { createdAt: "desc" },
+        take: 1,
+      },
       _count: { select: { bookings: true } },
     },
     orderBy: { createdAt: "desc" },
@@ -104,7 +121,7 @@ export async function getOwnerDashboardData(userId: string): Promise<OwnerDashbo
   const upcomingPickupsCount = upcomingPickups.length;
 
   const attentionBookings = bookings.filter(
-    (b) => b.status === "REQUESTED" || b.status === "DISPUTE"
+    (b) => b.status === "REQUESTED" || b.status === "IN_DISPUTE" || b.status === "DISPUTE"
   );
 
   const activeBookings = bookings.filter((b) => b.status === "ACTIVE");
@@ -158,7 +175,12 @@ export async function getOwnerDashboardData(userId: string): Promise<OwnerDashbo
       id: l.id,
       title: l.title,
       status: l.status,
+      city: l.city,
+      pricePerDay: l.pricePerDay,
+      imageUrl: l.images[0]?.url ?? null,
       bookingsCount: l._count.bookings,
+      latestBookingStatus: l.bookings[0]?.status ?? null,
+      latestBookingRef: l.bookings[0]?.bookingRef ?? null,
     })),
   };
 }

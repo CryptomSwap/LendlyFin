@@ -15,6 +15,11 @@ import {
 import { BOOKING_HELP_CTA } from "@/lib/copy/help-reassurance";
 import { LeaveReviewForm } from "./leave-review-form";
 import { ReviewCard } from "@/components/reviews/ReviewCard";
+import { PageContainer } from "@/components/layout";
+import {
+  getBookingLifecycleStep,
+  getBookingProgressPercent,
+} from "@/lib/booking-lifecycle-steps";
 
 export const runtime = "nodejs";
 
@@ -22,7 +27,16 @@ type Booking = {
   id: string;
   bookingRef?: string | null;
   userId?: string;
-  status: "REQUESTED" | "CONFIRMED" | "ACTIVE" | "COMPLETED" | "DISPUTE";
+  status:
+    | "REQUESTED"
+    | "CONFIRMED"
+    | "ACTIVE"
+    | "RETURNED"
+    | "IN_DISPUTE"
+    | "NON_RETURN_PENDING"
+    | "NON_RETURN_CONFIRMED"
+    | "COMPLETED"
+    | "DISPUTE";
   startDate: string;
   endDate: string;
   listing: { title: string; deposit: number; ownerId?: string | null };
@@ -33,6 +47,8 @@ type Booking = {
   paymentStatus?: string;
   paymentMethod?: string | null;
   depositStatus?: string | null;
+  disputeWindowEndsAt?: string | null;
+  returnedAt?: string | null;
   pickupInstructionsSnapshot?: string | null;
   pickupChecklist?: { completedAt: string | null } | null;
   returnChecklist?: {
@@ -48,7 +64,11 @@ async function getBooking(id: string): Promise<Booking | null> {
   const host = h.get("host");
   if (!host) throw new Error("Missing host header");
   const proto = h.get("x-forwarded-proto") ?? "http";
-  const res = await fetch(`${proto}://${host}/api/bookings/${id}`, { cache: "no-store" });
+  const cookie = h.get("cookie") ?? "";
+  const res = await fetch(`${proto}://${host}/api/bookings/${id}`, {
+    cache: "no-store",
+    headers: cookie ? { cookie } : undefined,
+  });
   if (!res.ok) return null;
   return res.json();
 }
@@ -58,7 +78,11 @@ async function getMe() {
   const host = h.get("host");
   if (!host) return null;
   const proto = h.get("x-forwarded-proto") ?? "http";
-  const res = await fetch(`${proto}://${host}/api/me`, { cache: "no-store" });
+  const cookie = h.get("cookie") ?? "";
+  const res = await fetch(`${proto}://${host}/api/me`, {
+    cache: "no-store",
+    headers: cookie ? { cookie } : undefined,
+  });
   if (!res.ok) return null;
   const data = await res.json();
   return data.user || data;
@@ -110,9 +134,50 @@ export default async function BookingStatusPage(props: {
   const isRequestedPendingPayment =
     booking.status === "REQUESTED" && booking.paymentStatus === "PENDING";
 
+  const lifecycleStep = getBookingLifecycleStep(booking.status);
+  const progressPct = getBookingProgressPercent(
+    lifecycleStep.currentStep,
+    lifecycleStep.totalSteps
+  );
+
   return (
-    <div className="space-y-6 pb-24" dir="rtl">
+    <div className="min-h-screen w-full app-page-bg pb-24" dir="rtl">
+      <PageContainer width="narrow" className="space-y-6 lg:max-w-[72rem]">
       <h1 className="section-title">סטטוס הזמנה</h1>
+
+      <Card className="shadow-soft">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">ציר זמן</CardTitle>
+          <p className="text-sm text-muted-foreground mt-1.5 text-center">
+            <span className="font-medium text-foreground">
+              שלב {lifecycleStep.currentStep} מתוך {lifecycleStep.totalSteps}
+            </span>
+            <span className="text-muted-foreground"> · {lifecycleStep.label}</span>
+          </p>
+          <div
+            className="relative h-2 w-full rounded-full bg-muted mt-2 overflow-hidden"
+            role="progressbar"
+            aria-valuenow={lifecycleStep.currentStep}
+            aria-valuemin={1}
+            aria-valuemax={lifecycleStep.totalSteps}
+            aria-label={`שלב ${lifecycleStep.currentStep} מתוך ${lifecycleStep.totalSteps}: ${lifecycleStep.label}`}
+          >
+            {/* Fill grows from the right edge toward the left (RTL-friendly) */}
+            <div
+              className="absolute inset-y-0 right-0 rounded-full bg-primary transition-all duration-300"
+              style={{ width: `${progressPct}%` }}
+            />
+          </div>
+        </CardHeader>
+        <CardContent className="text-sm text-muted-foreground space-y-1 pt-0">
+          <p>{dot(booking.status, "REQUESTED")} בקשה</p>
+          <p>{dot(booking.status, "CONFIRMED")} אישור</p>
+          <p>{dot(booking.status, "ACTIVE")} פעילה</p>
+          <p>{dot(booking.status, "RETURNED")} הוחזר</p>
+          <p>{dot(booking.status, "IN_DISPUTE")} מחלוקת</p>
+          <p>{dot(booking.status, "COMPLETED")} הושלמה</p>
+        </CardContent>
+      </Card>
 
       {isRequestedPendingPayment && (
         <Card className="border-primary/20 bg-primary/5">
@@ -196,19 +261,7 @@ export default async function BookingStatusPage(props: {
         </Card>
       )}
 
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base">ציר זמן</CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm text-muted-foreground space-y-1">
-          <p>{dot(booking.status, "REQUESTED")} בקשה</p>
-          <p>{dot(booking.status, "CONFIRMED")} אישור</p>
-          <p>{dot(booking.status, "ACTIVE")} פעילה</p>
-          <p>{dot(booking.status, "COMPLETED")} הושלמה</p>
-        </CardContent>
-      </Card>
-
-      {["CONFIRMED", "ACTIVE", "COMPLETED", "DISPUTE"].includes(booking.status) &&
+      {["CONFIRMED", "ACTIVE", "RETURNED", "COMPLETED", "IN_DISPUTE", "DISPUTE", "NON_RETURN_PENDING", "NON_RETURN_CONFIRMED"].includes(booking.status) &&
         booking.pickupInstructionsSnapshot?.trim() && (
           <Card>
             <CardHeader>
@@ -266,6 +319,26 @@ export default async function BookingStatusPage(props: {
         </Card>
       )}
 
+      {booking.status === "RETURNED" && (
+        <Card className="shadow-soft">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">הפריט הוחזר</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm text-muted-foreground">
+            <p>חלון מחלוקת של 48 שעות פתוח לאחר ההחזרה.</p>
+            {booking.disputeWindowEndsAt && (
+              <p>
+                ניתן לפתוח מחלוקת עד{" "}
+                {new Date(booking.disputeWindowEndsAt).toLocaleString("he-IL")}
+              </p>
+            )}
+            <Link href={`/bookings/${booking.id}/dispute`} className="text-primary hover:underline inline-block mt-1 font-medium">
+              פתח מחלוקת
+            </Link>
+          </CardContent>
+        </Card>
+      )}
+
       {booking.status === "COMPLETED" && (
         <>
           <Card className="shadow-soft">
@@ -317,7 +390,7 @@ export default async function BookingStatusPage(props: {
         </>
       )}
 
-      {booking.status === "DISPUTE" && (
+      {(booking.status === "IN_DISPUTE" || booking.status === "DISPUTE") && (
         <Card className="shadow-soft">
           <CardHeader className="pb-2">
             <CardTitle className="text-base">הזמנה בבדיקה</CardTitle>
@@ -344,6 +417,28 @@ export default async function BookingStatusPage(props: {
         </Card>
       )}
 
+      {booking.status === "NON_RETURN_PENDING" && (
+        <Card className="shadow-soft">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">אי-החזרה בבדיקה</CardTitle>
+          </CardHeader>
+          <CardContent className="text-sm text-muted-foreground">
+            האירוע סומן לבדיקה על ידי צוות התמיכה. נעדכן בהמשך לגבי החלטה סופית.
+          </CardContent>
+        </Card>
+      )}
+
+      {booking.status === "NON_RETURN_CONFIRMED" && (
+        <Card className="shadow-soft">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">אי-החזרה אושרה</CardTitle>
+          </CardHeader>
+          <CardContent className="text-sm text-muted-foreground">
+            ההזמנה הוסלמה לאי-החזרה מאושרת ומטופלת על ידי הנהלת הפיילוט.
+          </CardContent>
+        </Card>
+      )}
+
       <Card className="shadow-soft">
         <CardContent className="py-4">
           <Link href={`/bookings/${booking.id}/messages`}>
@@ -366,7 +461,7 @@ export default async function BookingStatusPage(props: {
           {BOOKING_HELP_CTA.label}
         </Link>
       </p>
-      <StickyCTA>
+      <StickyCTA width="narrow">
         <div className="space-y-3">
           {cta.href ? (
             <Link href={cta.href}>
@@ -380,6 +475,7 @@ export default async function BookingStatusPage(props: {
           <TrustCTARow />
         </div>
       </StickyCTA>
+      </PageContainer>
     </div>
   );
 }
@@ -396,6 +492,14 @@ function getCTA(status: Booking["status"], bookingId: string) {
       return { label: "רשימת איסוף", href: `/bookings/${bookingId}/pickup` };
     case "ACTIVE":
       return { label: "רשימת החזרה", href: `/bookings/${bookingId}/return` };
+    case "RETURNED":
+      return { label: "פתח מחלוקת", href: `/bookings/${bookingId}/dispute` };
+    case "IN_DISPUTE":
+      return { label: "מחלוקת פתוחה", href: "" };
+    case "NON_RETURN_PENDING":
+      return { label: "בטיפול צוות", href: "" };
+    case "NON_RETURN_CONFIRMED":
+      return { label: "אי-החזרה אושרה", href: "" };
     case "COMPLETED":
       return { label: "השאר ביקורת", href: "" };
     case "DISPUTE":
@@ -408,8 +512,12 @@ function dot(current: Booking["status"], step: Booking["status"]) {
     "REQUESTED",
     "CONFIRMED",
     "ACTIVE",
+    "RETURNED",
+    "IN_DISPUTE",
     "COMPLETED",
     "DISPUTE",
+    "NON_RETURN_PENDING",
+    "NON_RETURN_CONFIRMED",
   ];
 
   if (current === step) return "●";

@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { formatMoneyIls } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
 import { Package, Clock, CalendarCheck, Car, CheckCircle, Banknote } from "lucide-react";
@@ -20,7 +20,7 @@ const statCard = (
   className?: string
 ) => (
   <Card key={label} className={cn("py-3 shadow-soft", className)}>
-    <CardContent className="flex items-center gap-3 p-4">
+    <CardContent className="flex items-center gap-3 p-4 md:p-5">
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
         {icon}
       </div>
@@ -42,7 +42,7 @@ export default function OwnerStatsCards({
   className,
 }: OwnerStatsCardsProps) {
   return (
-    <div className={cn("grid grid-cols-2 md:grid-cols-3 gap-2", className)} dir="rtl">
+    <div className={cn("grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-4", className)} dir="rtl">
       {statCard(
         <Package className="h-5 w-5" />,
         "מודעות פעילות",

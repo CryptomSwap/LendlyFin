@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/card";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LoadingBlock } from "@/components/ui/loading-block";
 import { PICKUP_PHOTO_ANGLES } from "@/lib/booking-auth";
@@ -24,12 +23,6 @@ const ANGLE_LABELS: Record<string, string> = {
 
 export default function PickupChecklistForm({ bookingId }: { bookingId: string }) {
   const router = useRouter();
-  const [checklist, setChecklist] = useState<{
-    accessoriesConfirmed: boolean;
-    conditionConfirmed: boolean;
-    notes: string | null;
-    completedAt: string | null;
-  } | null>(null);
   const [photos, setPhotos] = useState<{ angle: string; url: string }[]>([]);
   const [isComplete, setIsComplete] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -55,7 +48,6 @@ export default function PickupChecklistForm({ bookingId }: { bookingId: string }
         return;
       }
       const data = await res.json();
-      setChecklist(data.checklist);
       setPhotos(data.photos ?? []);
       setIsComplete(!!data.isComplete);
       if (data.checklist) {
@@ -120,7 +112,6 @@ export default function PickupChecklistForm({ bookingId }: { bookingId: string }
         setError(data?.error ?? "שגיאה בשמירה");
         return;
       }
-      setChecklist(data.checklist);
       if (data.bookingStatus === "ACTIVE") {
         setSuccess("רשימת האיסוף הושלמה וההזמנה הופעלה.");
         setIsComplete(true);
@@ -192,7 +183,7 @@ export default function PickupChecklistForm({ bookingId }: { bookingId: string }
                 onChange={(e) => setAccessoriesConfirmed(e.target.checked)}
                 className="rounded border-input"
               />
-              <span className="text-sm font-medium">אישרתי שהאביזרים (כבלים, תיק וכו') נמסרו כמצוין במודעה</span>
+              <span className="text-sm font-medium">אישרתי שהאביזרים (כבלים, תיק וכו&apos;) נמסרו כמצוין במודעה</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
               <input

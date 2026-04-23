@@ -6,6 +6,7 @@ import { ArrowRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getBookingStatusLabel } from "@/lib/status-labels";
 import { SuspendActions } from "./suspend-actions";
+import { PageContainer } from "@/components/layout";
 
 async function getUser(id: string) {
   const h = await headers();
@@ -43,8 +44,6 @@ const KYC_LABELS: Record<string, string> = {
   REJECTED: "נדחה",
 };
 
-import { getBookingStatusLabel } from "@/lib/status-labels";
-
 export default async function AdminUserDetailPage(props: {
   params: Promise<{ id: string }>;
 }) {
@@ -66,7 +65,8 @@ export default async function AdminUserDetailPage(props: {
   }
 
   return (
-    <div className="space-y-6 pb-24" dir="rtl">
+    <div className="min-h-screen w-full app-page-bg pb-24" dir="rtl">
+      <PageContainer width="wide" className="space-y-6">
       <div>
         <Link
           href="/admin/users"
@@ -148,7 +148,7 @@ export default async function AdminUserDetailPage(props: {
           <CardContent>
             <ul className="space-y-2 text-sm">
               {user.recentBookings.map((b: { id: string; status: string; listingTitle: string; startDate: string; endDate: string }) => (
-                <li key={b.id} className="flex items-center justify-between gap-2 border-b border-border pb-2 last:border-0">
+                <li key={b.id} className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between border-b border-border pb-2 last:border-0">
                   <span>{b.listingTitle} · {getBookingStatusLabel(b.status)}</span>
                   <Link href={`/admin/bookings/${b.id}`} className="text-primary hover:underline">
                     צפה
@@ -168,7 +168,7 @@ export default async function AdminUserDetailPage(props: {
           <CardContent>
             <ul className="space-y-2 text-sm">
               {user.recentListings.map((l: { id: string; title: string; status: string }) => (
-                <li key={l.id} className="flex items-center justify-between gap-2 border-b border-border pb-2 last:border-0">
+                <li key={l.id} className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between border-b border-border pb-2 last:border-0">
                   <span>{l.title} · {l.status}</span>
                   <Link href={`/listing/${l.id}`} className="text-primary hover:underline">
                     צפה
@@ -196,6 +196,7 @@ export default async function AdminUserDetailPage(props: {
           </CardContent>
         </Card>
       )}
+      </PageContainer>
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { getCurrentUser } from "@/lib/admin";
 import { needsOnboarding } from "@/lib/auth/onboarding";
 import { generateUniqueBookingRef } from "@/lib/booking-ref";
 import { sendBookingRequestedEmails } from "@/lib/notifications/booking-lifecycle";
+import { trackEvent } from "@/lib/analytics";
 
 export const runtime = "nodejs";
 
@@ -17,6 +18,12 @@ export async function POST(req: Request) {
   if (needsOnboarding(user)) {
     return NextResponse.json(
       { error: "Complete your profile (name, phone, city) to create a booking", code: "ONBOARDING_REQUIRED" },
+      { status: 403 }
+    );
+  }
+  if (user.suspendedAt) {
+    return NextResponse.json(
+      { error: "החשבון מושעה זמנית ולא ניתן ליצור הזמנות.", code: "ACCOUNT_SUSPENDED" },
       { status: 403 }
     );
   }
@@ -110,6 +117,51 @@ export async function POST(req: Request) {
     );
   }
 
+  const now = new Date();
+  const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  const [recentRequestsByUser, activeBookingsByUser, duplicatePendingOnListing] = await Promise.all([
+    prisma.booking.count({
+      where: {
+        userId: user.id,
+        createdAt: { gte: oneDayAgo },
+        status: { in: ["REQUESTED", "CONFIRMED"] },
+      },
+    }),
+    prisma.booking.count({
+      where: {
+        userId: user.id,
+        status: { in: ["ACTIVE", "CONFIRMED", "RETURNED", "IN_DISPUTE", "NON_RETURN_PENDING"] },
+      },
+    }),
+    prisma.booking.count({
+      where: {
+        userId: user.id,
+        listingId: body.listingId,
+        status: { in: ["REQUESTED", "CONFIRMED"] },
+        endDate: { gte: now },
+      },
+    }),
+  ]);
+
+  if (recentRequestsByUser >= 8) {
+    return NextResponse.json(
+      { error: "בוצעו יותר מדי בקשות הזמנה ב-24 השעות האחרונות.", code: "RISK_VELOCITY_LIMIT" },
+      { status: 429 }
+    );
+  }
+  if (activeBookingsByUser >= 6) {
+    return NextResponse.json(
+      { error: "נדרש לסיים הזמנות פתוחות לפני יצירת הזמנה חדשה.", code: "RISK_ACTIVE_BOOKINGS_LIMIT" },
+      { status: 409 }
+    );
+  }
+  if (duplicatePendingOnListing > 0) {
+    return NextResponse.json(
+      { error: "כבר קיימת בקשה פתוחה עבור מודעה זו.", code: "RISK_DUPLICATE_PENDING" },
+      { status: 409 }
+    );
+  }
+
   const summary = getBookingSummary({
     pricePerDay: listing.pricePerDay,
     deposit: listing.deposit,
@@ -133,6 +185,7 @@ export async function POST(req: Request) {
         depositAmount: summary.depositAmount,
         totalDue: summary.totalDue,
         pickupInstructionsSnapshot: listing.pickupNote?.trim() || null,
+        riskFlagged: false,
       },
     });
     await tx.conversation.create({
@@ -142,6 +195,12 @@ export async function POST(req: Request) {
   });
 
   await sendBookingRequestedEmails(booking.id);
+  await trackEvent({
+    eventName: "booking_started",
+    bookingId: booking.id,
+    userId: user.id,
+    payload: { listingId: body.listingId },
+  });
 
   return NextResponse.json({ bookingId: booking.id });
 }

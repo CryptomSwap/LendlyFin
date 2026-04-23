@@ -1,10 +1,11 @@
 export const runtime = "nodejs";
 import { headers } from "next/headers";
-import Link from "next/link";
 import { AdminNav } from "@/components/admin-nav";
 import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AdminUsersTable } from "./users-table";
+import { PageContainer } from "@/components/layout";
+import { Button } from "@/components/ui/button";
 
 async function getUsers(params: {
   q?: string;
@@ -65,7 +66,8 @@ export default async function AdminUsersPage(props: {
   const { users, total, page, limit, totalPages } = await getUsers(searchParams);
 
   return (
-    <div className="space-y-6 pb-24" dir="rtl">
+    <div className="min-h-screen w-full app-page-bg pb-24" dir="rtl">
+      <PageContainer width="wide" className="space-y-6">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <h1 className="page-title">משתמשים – מנהל</h1>
         <AdminNav />
@@ -76,17 +78,17 @@ export default async function AdminUsersPage(props: {
           <CardTitle>חיפוש וסינון</CardTitle>
         </CardHeader>
         <CardContent>
-          <form method="get" className="flex flex-wrap gap-4 items-end">
+          <form method="get" className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_220px_220px_auto] xl:items-end">
             <input
               type="text"
               name="q"
               placeholder="שם או מזהה"
               defaultValue={searchParams.q}
-              className="border rounded px-3 py-2 text-sm w-40"
+              className="input-base w-full"
             />
             <select
               name="kycStatus"
-              className="border rounded px-3 py-2 text-sm"
+              className="input-base w-full"
               defaultValue={searchParams.kycStatus ?? ""}
             >
               <option value="">כל סטטוס אימות</option>
@@ -96,16 +98,16 @@ export default async function AdminUsersPage(props: {
             </select>
             <select
               name="suspended"
-              className="border rounded px-3 py-2 text-sm"
+              className="input-base w-full"
               defaultValue={searchParams.suspended ?? ""}
             >
               <option value="">כל המשתמשים</option>
               <option value="false">לא מושעה</option>
               <option value="true">מושעה</option>
             </select>
-            <button type="submit" className="rounded bg-primary text-primary-foreground px-4 py-2 text-sm">
+            <Button type="submit" className="w-full xl:w-auto">
               חפש
-            </button>
+            </Button>
           </form>
         </CardContent>
       </Card>
@@ -125,6 +127,7 @@ export default async function AdminUsersPage(props: {
           />
         </CardContent>
       </Card>
+      </PageContainer>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { confirmManualPayment } from "@/lib/payments/adapter";
 import { createAuditLog, AUDIT_ENTITY } from "@/lib/audit";
 import { sendBookingConfirmedEmails } from "@/lib/notifications/booking-lifecycle";
 import { prisma } from "@/lib/prisma";
+import { trackEvent } from "@/lib/analytics";
 
 export const runtime = "nodejs";
 
@@ -55,8 +56,28 @@ export async function POST(
     reason: typeof body.paymentNotes === "string" ? body.paymentNotes.trim() || undefined : undefined,
     targetDisplayName: `Booking ${bookingId}`,
   });
+  await prisma.adminActionRecord.create({
+    data: {
+      bookingId,
+      action: "CONFIRM_MANUAL_PAYMENT",
+      note: typeof body.paymentNotes === "string" ? body.paymentNotes.trim() || null : null,
+      adminUserId: adminUser.id,
+    },
+  });
 
   await sendBookingConfirmedEmails(bookingId);
+  await trackEvent({
+    eventName: "booking_confirmed",
+    bookingId,
+    userId: adminUser.id,
+    payload: { source: "admin_manual_confirm" },
+  });
+  await trackEvent({
+    eventName: "admin_action_recorded",
+    bookingId,
+    userId: adminUser.id,
+    payload: { action: "confirm_payment" },
+  });
 
   return NextResponse.json({ ok: true, bookingId: result.bookingId });
 }

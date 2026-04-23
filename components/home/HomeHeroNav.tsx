@@ -14,8 +14,8 @@ const NAV_ITEMS = [
 ] as const;
 
 /**
- * Desktop-only minimal nav overlay on the homepage hero (replaces the hidden header).
- * Logo, nav links, auth — floats over the hero with no white bar.
+ * Desktop-only overlay on the homepage hero (/home AppShell header is md:hidden).
+ * Logo, primary links, auth. Mobile uses BottomNav instead — this component is md+ only.
  */
 export function HomeHeroNav() {
   const pathname = usePathname();

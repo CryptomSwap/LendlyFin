@@ -7,7 +7,16 @@ export type BookingCardProps = {
   title: string;
   subtitle: string;
   /** Raw booking status (e.g. REQUESTED) for label and pill variant */
-  status: "REQUESTED" | "CONFIRMED" | "ACTIVE" | "COMPLETED" | "DISPUTE";
+  status:
+    | "REQUESTED"
+    | "CONFIRMED"
+    | "ACTIVE"
+    | "RETURNED"
+    | "IN_DISPUTE"
+    | "NON_RETURN_PENDING"
+    | "NON_RETURN_CONFIRMED"
+    | "COMPLETED"
+    | "DISPUTE";
   href: string;
   /** Optional booking ref for display (e.g. LND-XXXXXX) */
   bookingRef?: string | null;

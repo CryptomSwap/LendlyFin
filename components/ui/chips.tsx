@@ -23,7 +23,7 @@ export default function Chip({
           "shadow-[0_2px_8px_rgba(0,0,0,0.06)]",
           "hover:bg-[var(--mint-accent)]/25 hover:border-[var(--mint-accent)]/40 hover:shadow-[0_2px_12px_rgba(47,191,159,0.15)]",
           "transition-all duration-200",
-          selected && "ring-2 ring-[var(--mint-accent)] ring-offset-2 ring-offset-background",
+          selected && "ring-2 ring-inset ring-[var(--mint-accent)]",
           className
         )}
       >

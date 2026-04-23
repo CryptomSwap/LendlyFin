@@ -3,7 +3,7 @@ import { Shield } from "lucide-react";
 
 export default function InsuranceTermsPage() {
   return (
-    <div className="space-y-6 pb-24 max-w-4xl mx-auto">
+    <div className="min-h-screen w-full app-page-bg space-y-6 pb-24 max-w-4xl mx-auto" dir="rtl">
       <div className="text-center mb-8">
         <Shield className="h-16 w-16 mx-auto mb-4 text-primary" />
         <h1 className="page-title mb-2">תנאי ביטוח</h1>
@@ -13,7 +13,7 @@ export default function InsuranceTermsPage() {
       </div>
 
       <Card className="shadow-soft">
-        <CardContent className="p-8 space-y-6 max-w-none">
+        <CardContent className="p-5 sm:p-8 space-y-6 max-w-none">
           <section>
             <h2 className="text-lg font-semibold mb-4">1. סקירת כיסוי</h2>
             <p className="text-muted-foreground">

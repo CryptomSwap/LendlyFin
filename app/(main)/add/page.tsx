@@ -16,6 +16,7 @@ import { CATEGORY_LIST, CITIES, getSubcategoriesForCategory } from "@/lib/consta
 import { formatMoneyIls } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
 import { ArrowLeft, ImagePlus } from "lucide-react";
+import { PageContainer } from "@/components/layout";
 
 const TOTAL_STEPS = 5;
 const MAX_TITLE = 80;
@@ -210,10 +211,11 @@ export default function AddListingPage() {
   );
 
   return (
-    <div className="min-h-screen flex flex-col pb-24" dir="rtl">
+    <div className="min-h-screen flex flex-col pb-24 app-page-bg" dir="rtl">
       {header}
 
-      <main className="flex-1 px-4 py-4">
+      <main className="flex-1 py-4">
+        <PageContainer width="narrow" className="lg:max-w-[62rem]">
         {/* Step 1: Basic info */}
         {step === 1 && (
           <Card className="shadow-soft">
@@ -308,7 +310,7 @@ export default function AddListingPage() {
             <CardContent className="space-y-5">
               <section className="space-y-3" aria-label="תמחור">
                 <h3 className="text-sm font-semibold text-foreground">תמחור</h3>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div>
                     <label className="block text-sm font-medium mb-1" htmlFor="add-price">מחיר ליום (₪) *</label>
                     <Input
@@ -540,9 +542,10 @@ export default function AddListingPage() {
             </CardContent>
           </Card>
         )}
+        </PageContainer>
       </main>
 
-      <div className="sticky bottom-16 inset-x-0 z-10 bg-card border-t border-border shadow-cta-strip px-4 py-4">
+      <div className="sticky bottom-16 md:bottom-4 inset-x-0 z-10 bg-card border-t border-border shadow-cta-strip px-4 py-4 max-w-md md:max-w-4xl mx-auto w-full">
         {step < TOTAL_STEPS ? (
           <Button className="w-full" size="lg" onClick={handleNext}>
             המשך

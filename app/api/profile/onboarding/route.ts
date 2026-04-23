@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/admin";
+import { trackEvent } from "@/lib/analytics";
 
 export const runtime = "nodejs";
 
@@ -38,6 +39,11 @@ export async function PATCH(req: Request) {
   await prisma.user.update({
     where: { id: user.id },
     data: { name, phoneNumber, city },
+  });
+  await trackEvent({
+    eventName: "onboarding_completed",
+    userId: user.id,
+    payload: { city },
   });
 
   return NextResponse.json({ ok: true });

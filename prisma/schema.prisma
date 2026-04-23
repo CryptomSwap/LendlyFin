@@ -29,6 +29,10 @@ model User {
 
   suspendedAt       DateTime?
   suspensionReason  String?
+  termsAcceptedVersion String?
+  termsAcceptedAt   DateTime?
+  privacyAcceptedVersion String?
+  privacyAcceptedAt DateTime?
 
   createdAt         DateTime    @default(now())
 }
@@ -106,6 +110,12 @@ model Booking {
   endDate   DateTime
 
   status    BookingStatus
+  returnedAt DateTime?
+  disputeWindowEndsAt DateTime?
+  nonReturnMarkedAt DateTime?
+  nonReturnReason String?
+  riskFlagged Boolean @default(false)
+  riskReason String?
 
   /// Snapshot of listing pickup instructions at booking creation (listing.pickupNote).
   pickupInstructionsSnapshot String?
@@ -118,6 +128,60 @@ model Booking {
   reviews           Review[]
 
   createdAt DateTime @default(now())
+}
+
+model AnalyticsEvent {
+  id         String   @id @default(cuid())
+  eventName  String
+  bookingId  String?
+  userId     String?
+  payload    String?
+  createdAt  DateTime @default(now())
+
+  @@index([eventName, createdAt])
+  @@index([bookingId])
+  @@index([userId])
+}
+
+model AdminActionRecord {
+  id         String   @id @default(cuid())
+  bookingId  String?
+  disputeId  String?
+  action     String
+  note       String?
+  adminUserId String
+  createdAt  DateTime @default(now())
+
+  @@index([bookingId, createdAt])
+  @@index([disputeId, createdAt])
+  @@index([adminUserId, createdAt])
+}
+
+model SupportTicket {
+  id         String   @id @default(cuid())
+  userId     String?
+  pageUrl    String?
+  userAgent  String?
+  title      String
+  description String?
+  status     String   @default("OPEN")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([status, createdAt])
+  @@index([userId, createdAt])
+}
+
+model SystemAlert {
+  id         String   @id @default(cuid())
+  level      String
+  source     String
+  message    String
+  context    String?
+  createdAt  DateTime @default(now())
+
+  @@index([level, createdAt])
+  @@index([source, createdAt])
 }
 
 model Review {
@@ -175,6 +239,11 @@ model Dispute {
   bookingId        String        @unique
   booking          Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   reason           String        // "damage" | "missing_items" | "manual"
+  adminReasonCode  String?
+  resolutionOutcome String?
+  evidenceChecklist String?      // JSON array for pilot auditing
+  financialActionNote String?
+  resolvedByAdminId String?
   status           DisputeStatus @default(OPEN)
   openedByUserId   String?
   adminNote        String?
@@ -256,8 +325,12 @@ enum BookingStatus {
   REQUESTED
   CONFIRMED
   ACTIVE
+  RETURNED
+  IN_DISPUTE
+  NON_RETURN_PENDING
+  NON_RETURN_CONFIRMED
   COMPLETED
-  DISPUTE
+  DISPUTE // legacy compatibility; new flows use IN_DISPUTE
 }
 
 enum PaymentStatus {

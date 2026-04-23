@@ -2,11 +2,10 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireBookingAccess } from "@/lib/booking-auth";
 import { RETURN_PHOTO_ANGLES } from "@/lib/booking-auth";
-import { releaseDepositToRenter } from "@/lib/payments/adapter";
 import {
-  sendBookingCompletedEmails,
   sendDisputeOpenedEmails,
 } from "@/lib/notifications/booking-lifecycle";
+import { trackEvent } from "@/lib/analytics";
 
 export const runtime = "nodejs";
 
@@ -51,7 +50,7 @@ export async function GET(
   });
 }
 
-/** PUT: create or update return checklist. When complete without damage/missing → COMPLETED; with damage/missing → DISPUTE + create Dispute. */
+/** PUT: create or update return checklist. When complete sets RETURNED + dispute window, or opens dispute immediately when issues exist. */
 export async function PUT(
   req: Request,
   ctx: { params: Promise<{ id: string }> }
@@ -125,18 +124,15 @@ export async function PUT(
     },
   });
 
-  let newStatus: "COMPLETED" | "DISPUTE" | null = null;
+  let newStatus: "RETURNED" | "IN_DISPUTE" | "COMPLETED" | null = null;
   if (canComplete && checklist.completedAt) {
-    newStatus = hasIssue ? "DISPUTE" : "COMPLETED";
-    if (newStatus === "COMPLETED") {
-      await releaseDepositToRenter(bookingId, { setBookingCompleted: true });
-      if (booking.status === "ACTIVE") {
-        await sendBookingCompletedEmails(bookingId);
-      }
-    } else {
+    const disputeWindowEndsAt = new Date(Date.now() + 48 * 60 * 60 * 1000);
+
+    if (hasIssue) {
+      newStatus = "IN_DISPUTE";
       await prisma.booking.update({
         where: { id: bookingId },
-        data: { status: "DISPUTE" },
+        data: { status: "IN_DISPUTE", returnedAt: checklist.completedAt, disputeWindowEndsAt },
       });
       const existing = await prisma.dispute.findUnique({ where: { bookingId } });
       if (!existing) {
@@ -154,8 +150,30 @@ export async function PUT(
           },
         });
         await sendDisputeOpenedEmails(bookingId);
+        await trackEvent({
+          eventName: "dispute_opened",
+          bookingId,
+          userId: user?.id ?? undefined,
+          payload: { source: "return_checklist_auto" },
+        });
       }
+    } else {
+      newStatus = "RETURNED";
+      await prisma.booking.update({
+        where: { id: bookingId },
+        data: {
+          status: "RETURNED",
+          returnedAt: checklist.completedAt,
+          disputeWindowEndsAt,
+        },
+      });
     }
+    await trackEvent({
+      eventName: "return_checklist_submitted",
+      bookingId,
+      userId: user?.id ?? undefined,
+      payload: { hasIssue },
+    });
   }
 
   return NextResponse.json({

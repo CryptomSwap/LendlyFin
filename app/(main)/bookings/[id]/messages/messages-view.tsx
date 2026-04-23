@@ -119,7 +119,7 @@ export function BookingMessagesView({
       ) : (
         <>
           {error && <Alert variant="error">{error}</Alert>}
-          <div className="flex gap-2 items-end">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
             <div className="form-group flex-1 min-w-0">
               <Label htmlFor="booking-message-body" className="sr-only">תוכן הודעה</Label>
               <textarea
@@ -135,7 +135,7 @@ export function BookingMessagesView({
             <Button
               onClick={handleSend}
               disabled={sending || !body.trim()}
-              className="self-end"
+              className="w-full sm:w-auto sm:self-end"
             >
               {sending ? "שולח..." : "שלח"}
             </Button>

@@ -48,38 +48,38 @@ export function AdminUsersTable({
   return (
     <div className="space-y-4">
       <div className="overflow-x-auto">
-        <table className="w-full text-sm border-collapse">
+        <table className="w-full min-w-[760px] text-sm border-separate border-spacing-0">
           <thead>
-            <tr className="border-b border-border">
-              <th className="text-right py-2 px-2 font-medium">שם</th>
-              <th className="text-right py-2 px-2 font-medium">אימות</th>
-              <th className="text-right py-2 px-2 font-medium">מושעה</th>
-              <th className="text-right py-2 px-2 font-medium">מודעות</th>
-              <th className="text-right py-2 px-2 font-medium">הזמנות</th>
-              <th className="text-right py-2 px-2 font-medium">מחלוקות</th>
-              <th className="text-right py-2 px-2 font-medium"></th>
+            <tr className="bg-muted/30">
+              <th className="text-right py-3 px-3 font-medium text-muted-foreground">שם</th>
+              <th className="text-right py-3 px-3 font-medium text-muted-foreground">אימות</th>
+              <th className="text-right py-3 px-3 font-medium text-muted-foreground">מושעה</th>
+              <th className="text-right py-3 px-3 font-medium text-muted-foreground">מודעות</th>
+              <th className="text-right py-3 px-3 font-medium text-muted-foreground">הזמנות</th>
+              <th className="text-right py-3 px-3 font-medium text-muted-foreground">מחלוקות</th>
+              <th className="text-right py-3 px-3 font-medium text-muted-foreground"></th>
             </tr>
           </thead>
           <tbody>
             {users.map((u) => (
-              <tr key={u.id} className="border-b border-border">
-                <td className="py-2 px-2">
+              <tr key={u.id} className="border-b border-border/60 hover:bg-muted/20 transition-colors">
+                <td className="py-3 px-3">
                   <span className="font-medium">{u.name}</span>
                   {u.isAdmin && <span className="text-muted-foreground text-xs mr-1">(מנהל)</span>}
                 </td>
-                <td className="py-2 px-2">{kycLabels[u.kycStatus ?? ""] ?? u.kycStatus ?? "—"}</td>
-                <td className="py-2 px-2">
+                <td className="py-3 px-3">{kycLabels[u.kycStatus ?? ""] ?? u.kycStatus ?? "—"}</td>
+                <td className="py-3 px-3">
                   {u.suspendedAt ? (
-                    <span className="text-amber-600">מושעה</span>
+                    <span className="text-warning">מושעה</span>
                   ) : (
                     <span className="text-muted-foreground">—</span>
                   )}
                 </td>
-                <td className="py-2 px-2">{u.listingsCount}</td>
-                <td className="py-2 px-2">{u.bookingsCount}</td>
-                <td className="py-2 px-2">{u.disputesOpenedCount}</td>
-                <td className="py-2 px-2">
-                  <Link href={`/admin/users/${u.id}`} className="text-primary hover:underline">
+                <td className="py-3 px-3">{u.listingsCount}</td>
+                <td className="py-3 px-3">{u.bookingsCount}</td>
+                <td className="py-3 px-3">{u.disputesOpenedCount}</td>
+                <td className="py-3 px-3">
+                  <Link href={`/admin/users/${u.id}`} className="text-primary font-medium hover:underline">
                     צפה
                   </Link>
                 </td>

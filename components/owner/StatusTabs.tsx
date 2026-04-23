@@ -38,10 +38,10 @@ export function StatusTabs({ activeFilter, onFilterChange, counts }: StatusTabsP
             aria-selected={isActive}
             onClick={() => onFilterChange(filter)}
             className={cn(
-              "px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-colors shrink-0",
+              "brand-chip text-xs shrink-0",
               isActive
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "bg-muted/50 text-muted-foreground hover:bg-muted border border-border"
+                ? "brand-chip-active"
+                : "brand-chip-idle"
             )}
           >
             {filterLabels[filter]}

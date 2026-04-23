@@ -15,20 +15,15 @@ export default function IdCapture({
   onCapture,
   currentImage,
 }: IdCaptureProps) {
+  const isCameraSupported =
+    typeof navigator !== "undefined" && Boolean(navigator.mediaDevices?.getUserMedia);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [mode, setMode] = useState<CaptureMode>("idle");
   const [preview, setPreview] = useState<string | null>(currentImage || null);
-  const [cameraSupported, setCameraSupported] = useState<boolean | null>(null);
+  const [cameraSupported] = useState<boolean>(isCameraSupported);
   const [error, setError] = useState<string | null>(null);
-
-  // Check camera availability on mount
-  useEffect(() => {
-    setCameraSupported(
-      typeof navigator !== "undefined" && !!navigator.mediaDevices?.getUserMedia
-    );
-  }, []);
 
   // Handle camera stream
   useEffect(() => {
@@ -129,12 +124,12 @@ export default function IdCapture({
       <div className="space-y-4">
         <div className="text-center space-y-2">
           <h3 className="text-lg font-semibold">צילום תעודת זהות</h3>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted-foreground">
             תעודה נבחרה בהצלחה
           </p>
         </div>
 
-        <div className="relative w-full aspect-square rounded-lg overflow-hidden border-2 border-gray-200 bg-gray-100">
+        <div className="relative w-full aspect-square rounded-lg overflow-hidden border-2 border-border bg-muted">
           <Image
             src={preview}
             alt="ID Document"
@@ -164,18 +159,18 @@ export default function IdCapture({
       <div className="space-y-4">
         <div className="text-center space-y-2">
           <h3 className="text-lg font-semibold">צילום תעודת זהות</h3>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted-foreground">
             צלם תמונה ברורה של תעודת הזהות או הדרכון שלך
           </p>
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-800">
+          <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-3 text-sm text-destructive">
             {error}
           </div>
         )}
 
-        <div className="relative w-full aspect-square rounded-lg overflow-hidden border-2 border-gray-200 bg-black flex items-center justify-center">
+        <div className="relative w-full aspect-square rounded-lg overflow-hidden border-2 border-border bg-black flex items-center justify-center">
           <video
             ref={videoRef}
             className="w-full h-full object-contain"
@@ -211,13 +206,13 @@ export default function IdCapture({
     <div className="space-y-4">
       <div className="text-center space-y-2">
         <h3 className="text-lg font-semibold">צילום תעודת זהות</h3>
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-muted-foreground">
           בחר: צלם עכשיו או העלה תמונה קיימת
         </p>
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-800">
+        <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-3 text-sm text-destructive">
           {error}
         </div>
       )}
@@ -235,24 +230,24 @@ export default function IdCapture({
           <button
             type="button"
             onClick={handleStartCamera}
-            className="p-4 border-2 border-dashed border-blue-300 rounded-lg bg-blue-50 hover:bg-blue-100 transition flex flex-col items-center justify-center gap-2"
+            className="p-4 border-2 border-dashed border-[var(--mint-accent)]/40 rounded-lg bg-[var(--mint-accent)]/10 hover:bg-[var(--mint-accent)]/15 transition flex flex-col items-center justify-center gap-2"
           >
             <span className="text-3xl">📷</span>
-            <span className="text-sm font-medium text-blue-900">צלם עכשיו</span>
+            <span className="text-sm font-medium text-foreground">צלם עכשיו</span>
           </button>
         )}
 
         <button
           type="button"
           onClick={handleStartUpload}
-          className="p-4 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 transition flex flex-col items-center justify-center gap-2"
+          className="p-4 border-2 border-dashed border-border rounded-lg bg-card hover:bg-muted/40 transition flex flex-col items-center justify-center gap-2"
         >
           <span className="text-3xl">📁</span>
-          <span className="text-sm font-medium text-gray-900">העלה תמונה</span>
+          <span className="text-sm font-medium text-foreground">העלה תמונה</span>
         </button>
       </div>
 
-      <p className="text-xs text-gray-500 text-center">
+      <p className="text-xs text-muted-foreground text-center">
         ודא שתעודת הזהות או הדרכון שלך בתמונה ברורה ומוארה
       </p>
     </div>

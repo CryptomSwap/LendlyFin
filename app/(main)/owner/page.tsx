@@ -1,5 +1,4 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { getCurrentUser } from "@/lib/admin";
 import { getOwnerDashboardData } from "@/lib/owner/dashboard";
 import OwnerStatsCards from "@/components/owner/OwnerStatsCards";
@@ -8,6 +7,7 @@ import OwnerAttentionList from "@/components/owner/OwnerAttentionList";
 import OwnerUpcomingBookings from "@/components/owner/OwnerUpcomingBookings";
 import OwnerListingsSection from "@/components/owner/OwnerListingsSection";
 import { EmptyState } from "@/components/ui/empty-state";
+import { PageContainer } from "@/components/layout";
 import { Package } from "lucide-react";
 
 export const runtime = "nodejs";
@@ -22,7 +22,8 @@ export default async function OwnerDashboardPage() {
   const hasListings = data.listings.length > 0;
 
   return (
-    <div className="space-y-6 pb-24" dir="rtl">
+    <div className="min-h-screen w-full app-page-bg pb-24" dir="rtl">
+      <PageContainer width="wide" className="space-y-8">
       <header>
         <h1 className="section-title">לוח מלווה</h1>
         <p className="text-sm text-muted-foreground mt-0.5">
@@ -78,6 +79,7 @@ export default async function OwnerDashboardPage() {
       )}
 
       {hasListings && <OwnerListingsSection listings={data.listings} />}
+      </PageContainer>
     </div>
   );
 }

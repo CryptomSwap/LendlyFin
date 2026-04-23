@@ -12,6 +12,7 @@ import { StatusPill } from "@/components/ui/status-pill";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingBlock } from "@/components/ui/loading-block";
 import { AdminNav } from "@/components/admin-nav";
+import { PageContainer } from "@/components/layout";
 
 type Listing = {
   id: string;
@@ -77,20 +78,21 @@ export default function AdminListingsPage() {
   };
 
   return (
-    <div className="space-y-6 pb-24" dir="rtl">
+    <div className="min-h-screen w-full app-page-bg pb-24" dir="rtl">
+      <PageContainer width="wide" className="space-y-6">
       <div className="flex items-center justify-between gap-4">
         <h1 className="page-title">מודעות – ביקורת מנהל</h1>
         <AdminNav />
       </div>
 
-      <div className="flex gap-2 overflow-x-auto pb-2">
+      <div className="flex gap-2 overflow-x-auto rounded-xl border border-border/70 bg-card p-2">
         {["PENDING_APPROVAL", "ACTIVE", "REJECTED", "PAUSED"].map((s) => (
           <button
             key={s}
             type="button"
             onClick={() => setStatusFilter(s)}
-            className={`shrink-0 rounded-lg border px-3 py-1.5 text-sm ${
-              statusFilter === s ? "border-primary bg-primary/10" : "border-border"
+            className={`brand-chip shrink-0 ${
+              statusFilter === s ? "brand-chip-active" : "brand-chip-idle"
             }`}
           >
             {getListingStatusLabel(s)}
@@ -174,6 +176,7 @@ export default function AdminListingsPage() {
           ))}
         </ul>
       )}
+      </PageContainer>
     </div>
   );
 }

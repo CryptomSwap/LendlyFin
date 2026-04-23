@@ -119,7 +119,7 @@ const faqs = [
 
 export default function FAQPage() {
   return (
-    <div className="space-y-6 pb-24 max-w-4xl mx-auto">
+    <div className="min-h-screen w-full app-page-bg space-y-6 pb-24 max-w-4xl mx-auto" dir="rtl">
       <div className="text-center mb-8">
         <HelpCircle className="h-16 w-16 mx-auto mb-4 text-primary" />
         <h1 className="page-title mb-2">שאלות נפוצות</h1>

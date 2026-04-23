@@ -4,6 +4,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import { BookingMessagesView } from "./messages-view";
+import { PageContainer } from "@/components/layout";
 
 async function getMessages(bookingId: string) {
   const h = await headers();
@@ -52,7 +53,8 @@ export default async function BookingMessagesPage(props: {
   const bookingRef = context?.bookingRef ?? null;
 
   return (
-    <div className="space-y-4 pb-24" dir="rtl">
+    <div className="min-h-screen w-full app-page-bg pb-24" dir="rtl">
+      <PageContainer width="narrow" className="space-y-4 lg:max-w-[72rem]">
       <div className="flex items-center gap-2">
         <Link
           href={`/bookings/${bookingId}`}
@@ -76,6 +78,7 @@ export default async function BookingMessagesPage(props: {
         currentUserId={data.currentUserId}
         bookingRef={bookingRef}
       />
+      </PageContainer>
     </div>
   );
 }

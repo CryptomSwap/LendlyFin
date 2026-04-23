@@ -8,7 +8,16 @@ import { Inbox } from "lucide-react";
 
 type Booking = {
   id: string;
-  status: "REQUESTED" | "CONFIRMED" | "ACTIVE" | "COMPLETED" | "DISPUTE";
+  status:
+    | "REQUESTED"
+    | "CONFIRMED"
+    | "ACTIVE"
+    | "RETURNED"
+    | "IN_DISPUTE"
+    | "NON_RETURN_PENDING"
+    | "NON_RETURN_CONFIRMED"
+    | "COMPLETED"
+    | "DISPUTE";
   startDate: string;
   endDate: string;
   listing: { title: string };
@@ -24,15 +33,21 @@ function computeCounts(bookings: Booking[]): Record<BookingFilterType, number> {
   const REQUESTED = bookings.filter((b) => b.status === "REQUESTED").length;
   const CONFIRMED = bookings.filter((b) => b.status === "CONFIRMED").length;
   const ACTIVE = bookings.filter((b) => b.status === "ACTIVE").length;
+  const RETURNED = bookings.filter((b) => b.status === "RETURNED").length;
+  const IN_DISPUTE = bookings.filter((b) => b.status === "IN_DISPUTE").length;
+  const NON_RETURN_PENDING = bookings.filter((b) => b.status === "NON_RETURN_PENDING").length;
+  const NON_RETURN_CONFIRMED = bookings.filter((b) => b.status === "NON_RETURN_CONFIRMED").length;
   const COMPLETED = bookings.filter((b) => b.status === "COMPLETED").length;
-  const DISPUTE = bookings.filter((b) => b.status === "DISPUTE").length;
   return {
     all,
     REQUESTED,
     CONFIRMED,
     ACTIVE,
+    RETURNED,
+    IN_DISPUTE,
+    NON_RETURN_PENDING,
+    NON_RETURN_CONFIRMED,
     COMPLETED,
-    DISPUTE,
   };
 }
 

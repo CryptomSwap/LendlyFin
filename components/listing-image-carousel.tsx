@@ -16,7 +16,7 @@ export default function ListingImageCarousel({
   if (!images || images.length === 0) {
     return (
       <div
-        className="aspect-[4/3] min-h-[220px] bg-muted rounded-b-2xl flex items-center justify-center text-muted-foreground"
+        className="aspect-[4/3] min-h-[220px] lg:aspect-[16/10] bg-muted rounded-card flex items-center justify-center text-muted-foreground"
         aria-label="אין תמונות"
       >
         <ImageIcon className="h-14 w-14" aria-hidden />
@@ -31,7 +31,7 @@ export default function ListingImageCarousel({
 
   return (
     <div className="space-y-3" dir="rtl">
-      <div className="relative aspect-[4/3] min-h-[220px] overflow-hidden bg-muted rounded-b-2xl">
+      <div className="relative aspect-[4/3] min-h-[220px] lg:aspect-[16/10] overflow-hidden bg-muted rounded-card">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={current}
@@ -76,14 +76,14 @@ export default function ListingImageCarousel({
       </div>
 
       {hasMultiple && (
-        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide px-4">
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide px-1">
           {images.map((im, i) => (
             <button
               key={im.url + i}
               type="button"
               onClick={() => setIdx(i)}
               className={cn(
-                "h-14 w-14 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-colors",
+                "h-14 w-14 lg:h-16 lg:w-16 flex-shrink-0 rounded-lg overflow-hidden border-2 transition-colors",
                 i === idx
                   ? "border-primary ring-2 ring-primary/20"
                   : "border-border hover:border-primary/50"

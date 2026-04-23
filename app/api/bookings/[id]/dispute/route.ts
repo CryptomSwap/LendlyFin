@@ -3,12 +3,13 @@ import { prisma } from "@/lib/prisma";
 import { requireBookingMessagesAccess } from "@/lib/booking-auth";
 import { needsOnboarding } from "@/lib/auth/onboarding";
 import { sendDisputeOpenedEmails } from "@/lib/notifications/booking-lifecycle";
+import { trackEvent } from "@/lib/analytics";
 
 export const runtime = "nodejs";
 
 const VALID_REASONS = ["damage", "missing_items", "manual"] as const;
 
-/** POST: open a dispute (renter, lender, or admin). Only if booking is ACTIVE, COMPLETED, or already DISPUTE. No duplicate. */
+/** POST: open a dispute (renter, lender, or admin). Enforces return dispute window policy. */
 export async function POST(
   req: Request,
   ctx: { params: Promise<{ id: string }> }
@@ -24,7 +25,7 @@ export async function POST(
     );
   }
 
-  const allowedStatuses = ["ACTIVE", "COMPLETED", "DISPUTE"];
+  const allowedStatuses = ["RETURNED", "IN_DISPUTE", "COMPLETED", "DISPUTE"];
   if (!allowedStatuses.includes(booking.status)) {
     return NextResponse.json(
       { error: "ניתן לפתוח מחלוקת רק להזמנה פעילה, שהושלמה או שכבר במחלוקת." },
@@ -38,6 +39,16 @@ export async function POST(
       { error: "קיימת כבר מחלוקת להזמנה זו.", disputeId: existing.id },
       { status: 409 }
     );
+  }
+
+  if (booking.status === "RETURNED" && booking.disputeWindowEndsAt) {
+    const now = Date.now();
+    if (new Date(booking.disputeWindowEndsAt).getTime() < now) {
+      return NextResponse.json(
+        { error: "חלון הזמן לפתיחת מחלוקת (48 שעות) הסתיים." },
+        { status: 400 }
+      );
+    }
   }
 
   let body: { reason?: string; note?: string };
@@ -69,10 +80,16 @@ export async function POST(
 
   await prisma.booking.update({
     where: { id: bookingId },
-    data: { status: "DISPUTE" },
+    data: { status: "IN_DISPUTE" },
   });
 
   await sendDisputeOpenedEmails(bookingId);
+  await trackEvent({
+    eventName: "dispute_opened",
+    bookingId,
+    userId: user.id,
+    payload: { source: "manual_form", reason },
+  });
 
   return NextResponse.json({ dispute: { id: dispute.id, reason: dispute.reason, status: dispute.status } });
 }

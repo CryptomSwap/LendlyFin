@@ -46,12 +46,12 @@ export default function OwnerAttentionList({
           דורש טיפול ({bookings.length})
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-2">
+      <CardContent className="space-y-3">
         {bookings.map((b) => (
           <Link
             key={b.id}
             href={`/bookings/${b.id}`}
-            className="block rounded-lg border border-border bg-muted/30 p-3 text-sm hover:bg-muted/50 transition-colors"
+            className="block rounded-lg border border-border bg-muted/30 p-3 md:p-4 text-sm hover:bg-muted/50 transition-colors"
           >
             <p className="font-medium text-foreground">{b.listingTitle}</p>
             <p className="text-muted-foreground">

@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import ManageListingAvailability from "./manage-client";
+import { PageContainer } from "@/components/layout";
 
 async function getListing(id: string) {
   const h = await headers();
@@ -30,7 +31,8 @@ export default async function ListingManagePage(props: {
   }
 
   return (
-    <div className="space-y-6 pb-24" dir="rtl">
+    <div className="min-h-screen w-full app-page-bg pb-24" dir="rtl">
+      <PageContainer width="narrow" className="space-y-6 lg:max-w-[72rem]">
       <div className="flex items-center gap-2">
         <Link
           href={`/listing/${id}`}
@@ -47,6 +49,7 @@ export default async function ListingManagePage(props: {
         pickupNote={listing.pickupNote ?? ""}
         rules={listing.rules ?? ""}
       />
+      </PageContainer>
     </div>
   );
 }

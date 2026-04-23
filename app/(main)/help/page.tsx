@@ -7,11 +7,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { PageContainer } from "@/components/layout";
 import { LifeBuoy, MessageSquare, Book, HelpCircle, Shield, Mail } from "lucide-react";
 
 export default function HelpPage() {
   return (
-    <div className="space-y-6 pb-24">
+    <div className="min-h-screen w-full app-page-bg pb-24" dir="rtl">
+      <PageContainer width="narrow" className="space-y-6">
       <div className="text-center mb-8">
         <LifeBuoy className="h-16 w-16 mx-auto mb-4 text-primary" />
         <h1 className="page-title mb-2">מרכז עזרה</h1>
@@ -20,7 +22,7 @@ export default function HelpPage() {
         </p>
       </div>
 
-      <div className="grid gap-6">
+      <div className="grid gap-6 md:grid-cols-2">
         <Card className="shadow-soft">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
@@ -78,11 +80,15 @@ export default function HelpPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Link href="/help">
+            <a
+              href={`mailto:support@lendly.com?subject=${encodeURIComponent(
+                "[Bug Report] Help center"
+              )}`}
+            >
               <Button variant="outline" className="w-full">
                 דיווח על בעיה
               </Button>
-            </Link>
+            </a>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Mail className="h-4 w-4" />
               <a href="mailto:support@lendly.com" className="hover:underline">support@lendly.com</a>
@@ -113,6 +119,7 @@ export default function HelpPage() {
           </CardContent>
         </Card>
       </div>
+      </PageContainer>
     </div>
   );
 }

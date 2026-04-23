@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireBookingAccess } from "@/lib/booking-auth";
 import { PICKUP_PHOTO_ANGLES } from "@/lib/booking-auth";
 import { sendBookingActiveEmails } from "@/lib/notifications/booking-lifecycle";
+import { trackEvent } from "@/lib/analytics";
 
 export const runtime = "nodejs";
 
@@ -54,7 +55,7 @@ export async function PUT(
   ctx: { params: Promise<{ id: string }> }
 ) {
   const { id: bookingId } = await ctx.params;
-  const { error, booking } = await requireBookingAccess(bookingId);
+  const { error, booking, user } = await requireBookingAccess(bookingId);
   if (error) return error;
   if (!booking) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
@@ -111,10 +112,20 @@ export async function PUT(
       data: { status: "ACTIVE" },
     });
     await sendBookingActiveEmails(bookingId);
+    await trackEvent({
+      eventName: "pickup_checklist_submitted",
+      bookingId,
+      userId: user?.id ?? undefined,
+    });
   } else if (canComplete && checklist.completedAt) {
     await prisma.booking.update({
       where: { id: bookingId },
       data: { status: "ACTIVE" },
+    });
+    await trackEvent({
+      eventName: "pickup_checklist_submitted",
+      bookingId,
+      userId: user?.id ?? undefined,
     });
   }
 

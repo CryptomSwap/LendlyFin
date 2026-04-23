@@ -1,5 +1,6 @@
 import "./globals.css";
 import SessionProvider from "@/components/session-provider";
+import ThemeProvider from "@/components/theme-provider";
 import { Heebo } from "next/font/google";
 
 const heebo = Heebo({
@@ -14,9 +15,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="he" dir="rtl" className={heebo.variable}>
-      <body className="min-h-screen bg-background text-foreground font-sans antialiased" suppressHydrationWarning>
-        <SessionProvider>{children}</SessionProvider>
+    <html lang="he" dir="rtl" className={heebo.variable} suppressHydrationWarning>
+      <body className="min-h-screen bg-background text-foreground font-sans antialiased">
+        <ThemeProvider>
+          <SessionProvider>{children}</SessionProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

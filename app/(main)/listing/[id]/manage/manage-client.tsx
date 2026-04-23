@@ -254,30 +254,30 @@ export default function ManageListingAvailability({
             <Alert variant="success">{success}</Alert>
           )}
 
-          <form onSubmit={handleAdd} className="flex flex-wrap items-end gap-3">
-            <div className="form-group min-w-[140px]">
+          <form onSubmit={handleAdd} className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] md:items-end">
+            <div className="form-group min-w-0">
               <Label htmlFor="manage-block-start">מתאריך</Label>
               <Input
                 id="manage-block-start"
                 type="date"
                 value={addStart}
                 onChange={(e) => setAddStart(e.target.value)}
-                className="w-full min-w-[140px]"
+                className="w-full"
                 disabled={submitting}
               />
             </div>
-            <div className="form-group min-w-[140px]">
+            <div className="form-group min-w-0">
               <Label htmlFor="manage-block-end">עד תאריך</Label>
               <Input
                 id="manage-block-end"
                 type="date"
                 value={addEnd}
                 onChange={(e) => setAddEnd(e.target.value)}
-                className="w-full min-w-[140px]"
+                className="w-full"
                 disabled={submitting}
               />
             </div>
-            <Button type="submit" disabled={submitting}>
+            <Button type="submit" disabled={submitting} className="w-full sm:w-auto md:self-end">
               {submitting ? "מוסיף..." : "הוסף תאריכים חסומים"}
             </Button>
           </form>
@@ -300,7 +300,7 @@ export default function ManageListingAvailability({
                 {ranges.map((r) => (
                   <li
                     key={r.id}
-                    className="flex items-center justify-between rounded-lg border bg-card px-3 py-2 text-sm"
+                    className="flex flex-col gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm sm:flex-row sm:items-center sm:justify-between"
                   >
                     <span>
                       {formatDate(r.startDate)} – {formatDate(r.endDate)}

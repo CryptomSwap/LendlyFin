@@ -7,16 +7,24 @@ export const BOOKING_STATUS_LABELS: Record<string, string> = {
   REQUESTED: "ממתין לאישור",
   CONFIRMED: "אושרה",
   ACTIVE: "פעילה",
+  RETURNED: "הוחזר",
+  IN_DISPUTE: "במחלוקת",
+  NON_RETURN_PENDING: "אי-החזרה בבדיקה",
+  NON_RETURN_CONFIRMED: "אי-החזרה מאושרת",
   COMPLETED: "הושלמה",
-  DISPUTE: "מחלוקת",
+  DISPUTE: "במחלוקת",
 };
 
 export const BOOKING_STATUS_LABEL_DETAIL: Record<string, string> = {
   REQUESTED: "ממתין לאישור",
   CONFIRMED: "אושרה · ממתין לאיסוף",
   ACTIVE: "פעילה",
+  RETURNED: "הוחזר · חלון מחלוקת פתוח",
+  IN_DISPUTE: "מחלוקת פתוחה",
+  NON_RETURN_PENDING: "אי-החזרה בבדיקה",
+  NON_RETURN_CONFIRMED: "אי-החזרה אושרה",
   COMPLETED: "הושלמה",
-  DISPUTE: "בעיה פתוחה",
+  DISPUTE: "מחלוקת פתוחה",
 };
 
 export function getBookingStatusLabel(status: string): string {
@@ -34,6 +42,10 @@ const BOOKING_STATUS_PILL_VARIANT: Record<string, BookingStatusPillVariant> = {
   REQUESTED: "warning",
   CONFIRMED: "primary",
   ACTIVE: "success",
+  RETURNED: "primary",
+  IN_DISPUTE: "danger",
+  NON_RETURN_PENDING: "warning",
+  NON_RETURN_CONFIRMED: "danger",
   COMPLETED: "muted",
   DISPUTE: "danger",
 };

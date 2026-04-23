@@ -7,12 +7,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { TrustStrip } from "@/components/home/TrustStrip";
-import { Shield, CheckCircle2, AlertTriangle, FileCheck, MessageSquare } from "lucide-react";
+import { Shield, CheckCircle2, AlertTriangle, FileCheck, MessageSquare, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function SafetyPage() {
   return (
-    <div className="space-y-6 pb-24 max-w-4xl mx-auto">
+    <div className="min-h-screen w-full app-page-bg space-y-6 pb-24 max-w-4xl mx-auto" dir="rtl">
       <div className="text-center mb-8">
         <Shield className="h-16 w-16 mx-auto mb-4 text-primary" />
         <h1 className="page-title mb-2">בטיחות ואמון</h1>
@@ -40,7 +40,7 @@ export default function SafetyPage() {
             <div className="space-y-3">
               <div>
                 <h3 className="font-semibold mb-2 flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-green-600" />
+                  <CheckCircle2 className="h-4 w-4 text-primary" />
                   אימות זהות
                 </h3>
                 <p className="text-sm text-muted-foreground">
@@ -49,7 +49,7 @@ export default function SafetyPage() {
               </div>
               <div>
                 <h3 className="font-semibold mb-2 flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-green-600" />
+                  <CheckCircle2 className="h-4 w-4 text-primary" />
                   אימות אימייל
                 </h3>
                 <p className="text-sm text-muted-foreground">
@@ -58,7 +58,7 @@ export default function SafetyPage() {
               </div>
               <div>
                 <h3 className="font-semibold mb-2 flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-green-600" />
+                  <CheckCircle2 className="h-4 w-4 text-primary" />
                   אימות טלפון (בקרוב)
                 </h3>
                 <p className="text-sm text-muted-foreground">
@@ -166,9 +166,9 @@ export default function SafetyPage() {
                   <li>חיובים נוספים אם הנזק עולה על גובה הפיקדון</li>
                 </ul>
               </div>
-              <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+              <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
                 <div className="flex items-start gap-2">
-                  <AlertTriangle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                  <AlertTriangle className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
                   <div>
                     <h4 className="font-semibold text-sm mb-1">חשוב</h4>
                     <p className="text-sm text-muted-foreground">

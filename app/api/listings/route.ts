@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/admin";
 import { needsOnboarding } from "@/lib/auth/onboarding";
 import { isValidCategorySlug, isValidSubcategorySlug } from "@/lib/constants";
+import { trackEvent } from "@/lib/analytics";
 
 /** Public list: only ACTIVE listings (e.g. for home/feeds) */
 export async function GET() {
@@ -102,6 +103,16 @@ export async function POST(req: Request) {
     },
     include: {
       images: { orderBy: { order: "asc" } },
+    },
+  });
+  await trackEvent({
+    eventName: "listing_created",
+    userId: user.id,
+    payload: {
+      listingId: listing.id,
+      category: listing.category,
+      city: listing.city,
+      pricePerDay: listing.pricePerDay,
     },
   });
 

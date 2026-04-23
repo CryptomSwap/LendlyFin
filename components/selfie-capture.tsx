@@ -14,18 +14,19 @@ export default function SelfieCapture({
   onCapture,
   currentImage,
 }: SelfieCaptureProps) {
+  const hasCameraApi =
+    typeof navigator !== "undefined" && Boolean(navigator.mediaDevices?.getUserMedia);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [preview, setPreview] = useState<string | null>(currentImage || null);
-  const [cameraSupported, setCameraSupported] = useState<boolean | null>(null);
+  const [cameraSupported, setCameraSupported] = useState<boolean | null>(
+    hasCameraApi ? null : false
+  );
   const [error, setError] = useState<string | null>(null);
 
   // Try to open front camera with getUserMedia
   useEffect(() => {
-    if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
-      setCameraSupported(false);
-      return;
-    }
+    if (!hasCameraApi) return;
 
     let cancelled = false;
 
@@ -62,7 +63,7 @@ export default function SelfieCapture({
         streamRef.current = null;
       }
     };
-  }, []);
+  }, [hasCameraApi]);
 
   const handleCaptureFrame = async () => {
     if (!videoRef.current) return;
@@ -97,7 +98,7 @@ export default function SelfieCapture({
     return (
       <div className="space-y-4">
         {error && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-xs text-yellow-900">
+          <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 text-xs text-foreground">
             {error}
           </div>
         )}
@@ -116,14 +117,14 @@ export default function SelfieCapture({
     <div className="space-y-4">
       <div className="text-center space-y-2">
         <h3 className="text-lg font-semibold">צילום סלפי</h3>
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-muted-foreground">
           נצלם עכשיו תמונה ברורה של הפנים שלך מתוך המצלמה.
         </p>
       </div>
 
       {preview ? (
         <div className="space-y-4">
-          <div className="relative w-full aspect-square rounded-lg overflow-hidden border-2 border-gray-200 bg-gray-100">
+          <div className="relative w-full aspect-square rounded-lg overflow-hidden border-2 border-border bg-muted">
             <Image
               src={preview}
               alt="Selfie"
@@ -145,7 +146,7 @@ export default function SelfieCapture({
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="relative w-full aspect-square rounded-lg overflow-hidden border-2 border-gray-200 bg-black flex items-center justify-center">
+          <div className="relative w-full aspect-square rounded-lg overflow-hidden border-2 border-border bg-black flex items-center justify-center">
             <video
               ref={videoRef}
               className="w-full h-full object-contain"

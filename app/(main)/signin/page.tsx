@@ -29,11 +29,11 @@ export default async function SignInPage({ searchParams }: Props) {
       </p>
       {isOAuthSigninError && (
         <div
-          className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-right text-sm text-amber-900"
+          className="rounded-lg border border-primary/20 bg-primary/5 p-4 text-right text-sm text-foreground"
           role="alert"
         >
           <p className="font-medium">שגיאה בהתחברות עם Google</p>
-          <p className="mt-1 text-amber-800">
+          <p className="mt-1 text-muted-foreground">
             וודא ש־GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET ו־NEXTAUTH_URL מוגדרים ב־.env.local,
             ושה־Redirect URI ב־Google Cloud Console הוא בדיוק:
           </p>

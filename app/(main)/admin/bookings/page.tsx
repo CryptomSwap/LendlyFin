@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getBookingStatusLabel } from "@/lib/status-labels";
 import { AdminNav } from "@/components/admin-nav";
+import { PageContainer } from "@/components/layout";
 
 async function getBookings() {
   const h = await headers();
@@ -37,7 +38,8 @@ export default async function AdminBookingsPage() {
   const bookings = await getBookings();
 
   return (
-    <div className="space-y-6 pb-24" dir="rtl">
+    <div className="min-h-screen w-full app-page-bg pb-24" dir="rtl">
+      <PageContainer width="wide" className="space-y-6">
       <div className="flex items-center justify-between gap-4">
         <h1 className="page-title">הזמנות – מנהל</h1>
         <AdminNav />
@@ -51,29 +53,33 @@ export default async function AdminBookingsPage() {
           {bookings.length === 0 ? (
             <EmptyState variant="inline" title="אין הזמנות. ההזמנות יופיעו כאן." />
           ) : (
-            <ul className="space-y-2">
+            <ul className="space-y-3">
               {bookings.map((b: { id: string; bookingRef?: string | null; status: string; user?: { name: string }; listing?: { title: string }; pickupChecklist?: { completedAt: string | null }; createdAt: string }) => (
-                <li key={b.id} className="flex items-center justify-between gap-4 py-2 border-b border-border last:border-0">
-                  <div className="text-sm">
-                    {b.bookingRef && (
-                      <span className="font-mono text-muted-foreground mr-2" dir="ltr">{b.bookingRef}</span>
-                    )}
-                    <span className="font-medium">{b.listing?.title ?? "—"}</span>
-                    <span className="text-muted-foreground"> · {b.user?.name ?? "—"}</span>
-                    <span className="text-muted-foreground"> · {getBookingStatusLabel(b.status)}</span>
-                    {b.pickupChecklist?.completedAt && (
-                      <span className="text-green-600 text-xs mr-2">✔ איסוף</span>
-                    )}
+                <li key={b.id} className="rounded-xl border border-border/70 bg-card px-4 py-3">
+                  <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                    <div className="text-sm min-w-0">
+                      <p className="font-medium text-foreground truncate">{b.listing?.title ?? "—"}</p>
+                      <p className="text-muted-foreground">
+                        {b.user?.name ?? "—"} · {getBookingStatusLabel(b.status)}
+                        {b.pickupChecklist?.completedAt && <span className="text-success mr-2">✔ איסוף</span>}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {b.bookingRef && <span className="font-mono" dir="ltr">{b.bookingRef}</span>}
+                        {b.bookingRef && " · "}
+                        {new Date(b.createdAt).toLocaleDateString("he-IL")}
+                      </p>
+                    </div>
+                    <Link href={`/admin/bookings/${b.id}`} className="text-sm text-primary font-medium hover:underline shrink-0">
+                      צפה
+                    </Link>
                   </div>
-                  <Link href={`/admin/bookings/${b.id}`} className="text-sm text-primary hover:underline">
-                    צפה
-                  </Link>
                 </li>
               ))}
             </ul>
           )}
         </CardContent>
       </Card>
+      </PageContainer>
     </div>
   );
 }

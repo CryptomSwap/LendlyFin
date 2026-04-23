@@ -249,30 +249,30 @@ export default function KYCFlow() {
           <div className="space-y-6">
             <div className="text-center space-y-2">
               <h2 className="text-2xl font-semibold">אימות זהות</h2>
-              <p className="text-gray-600">
+              <p className="text-muted-foreground">
                 כדי לאמת את זהותך, נדרשות שתי תמונות:
               </p>
             </div>
 
             <div className="space-y-4">
-              <div className="border rounded-lg p-4 space-y-2">
+              <div className="border border-border rounded-lg p-4 space-y-2 bg-card">
                 <div className="flex items-start gap-3">
                   <div className="text-2xl">📸</div>
                   <div>
                     <h3 className="font-semibold">סלפי</h3>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-muted-foreground">
                       צלם תמונה של עצמך עם הפנים שלך
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="border rounded-lg p-4 space-y-2">
+              <div className="border border-border rounded-lg p-4 space-y-2 bg-card">
                 <div className="flex items-start gap-3">
                   <div className="text-2xl">🆔</div>
                   <div>
                     <h3 className="font-semibold">תעודת זהות</h3>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-muted-foreground">
                       צלם את תעודת הזהות או הדרכון שלך
                     </p>
                   </div>
@@ -280,8 +280,8 @@ export default function KYCFlow() {
               </div>
             </div>
 
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <p className="text-sm text-blue-900">
+            <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
+              <p className="text-sm text-foreground">
                 <strong>טיפ:</strong> ודא שהתמונות ברורות ומוארות היטב
               </p>
             </div>
@@ -317,15 +317,15 @@ export default function KYCFlow() {
           <div className="space-y-6">
             <div className="text-center">
               <h2 className="text-xl font-semibold">בדוק את התמונות</h2>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-muted-foreground">
                 ודא שהתמונות ברורות לפני השליחה
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <h3 className="text-sm font-medium text-center">סלפי</h3>
-                <div className="relative aspect-square rounded-lg overflow-hidden border-2 border-gray-200 bg-gray-100">
+                <div className="relative aspect-square rounded-lg overflow-hidden border-2 border-border bg-muted">
                   {selfieFile && (
                     <Image
                       src={URL.createObjectURL(selfieFile)}
@@ -349,7 +349,7 @@ export default function KYCFlow() {
 
               <div className="space-y-2">
                 <h3 className="text-sm font-medium text-center">תעודת זהות</h3>
-                <div className="relative aspect-square rounded-lg overflow-hidden border-2 border-gray-200 bg-gray-100">
+                <div className="relative aspect-square rounded-lg overflow-hidden border-2 border-border bg-muted">
                   {idFile && (
                     <Image
                       src={URL.createObjectURL(idFile)}
@@ -373,8 +373,8 @@ export default function KYCFlow() {
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                <p className="text-sm text-red-800">{error}</p>
+            <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-3">
+                <p className="text-sm text-destructive">{error}</p>
               </div>
             )}
           </div>
@@ -384,7 +384,7 @@ export default function KYCFlow() {
         return (
           <div className="text-center space-y-4 py-8">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-300 border-t-blue-600"></div>
-            <p className="text-gray-600">שולח את המסמכים...</p>
+            <p className="text-muted-foreground">שולח את המסמכים...</p>
           </div>
         );
 
@@ -394,7 +394,7 @@ export default function KYCFlow() {
             <div className="text-6xl">✅</div>
             <div className="space-y-2">
               <h2 className="text-2xl font-semibold">נשלח בהצלחה!</h2>
-              <p className="text-gray-600">
+              <p className="text-muted-foreground">
                 המסמכים נשלחו לאימות. נבדוק אותם ונעדכן אותך בקרוב.
               </p>
             </div>
