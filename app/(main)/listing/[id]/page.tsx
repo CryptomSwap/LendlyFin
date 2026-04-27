@@ -13,22 +13,42 @@ import { getListingStatusLabel } from "@/lib/status-labels";
 import { FAQBlock } from "@/components/ui/faq-block";
 import { DEPOSIT_DISPUTE_FAQ_ITEMS } from "@/lib/copy/help-reassurance";
 import { Star, MessageCircle, HelpCircle } from "lucide-react";
+import { prisma } from "@/lib/prisma";
 
 async function getListing(id: string) {
-  const h = await headers();
-  const host = h.get("host");
-  if (!host) throw new Error("Missing host header");
-  const proto = h.get("x-forwarded-proto") ?? "http";
-  const cookie = h.get("cookie") ?? "";
-  const url = `${proto}://${host}/api/listings/${id}`;
-
-  const res = await fetch(url, {
-    cache: "no-store",
-    headers: cookie ? { cookie } : undefined,
+  const listing = await prisma.listing.findUnique({
+    where: { id },
+    include: {
+      images: { orderBy: { order: "asc" } },
+      owner: {
+        select: { id: true, name: true, kycStatus: true, phoneNumber: true },
+      },
+    },
   });
-  if (!res.ok) return null;
+  if (!listing) return null;
 
-  return res.json() as Promise<{
+  const [completedBookingsCount, reviewsAggregate] = await Promise.all([
+    prisma.booking.count({
+      where: { listingId: id, status: "COMPLETED" },
+    }),
+    listing.ownerId
+      ? prisma.review.aggregate({
+          where: {
+            booking: { listingId: id },
+            targetUserId: listing.ownerId,
+          },
+          _count: { id: true },
+          _avg: { rating: true },
+        })
+      : null,
+  ]);
+
+  return {
+    ...listing,
+    completedBookingsCount,
+    reviewsCount: reviewsAggregate?._count.id ?? 0,
+    averageRating: Math.round((reviewsAggregate?._avg.rating ?? 0) * 10) / 10,
+  } as {
     id: string;
     ownerId?: string | null;
     owner?: { id: string; name: string; kycStatus?: string | null; phoneNumber?: string | null } | null;
@@ -47,7 +67,7 @@ async function getListing(id: string) {
     completedBookingsCount?: number;
     reviewsCount?: number;
     averageRating?: number;
-  }>;
+  };
 }
 
 async function getMe(): Promise<{ id: string; isAdmin?: boolean } | null> {

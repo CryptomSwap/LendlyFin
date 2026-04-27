@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { datesOverlap } from "@/lib/availability";
 import { getBookingSummary } from "@/lib/pricing";
 import { getCurrentUser } from "@/lib/admin";
 import { needsOnboarding } from "@/lib/auth/onboarding";
@@ -64,32 +63,45 @@ export async function POST(req: Request) {
     );
   }
 
-  // Overlap check: existing bookings and blocked ranges
-  const [existingBookings, blockedRanges] = await Promise.all([
-    prisma.booking.findMany({
-      where: { listingId: body.listingId },
-      select: { startDate: true, endDate: true },
+  // Overlap check: push date conflict logic into DB.
+  const [overlappingBooking, overlappingBlockedRange] = await Promise.all([
+    prisma.booking.findFirst({
+      where: {
+        listingId: body.listingId,
+        status: {
+          in: [
+            "REQUESTED",
+            "CONFIRMED",
+            "ACTIVE",
+            "RETURNED",
+            "IN_DISPUTE",
+            "NON_RETURN_PENDING",
+            "NON_RETURN_CONFIRMED",
+          ],
+        },
+        startDate: { lte: endDate },
+        endDate: { gte: startDate },
+      },
+      select: { id: true },
     }),
-    prisma.listingBlockedRange.findMany({
-      where: { listingId: body.listingId },
-      select: { startDate: true, endDate: true },
+    prisma.listingBlockedRange.findFirst({
+      where: {
+        listingId: body.listingId,
+        startDate: { lte: endDate },
+        endDate: { gte: startDate },
+      },
+      select: { id: true },
     }),
   ]);
 
-  const overlapsBooking = existingBookings.some((b) =>
-    datesOverlap(startDate, endDate, b.startDate, b.endDate)
-  );
-  if (overlapsBooking) {
+  if (overlappingBooking) {
     return NextResponse.json(
       { error: "התאריכים שנבחרו חופפים להזמנה קיימת. נא לבחור תאריכים אחרים." },
       { status: 409 }
     );
   }
 
-  const overlapsBlocked = blockedRanges.some((r) =>
-    datesOverlap(startDate, endDate, r.startDate, r.endDate)
-  );
-  if (overlapsBlocked) {
+  if (overlappingBlockedRange) {
     return NextResponse.json(
       { error: "התאריכים שנבחרו חסומים. נא לבחור תאריכים זמינים." },
       { status: 409 }

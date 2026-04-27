@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, isAdminUser } from "@/lib/admin";
+import { getCurrentUser } from "@/lib/admin";
+import { measurePerf } from "@/lib/perf";
 
 export const runtime = "nodejs";
 
@@ -14,50 +15,48 @@ export async function GET(
   _req: Request,
   ctx: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await ctx.params;
+  return measurePerf("api.listingById.GET", async () => {
+    const { id } = await ctx.params;
 
-  const listing = await prisma.listing.findUnique({
-    where: { id },
-    include: {
-      images: { orderBy: { order: "asc" } },
-      owner: {
-        select: { id: true, name: true, kycStatus: true, phoneNumber: true },
+    const listing = await prisma.listing.findUnique({
+      where: { id },
+      include: {
+        images: { orderBy: { order: "asc" } },
+        owner: {
+          select: { id: true, name: true, kycStatus: true, phoneNumber: true },
+        },
       },
-    },
-  });
+    });
 
-  if (!listing) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
-  }
+    if (!listing) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
 
-  const [completedBookingsCount, reviewsAgg] = await Promise.all([
-    prisma.booking.count({
-      where: { listingId: id, status: "COMPLETED" },
-    }),
-    listing.ownerId
-      ? prisma.review.findMany({
-          where: {
-            booking: { listingId: id },
-            targetUserId: listing.ownerId,
-          },
-          select: { rating: true },
-        })
-      : [],
-  ]);
+    const [completedBookingsCount, reviewsAgg] = await Promise.all([
+      prisma.booking.count({
+        where: { listingId: id, status: "COMPLETED" },
+      }),
+      listing.ownerId
+        ? prisma.review.aggregate({
+            where: {
+              booking: { listingId: id },
+              targetUserId: listing.ownerId,
+            },
+            _count: { id: true },
+            _avg: { rating: true },
+          })
+        : null,
+    ]);
 
-  const reviewsCount = reviewsAgg.length;
-  const averageRating =
-    reviewsCount > 0
-      ? Math.round(
-          (reviewsAgg.reduce((s, r) => s + r.rating, 0) / reviewsCount) * 10
-        ) / 10
-      : 0;
+    const reviewsCount = reviewsAgg?._count.id ?? 0;
+    const averageRating = Math.round((reviewsAgg?._avg.rating ?? 0) * 10) / 10;
 
-  return NextResponse.json({
-    ...listing,
-    completedBookingsCount,
-    reviewsCount,
-    averageRating,
+    return NextResponse.json({
+      ...listing,
+      completedBookingsCount,
+      reviewsCount,
+      averageRating,
+    });
   });
 }
 
@@ -80,7 +79,7 @@ export async function PATCH(
     return NextResponse.json({ error: "Listing not found" }, { status: 404 });
   }
 
-  const isAdmin = await isAdminUser(user.id);
+  const isAdmin = !!user.isAdmin;
   if (!canManageListing(listing, user.id, isAdmin)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }

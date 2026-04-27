@@ -7,7 +7,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { TrustStrip } from "@/components/home/TrustStrip";
-import { Shield, CheckCircle2, AlertTriangle, FileCheck, MessageSquare, Users } from "lucide-react";
+import { Shield, CheckCircle2, AlertTriangle, FileCheck, MessageSquare, Scale } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function SafetyPage() {
@@ -17,7 +17,7 @@ export default function SafetyPage() {
         <Shield className="h-16 w-16 mx-auto mb-4 text-primary" />
         <h1 className="page-title mb-2">בטיחות ואמון</h1>
         <p className="text-sm text-muted-foreground">
-          למד על אמצעי הבטיחות ותכונות בניית האמון שלנו
+          עקרונות הבטיחות של Lendly בהתאם לתנאי השימוש, מדיניות הפרטיות ומדיניות הביטולים וההחזרים
         </p>
       </div>
 
@@ -33,7 +33,7 @@ export default function SafetyPage() {
               תהליך אימות
             </CardTitle>
             <CardDescription>
-              איך אנחנו מאמתים זהויות ובונים אמון
+              אימות חשבון וזהות (KYC) לפי תנאי השימוש
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -44,25 +44,25 @@ export default function SafetyPage() {
                   אימות זהות
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  משתמשים שמעוניינים לפרסם מודעות נדרשים לאמת את זהותם בהעלאת תעודת זהות. זה מסייע להבטיח שכל אחד בפלטפורמה הוא מי שהוא טוען שהוא.
+                  Lendly רשאית לדרוש אימות זהות, כולל מסמכי זיהוי, צילום עצמי ופרטים משלימים, לצורכי מניעת הונאה, אבטחת פעילות ועמידה בדרישות דין.
                 </p>
               </div>
               <div>
                 <h3 className="font-semibold mb-2 flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-primary" />
-                  אימות אימייל
+                  פרטים נכונים ומעודכנים
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  כל המשתמשים צריכים לאמת את כתובת האימייל בעת יצירת חשבון. זה מסייע במניעת חשבונות מזויפים ומבטיח שנוכל ליצור איתך קשר לגבי ההזמנות.
+                  השימוש בפלטפורמה מותנה במסירת מידע נכון, מלא ומעודכן. מסירת מידע שגוי או אי שיתוף פעולה בתהליך KYC עלולים להוביל להגבלת חשבון, השעיה או סגירה.
                 </p>
               </div>
               <div>
                 <h3 className="font-semibold mb-2 flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-primary" />
-                  אימות טלפון (בקרוב)
+                  שימוש לבגירים בלבד
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  אנחנו עובדים על הוספת אימות מספר טלפון לשכבת אבטחה נוספת.
+                  השירות מיועד לבני 18 ומעלה בלבד.
                 </p>
               </div>
             </div>
@@ -77,47 +77,31 @@ export default function SafetyPage() {
         <Card className="shadow-soft">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
-              <Users className="h-5 w-5 text-primary" />
-              ציון אמון
+              <Scale className="h-5 w-5 text-primary" />
+              אחריות הפלטפורמה והתפקיד של Lendly
             </CardTitle>
             <CardDescription>
-              איך אנחנו מחשבים ומציגים את רמת האמינות של המשתמש
+              מה Lendly כן עושה ומה לא
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-3">
               <div>
-                <h3 className="font-semibold mb-2">מהו ציון אמון?</h3>
-                <p className="text-sm text-muted-foreground mb-3">
-                  ציון האמון הוא דירוג מספרי (0–100) שמשקף את האמינות והאמון שלך בפלטפורמה. הוא מחושב לפי כמה גורמים:
-                </p>
-                <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground ms-4">
-                  <li>הזמנות שהושלמו ללא בעיות</li>
-                  <li>ביקורות חיוביות ממשתמשים אחרים</li>
-                  <li>מצב אימות החשבון</li>
-                  <li>זמן תגובה להודעות</li>
-                  <li>החזרות ואיסופים בזמן</li>
-                  <li>היסטוריית מחלוקות</li>
-                </ul>
-              </div>
-              <div>
-                <h3 className="font-semibold mb-2">איך לשפר את ציון האמון</h3>
-                <p className="text-sm text-muted-foreground mb-2">
-                  דרכים לבנות ולשמור על ציון אמון גבוה:
-                </p>
-                <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground ms-4">
-                  <li>השלם הזמנות בהצלחה</li>
-                  <li>החזר פריטים בזמן ובמצב טוב</li>
-                  <li>הגב להודעות במהירות</li>
-                  <li>השאר ביקורות כנות לאחר עסקאות</li>
-                  <li>אמת את החשבון</li>
-                  <li>הימנע מביטולים ומחלוקות</li>
-                </ul>
-              </div>
-              <div>
-                <h3 className="font-semibold mb-2">למה ציון אמון חשוב</h3>
+                <h3 className="font-semibold mb-2">Lendly היא פלטפורמת תיווך טכנולוגית</h3>
                 <p className="text-sm text-muted-foreground">
-                  משאילים נוטים לאשר הזמנות ממשתמשים עם ציון אמון גבוה יותר. גם שוכרים מעדיפים להזמין ממשאילים עם ציון אמון טוב. ציון גבוה יכול לסייע לקבל יותר הזמנות ולפרסם יותר מודעות.
+                  Lendly אינה צד להסכם ההשכרה בין משכיר לשוכר. העסקה נכרתת ישירות בין הצדדים, והם אחראים לקיום התחייבויותיהם.
+                </p>
+              </div>
+              <div>
+                <h3 className="font-semibold mb-2">כספים ותשלומים</h3>
+                <p className="text-sm text-muted-foreground mb-2">
+                  כל התשלומים, הפיקדונות, ההחזרים והחיובים מעובדים באמצעות ספק תשלום מורשה בלבד. Lendly אינה מחזיקה כספי משתמשים ואינה מנהלת נאמנות (Escrow).
+                </p>
+              </div>
+              <div>
+                <h3 className="font-semibold mb-2">אחריות לפריטים</h3>
+                <p className="text-sm text-muted-foreground">
+                  המשכיר אחראי לספק תיאור מדויק ופריט תקין ובטוח; השוכר אחראי להשתמש באופן סביר ולהחזיר בזמן ובמצב דומה, למעט בלאי סביר.
                 </p>
               </div>
             </div>
@@ -131,7 +115,7 @@ export default function SafetyPage() {
               יישוב מחלוקות
             </CardTitle>
             <CardDescription>
-              איך אנחנו מטפלים בסכסוכים ומחלוקות בין משתמשים
+              עקרונות טיפול במחלוקות לפי תנאי השימוש
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -139,19 +123,19 @@ export default function SafetyPage() {
               <div>
                 <h3 className="font-semibold mb-2">מהי מחלוקת?</h3>
                 <p className="text-sm text-muted-foreground">
-                  מחלוקת מתעוררת כשיש חילוקי דעות בין שוכר למשאיל, כמו נזק לפריט, פריטים חסרים או בעיות תשלום. שני הצדדים יכולים לפתוח מחלוקת דרך הפלטפורמה.
+                  מחלוקת היא הליך פנימי לבירור טענות בין שוכר למשכיר בקשר להזמנה, למשל נזק, אובדן או הפרת תנאי השכרה.
                 </p>
               </div>
               <div>
                 <h3 className="font-semibold mb-2">איך מחלוקות נפתרות</h3>
                 <p className="text-sm text-muted-foreground mb-2">
-                  צוות התמיכה בודק מחלוקות על ידי:
+                  Lendly בוחנת מחלוקות על בסיס ראיות ונתוני מערכת:
                 </p>
                 <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground ms-4">
                   <li>בדיקת תמונות וראיות משני הצדדים</li>
                   <li>בדיקת פרטי ההזמנה והיסטוריית התקשורת</li>
                   <li>בחינת דוחות מצב באיסוף ובהחזרה</li>
-                  <li>קבלת החלטה הוגנת לפי מדיניות הפלטפורמה</li>
+                  <li>הכרעה תפעולית לצורכי חלוקה כספית לפי מסמכי הפלטפורמה</li>
                 </ul>
               </div>
               <div>
@@ -163,7 +147,7 @@ export default function SafetyPage() {
                   <li>החזר פיקדון מלא לשוכר</li>
                   <li>ניכוי חלקי לתיקונים</li>
                   <li>ניכוי מלא לנזק משמעותי או אובדן</li>
-                  <li>חיובים נוספים אם הנזק עולה על גובה הפיקדון</li>
+                  <li>חיוב נוסף במקרה שהנזק חורג מסכום הפיקדון (בהתאם למדיניות ולדין)</li>
                 </ul>
               </div>
               <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
@@ -172,7 +156,7 @@ export default function SafetyPage() {
                   <div>
                     <h4 className="font-semibold text-sm mb-1">חשוב</h4>
                     <p className="text-sm text-muted-foreground">
-                      תעד תמיד את מצב הפריטים בתמונות באיסוף ובהחזרה. הראיות האלה חיוניות ליישוב הוגן של מחלוקות.
+                      הכרעה תפעולית של Lendly אינה מחליפה סמכות שיפוטית ואינה מונעת פנייה לערכאות מוסמכות לפי דין.
                     </p>
                   </div>
                 </div>
@@ -188,7 +172,7 @@ export default function SafetyPage() {
               טיפים לבטיחות
             </CardTitle>
             <CardDescription>
-              שיטות עבודה מומלצות להשכרה ופרסום בטוחים
+              התנהלות מומלצת להפחתת סיכונים ולהגנה על שני הצדדים
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -197,7 +181,7 @@ export default function SafetyPage() {
                 <h3 className="font-semibold mb-2">לשוכרים</h3>
                 <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground ms-4">
                   <li>קרא תיאורים וביקורות לפני ההזמנה</li>
-                  <li>תקשר עם משאילים דרך מערכת ההודעות</li>
+                  <li>בצע תקשורת ותיעוד רק דרך הפלטפורמה</li>
                   <li>בדוק פריטים ביסודיות באיסוף ותעד נזק קיים</li>
                   <li>השתמש בפריטים רק לפי הייעוד והוראות השימוש</li>
                   <li>החזר בזמן ובאותו מצב</li>
@@ -208,12 +192,28 @@ export default function SafetyPage() {
                 <h3 className="font-semibold mb-2">למשאילים</h3>
                 <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground ms-4">
                   <li>ספק תיאורים מדויקים ותמונות ברורות</li>
-                  <li>הגדר תעריפים וזמינות ריאליסטיים</li>
+                  <li>פרסם רק פריטים חוקיים, בטוחים ובמצב תקין</li>
                   <li>הגב במהירות לבקשות הזמנה והודעות</li>
                   <li>תעד מצב פריט לפני ואחרי כל השכרה</li>
                   <li>היה זמין לתיאום איסוף והחזרה</li>
-                  <li>השאר ביקורות כנות לאחר השכרות</li>
+                  <li>זכור שבלאי טבעי וסביר אינו עילה לדרישה כספית</li>
                 </ul>
+              </div>
+            </div>
+            <div className="pt-4 border-t border-border text-sm text-muted-foreground space-y-2">
+              <p>
+                למידע המשפטי המלא והמחייב, עיין במסמכים הבאים:
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <Link href="/help/terms" className="text-primary underline underline-offset-4">
+                  תנאי שימוש
+                </Link>
+                <Link href="/help/privacy" className="text-primary underline underline-offset-4">
+                  מדיניות פרטיות
+                </Link>
+                <Link href="/help/refunds" className="text-primary underline underline-offset-4">
+                  מדיניות ביטולים והחזרים
+                </Link>
               </div>
             </div>
           </CardContent>

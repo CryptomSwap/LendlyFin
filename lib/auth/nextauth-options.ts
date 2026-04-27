@@ -117,12 +117,6 @@ export const authOptions: NextAuthOptions = {
         }
         token.lendlyUserId = dbUser.id;
         token.onboardingComplete = isOnboardingComplete(dbUser);
-      } else if (token.lendlyUserId) {
-        const u = await prisma.user.findUnique({
-          where: { id: token.lendlyUserId },
-          select: { name: true, phoneNumber: true, city: true },
-        });
-        token.onboardingComplete = u ? isOnboardingComplete(u) : false;
       }
       return token;
     },

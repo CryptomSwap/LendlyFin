@@ -11,23 +11,30 @@ export async function GET(req: Request) {
 
   const { searchParams } = new URL(req.url);
   const statusFilter = searchParams.get("status")?.trim();
+  const page = Math.max(1, Number(searchParams.get("page") ?? 1));
+  const limit = Math.min(100, Math.max(1, Number(searchParams.get("limit") ?? 20)));
 
   const where = statusFilter
     ? { status: statusFilter as "OPEN" | "UNDER_REVIEW" | "RESOLVED_OWNER" | "RESOLVED_RENTER" | "RESOLVED_SPLIT" | "CLOSED" }
     : {};
 
-  const disputes = await prisma.dispute.findMany({
-    where,
-    orderBy: { createdAt: "desc" },
-    include: {
-      booking: {
-        include: {
-          user: { select: { id: true, name: true } },
-          listing: { select: { id: true, title: true } },
+  const [disputes, total] = await Promise.all([
+    prisma.dispute.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      skip: (page - 1) * limit,
+      take: limit,
+      include: {
+        booking: {
+          include: {
+            user: { select: { id: true, name: true } },
+            listing: { select: { id: true, title: true } },
+          },
         },
       },
-    },
-  });
+    }),
+    prisma.dispute.count({ where }),
+  ]);
 
   const list = disputes.map((d) => ({
     id: d.id,
@@ -42,5 +49,5 @@ export async function GET(req: Request) {
     renterId: d.booking.userId,
   }));
 
-  return NextResponse.json({ disputes: list });
+  return NextResponse.json({ disputes: list, page, limit, total, hasMore: page * limit < total });
 }

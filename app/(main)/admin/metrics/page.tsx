@@ -5,18 +5,10 @@ import { AdminNav } from "@/components/admin-nav";
 import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageContainer } from "@/components/layout";
+import { getAdminMetrics } from "@/lib/admin/metrics";
 
 async function getMetrics() {
-  const h = await headers();
-  const host = h.get("host");
-  if (!host) return null;
-  const proto = h.get("x-forwarded-proto") ?? "http";
-  const res = await fetch(`${proto}://${host}/api/admin/metrics`, {
-    cache: "no-store",
-    headers: { cookie: h.get("cookie") ?? "" },
-  });
-  if (!res.ok) return null;
-  return res.json();
+  return getAdminMetrics();
 }
 
 async function ensureAdmin() {

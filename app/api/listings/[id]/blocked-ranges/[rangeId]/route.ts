@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, isAdminUser } from "@/lib/admin";
+import { getCurrentUser } from "@/lib/admin";
 
 export const runtime = "nodejs";
 
@@ -23,7 +23,7 @@ export async function DELETE(
   if (!listing) {
     return NextResponse.json({ error: "Listing not found" }, { status: 404 });
   }
-  const isAdmin = await isAdminUser(user.id);
+  const isAdmin = !!user.isAdmin;
   if (!(isAdmin || (listing.ownerId && listing.ownerId === user.id))) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }

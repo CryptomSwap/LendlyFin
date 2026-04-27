@@ -20,6 +20,7 @@ import {
   getBookingLifecycleStep,
   getBookingProgressPercent,
 } from "@/lib/booking-lifecycle-steps";
+import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 
@@ -37,8 +38,8 @@ type Booking = {
     | "NON_RETURN_CONFIRMED"
     | "COMPLETED"
     | "DISPUTE";
-  startDate: string;
-  endDate: string;
+  startDate: string | Date;
+  endDate: string | Date;
   listing: { title: string; deposit: number; ownerId?: string | null };
   rentalSubtotal?: number;
   serviceFee?: number;
@@ -47,8 +48,8 @@ type Booking = {
   paymentStatus?: string;
   paymentMethod?: string | null;
   depositStatus?: string | null;
-  disputeWindowEndsAt?: string | null;
-  returnedAt?: string | null;
+  disputeWindowEndsAt?: string | Date | null;
+  returnedAt?: string | Date | null;
   pickupInstructionsSnapshot?: string | null;
   pickupChecklist?: { completedAt: string | null } | null;
   returnChecklist?: {
@@ -60,17 +61,29 @@ type Booking = {
 };
 
 async function getBooking(id: string): Promise<Booking | null> {
-  const h = await headers();
-  const host = h.get("host");
-  if (!host) throw new Error("Missing host header");
-  const proto = h.get("x-forwarded-proto") ?? "http";
-  const cookie = h.get("cookie") ?? "";
-  const res = await fetch(`${proto}://${host}/api/bookings/${id}`, {
-    cache: "no-store",
-    headers: cookie ? { cookie } : undefined,
+  const me = await getMe();
+  if (!me) return null;
+
+  const booking = await prisma.booking.findUnique({
+    where: { id },
+    include: {
+      listing: {
+        include: {
+          images: { orderBy: { order: "asc" } },
+        },
+      },
+      pickupChecklist: true,
+      returnChecklist: true,
+      checklistPhotos: true,
+      dispute: true,
+    },
   });
-  if (!res.ok) return null;
-  return res.json();
+
+  if (!booking) return null;
+  const isRenter = booking.userId === me.id;
+  const isLender = booking.listing?.ownerId != null && booking.listing.ownerId === me.id;
+  if (!isRenter && !isLender && !me.isAdmin) return null;
+  return booking;
 }
 
 async function getMe() {
@@ -89,17 +102,24 @@ async function getMe() {
 }
 
 async function getReviews(bookingId: string) {
-  const h = await headers();
-  const host = h.get("host");
-  if (!host) return [];
-  const proto = h.get("x-forwarded-proto") ?? "http";
-  const res = await fetch(`${proto}://${host}/api/bookings/${bookingId}/reviews`, {
-    cache: "no-store",
-    headers: { cookie: h.get("cookie") ?? "" },
+  const reviews = await prisma.review.findMany({
+    where: { bookingId },
+    orderBy: { createdAt: "desc" },
+    include: {
+      author: { select: { id: true, name: true } },
+      targetUser: { select: { id: true, name: true } },
+    },
   });
-  if (!res.ok) return [];
-  const data = await res.json();
-  return data.reviews ?? [];
+  return reviews.map((r) => ({
+    id: r.id,
+    rating: r.rating,
+    body: r.body,
+    createdAt: r.createdAt,
+    authorId: r.authorId,
+    authorName: r.author.name,
+    targetUserId: r.targetUserId,
+    targetUserName: r.targetUser.name,
+  }));
 }
 
 export default async function BookingStatusPage(props: {
@@ -480,7 +500,7 @@ export default async function BookingStatusPage(props: {
   );
 }
 
-function fmt(d: string) {
+function fmt(d: string | Date) {
   return new Intl.DateTimeFormat("he-IL").format(new Date(d));
 }
 

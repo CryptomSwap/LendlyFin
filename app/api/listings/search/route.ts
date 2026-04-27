@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
+import { measurePerf } from "@/lib/perf";
 
 export const runtime = "nodejs";
 
@@ -8,7 +9,8 @@ export const runtime = "nodejs";
 const PUBLIC_LISTING_STATUS = "ACTIVE" as const;
 
 export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
+  return measurePerf("api.listings.search.GET", async () => {
+    const { searchParams } = new URL(req.url);
 
   // Text + categorical filters
   const q = (searchParams.get("q") ?? "").trim();
@@ -83,7 +85,7 @@ export async function GET(req: Request) {
   const listingIds = rawItems.map((i) => i.id);
 
   // Batch-fetch trust stats: completed bookings per listing, reviews per listing (for owner)
-  const [completedCounts, reviewsByListing] = await Promise.all([
+  const [completedCounts, reviewStatsByListing] = await Promise.all([
     listingIds.length > 0
       ? prisma.booking.groupBy({
           by: ["listingId"],
@@ -95,14 +97,14 @@ export async function GET(req: Request) {
         })
       : [],
     listingIds.length > 0
-      ? prisma.review.findMany({
-          where: { booking: { listingId: { in: listingIds } } },
-          select: {
-            rating: true,
-            targetUserId: true,
-            booking: { select: { listingId: true } },
-          },
-        })
+      ? prisma.$queryRaw<Array<{ listingId: string; reviewsCount: number; averageRating: number | null }>>`
+          SELECT b.listingId AS listingId, COUNT(r.id) AS reviewsCount, AVG(r.rating) AS averageRating
+          FROM Review r
+          INNER JOIN Booking b ON b.id = r.bookingId
+          INNER JOIN Listing l ON l.id = b.listingId
+          WHERE b.listingId IN (${Prisma.join(listingIds)}) AND r.targetUserId = l.ownerId
+          GROUP BY b.listingId
+        `
       : [],
   ]);
 
@@ -110,31 +112,22 @@ export async function GET(req: Request) {
     completedCounts.map((c) => [c.listingId, c._count.id])
   );
 
-  const listingOwnerId = new Map(
-    rawItems.map((i) => [i.id, i.ownerId ?? ""])
+  const reviewsForOwnerByListing = new Map(
+    reviewStatsByListing.map((row) => [
+      row.listingId,
+      {
+        count: Number(row.reviewsCount ?? 0),
+        averageRating: Math.round(Number(row.averageRating ?? 0) * 10) / 10,
+      },
+    ])
   );
-  const reviewsForOwnerByListing: Record<
-    string,
-    { count: number; sum: number }
-  > = {};
-  for (const r of reviewsByListing) {
-    const lid = r.booking.listingId;
-    const ownerId = listingOwnerId.get(lid);
-    if (ownerId && r.targetUserId === ownerId) {
-      if (!reviewsForOwnerByListing[lid])
-        reviewsForOwnerByListing[lid] = { count: 0, sum: 0 };
-      reviewsForOwnerByListing[lid].count += 1;
-      reviewsForOwnerByListing[lid].sum += r.rating;
-    }
-  }
 
   const items = rawItems.map((listing) => {
     const { owner, ...rest } = listing;
     const completed = completedByListingId.get(listing.id) ?? 0;
-    const rev = reviewsForOwnerByListing[listing.id];
+    const rev = reviewsForOwnerByListing.get(listing.id);
     const reviewsCount = rev?.count ?? 0;
-    const averageRating =
-      reviewsCount > 0 ? Math.round((rev!.sum / reviewsCount) * 10) / 10 : 0;
+    const averageRating = rev?.averageRating ?? 0;
     return {
       ...rest,
       owner,
@@ -144,11 +137,12 @@ export async function GET(req: Request) {
     };
   });
 
-  return NextResponse.json({
-    items,
-    hasMore: page * limit < total,
-    total,
-    page,
-    limit,
+    return NextResponse.json({
+      items,
+      hasMore: page * limit < total,
+      total,
+      page,
+      limit,
+    });
   });
 }

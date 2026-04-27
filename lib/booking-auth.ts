@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/admin";
-import { isAdminUser } from "@/lib/admin";
 
 /**
  * Ensures the current user can access the booking (renter or admin).
@@ -28,7 +27,7 @@ export async function requireBookingAccess(bookingId: string) {
   }
 
   const isRenter = booking.userId === user.id;
-  const isAdmin = await isAdminUser(user.id);
+  const isAdmin = !!user.isAdmin;
 
   if (!isRenter && !isAdmin) {
     return { error: NextResponse.json({ error: "Forbidden" }, { status: 403 }), booking: null, user: null };
@@ -61,7 +60,7 @@ export async function requireBookingMessagesAccess(bookingId: string) {
 
   const isRenter = booking.userId === user.id;
   const isLender = booking.listing?.ownerId != null && booking.listing.ownerId === user.id;
-  const isAdmin = await isAdminUser(user.id);
+  const isAdmin = !!user.isAdmin;
 
   if (!isRenter && !isLender && !isAdmin) {
     return { error: NextResponse.json({ error: "Forbidden" }, { status: 403 }), booking: null, user: null };

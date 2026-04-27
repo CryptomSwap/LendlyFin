@@ -17,13 +17,13 @@
   --shadow-soft: 0 4px 10px rgba(0,0,0,0.06);
   --shadow-medium: 0 8px 20px rgba(0,0,0,0.10);
   --shadow-card: 0 6px 16px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04);
-  --shadow-cta: 0 8px 24px rgba(80,200,120,0.3);
+  --shadow-cta: 0 8px 24px rgba(47,191,159,0.3);
   --shadow-cta-strip: 0 -8px 24px rgba(0,0,0,0.08);
 
   --radius: 0.625rem;
 
   /* Lendly brand & semantic colors */
-  --primary: #50C878;
+  --primary: #2FBF9F;
   --primary-foreground: #ffffff;
   --accent: #7C3AED;
   --accent-foreground: #ffffff;
@@ -60,7 +60,7 @@
   --destructive: #ef4444;
   --border: #EAECEC;
   --input: #EAECEC;
-  --ring: #50C878;
+  --ring: #2FBF9F;
 
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
@@ -69,12 +69,12 @@
   --chart-5: oklch(0.769 0.188 70.08);
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: #50C878;
+  --sidebar-primary: #2FBF9F;
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: oklch(0.97 0 0);
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: #EAECEC;
-  --sidebar-ring: #50C878;
+  --sidebar-ring: #2FBF9F;
 }
 
 @theme inline {
@@ -280,7 +280,7 @@
 }
 
 .dark {
-  --primary: #50C878;
+  --primary: #3dd4b0;
   --primary-foreground: #ffffff;
   --accent: #8b5cf6;
   --accent-foreground: #ffffff;
@@ -302,15 +302,15 @@
   --destructive-foreground: #ffffff;
   --border: #334155;
   --input: #334155;
-  --ring: #50C878;
+  --ring: #3dd4b0;
   --sidebar: #0f172a;
   --sidebar-foreground: #f8fafc;
-  --sidebar-primary: #50C878;
+  --sidebar-primary: #3dd4b0;
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #334155;
   --sidebar-accent-foreground: #f8fafc;
   --sidebar-border: #334155;
-  --sidebar-ring: #50C878;
+  --sidebar-ring: #3dd4b0;
 
   color-scheme: dark;
 
@@ -331,7 +331,7 @@
   --shadow-soft: 0 4px 14px rgba(0, 0, 0, 0.35);
   --shadow-medium: 0 10px 28px rgba(0, 0, 0, 0.45);
   --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.25);
-  --shadow-cta: 0 8px 28px rgba(80, 200, 120, 0.35);
+  --shadow-cta: 0 8px 28px rgba(61, 212, 176, 0.35);
   --shadow-cta-strip: 0 -10px 28px rgba(0, 0, 0, 0.35);
 }
 

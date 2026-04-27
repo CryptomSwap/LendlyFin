@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, isAdminUser } from "@/lib/admin";
+import { getCurrentUser } from "@/lib/admin";
 import { normalizeRange } from "@/lib/availability";
 
 export const runtime = "nodejs";
@@ -30,7 +30,7 @@ export async function GET(
     return NextResponse.json({ error: "Listing not found" }, { status: 404 });
   }
 
-  const isAdmin = await isAdminUser(user.id);
+  const isAdmin = !!user.isAdmin;
   if (!canManageListing(listing, user.id, isAdmin)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
@@ -62,7 +62,7 @@ export async function POST(
     return NextResponse.json({ error: "Listing not found" }, { status: 404 });
   }
 
-  const isAdmin = await isAdminUser(user.id);
+  const isAdmin = !!user.isAdmin;
   if (!canManageListing(listing, user.id, isAdmin)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }

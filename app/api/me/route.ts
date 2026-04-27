@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/admin";
+import { measurePerf } from "@/lib/perf";
 
 export const runtime = "nodejs";
 
@@ -20,55 +21,53 @@ const ME_SELECT = {
 } as const;
 
 export async function GET() {
-  const user = await getCurrentUser();
-  if (!user) {
-    return NextResponse.json(
-      { error: "Unauthorized" },
-      { status: 401, headers: { "Cache-Control": "no-store" } }
-    );
-  }
+  return measurePerf("api.me.GET", async () => {
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401, headers: { "Cache-Control": "no-store" } }
+      );
+    }
 
-  const fullUser = await prisma.user.findUnique({
-    where: { id: user.id },
-    select: ME_SELECT,
+    const fullUser = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: ME_SELECT,
+    });
+    if (!fullUser) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401, headers: { "Cache-Control": "no-store" } }
+      );
+    }
+
+    const [completedBookingsCount, reviewsAggregate] = await Promise.all([
+      prisma.booking.count({
+        where: {
+          listing: { ownerId: user.id },
+          status: "COMPLETED",
+        },
+      }),
+      prisma.review.aggregate({
+        where: { targetUserId: user.id },
+        _count: { id: true },
+        _avg: { rating: true },
+      }),
+    ]);
+
+    const reviewsCount = reviewsAggregate._count.id;
+    const averageRating = Math.round((reviewsAggregate._avg.rating ?? 0) * 10) / 10;
+
+    return NextResponse.json(
+      {
+        user: {
+          ...fullUser,
+          completedBookingsCount,
+          reviewsCount,
+          averageRating,
+        },
+      },
+      { headers: { "Cache-Control": "no-store" } }
+    );
   });
-  if (!fullUser) {
-    return NextResponse.json(
-      { error: "Unauthorized" },
-      { status: 401, headers: { "Cache-Control": "no-store" } }
-    );
-  }
-
-  const [completedBookingsCount, reviewsReceived] = await Promise.all([
-    prisma.booking.count({
-      where: {
-        listing: { ownerId: user.id },
-        status: "COMPLETED",
-      },
-    }),
-    prisma.review.findMany({
-      where: { targetUserId: user.id },
-      select: { rating: true },
-    }),
-  ]);
-
-  const reviewsCount = reviewsReceived.length;
-  const averageRating =
-    reviewsCount > 0
-      ? Math.round(
-          (reviewsReceived.reduce((s, r) => s + r.rating, 0) / reviewsCount) * 10
-        ) / 10
-      : 0;
-
-  return NextResponse.json(
-    {
-      user: {
-        ...fullUser,
-        completedBookingsCount,
-        reviewsCount,
-        averageRating,
-      },
-    },
-    { headers: { "Cache-Control": "no-store" } }
-  );
 }

@@ -35,6 +35,9 @@ model User {
   privacyAcceptedAt DateTime?
 
   createdAt         DateTime    @default(now())
+
+  @@index([kycStatus, createdAt])
+  @@index([suspendedAt])
 }
 
 enum ListingStatus {
@@ -69,6 +72,9 @@ model Listing {
   createdAt           DateTime      @default(now())
 
   @@index([ownerId])
+  @@index([status, createdAt])
+  @@index([status, pricePerDay])
+  @@index([category, subcategory, status, createdAt])
 }
 
 model ListingBlockedRange {
@@ -80,6 +86,7 @@ model ListingBlockedRange {
   createdAt DateTime @default(now())
 
   @@index([listingId])
+  @@index([listingId, startDate, endDate])
 }
 
 
@@ -128,6 +135,13 @@ model Booking {
   reviews           Review[]
 
   createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([listingId, startDate, endDate])
+  @@index([listingId, status, startDate])
+  @@index([listingId, status, endDate])
+  @@index([status, createdAt])
+  @@index([status, disputeWindowEndsAt])
 }
 
 model AnalyticsEvent {
@@ -199,6 +213,7 @@ model Review {
   @@unique([bookingId, authorId])
   @@index([bookingId])
   @@index([targetUserId])
+  @@index([bookingId, targetUserId])
 }
 
 model Conversation {
@@ -223,6 +238,7 @@ model Message {
 
   @@index([conversationId])
   @@index([senderId])
+  @@index([conversationId, createdAt])
 }
 
 enum DisputeStatus {
@@ -254,6 +270,7 @@ model Dispute {
 
   @@index([status])
   @@index([bookingId])
+  @@index([status, createdAt])
 }
 
 model PickupChecklist {
