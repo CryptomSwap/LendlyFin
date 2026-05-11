@@ -72,7 +72,11 @@ export async function POST(
 
   const dispute = await prisma.dispute.findUnique({
     where: { id: disputeId },
-    include: { booking: { select: { id: true, listing: { select: { title: true } } } } },
+    include: {
+      booking: {
+        select: { id: true, depositAmount: true, listing: { select: { title: true } } },
+      },
+    },
   });
 
   if (!dispute) {
@@ -195,5 +199,17 @@ export async function POST(
     success: true,
     dispute: { id: disputeId, status: newStatus, resolvedAt: now },
     bookingStatus: "COMPLETED",
+    financials: {
+      releasedTo: resolution === "split" ? "split" : resolution,
+      releasedAmount: resolution === "split" ? Math.floor((dispute.booking.depositAmount ?? 0) / 2) : dispute.booking.depositAmount ?? 0,
+      splitBreakdown:
+        resolution === "split"
+          ? {
+              ownerAmount: Math.floor((dispute.booking.depositAmount ?? 0) / 2),
+              renterAmount: (dispute.booking.depositAmount ?? 0) - Math.floor((dispute.booking.depositAmount ?? 0) / 2),
+            }
+          : null,
+      depositStatus: releaseResult.depositStatus,
+    },
   });
 }

@@ -7,17 +7,28 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/alert";
 
-const REASONS = [
+/** Matches app/api/bookings/[id]/dispute/route.ts VALID_USER_REASON_CODES */
+const USER_REASONS = [
   { value: "damage", label: "נזק" },
   { value: "missing_items", label: "פריטים חסרים" },
+  { value: "item_not_as_described", label: "הפריט לא כמתואר" },
+  { value: "late_return", label: "איחור בהחזרה" },
+  { value: "non_return", label: "אי-החזרה" },
+  { value: "item_not_working", label: "תקלה / לא עובד" },
+  { value: "handoff_conflict", label: "סכסוך איסוף/החזרה" },
+  { value: "policy_violation", label: "הפרת מדיניות" },
+  { value: "payment_issue", label: "תשלום / החזר" },
+  { value: "communication_issue", label: "תקשורת / תיאום" },
   { value: "manual", label: "אחר" },
 ] as const;
 
 export default function BookingDisputePage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const [reason, setReason] = useState<(typeof REASONS)[number]["value"]>("damage");
+  const [userReasonCode, setUserReasonCode] =
+    useState<(typeof USER_REASONS)[number]["value"]>("damage");
   const [note, setNote] = useState("");
+  const [evidenceLines, setEvidenceLines] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -25,10 +36,18 @@ export default function BookingDisputePage() {
     setSaving(true);
     setError(null);
     try {
+      const evidenceChecklist = evidenceLines
+        .split("\n")
+        .map((s) => s.trim())
+        .filter(Boolean);
       const res = await fetch(`/api/bookings/${id}/dispute`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reason, note }),
+        body: JSON.stringify({
+          userReasonCode,
+          note: note.trim() || undefined,
+          ...(evidenceChecklist.length > 0 ? { evidenceChecklist } : {}),
+        }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -62,11 +81,13 @@ export default function BookingDisputePage() {
             <div className="space-y-2">
               <label className="text-sm font-medium">סיבה</label>
               <select
-                value={reason}
-                onChange={(e) => setReason(e.target.value as (typeof REASONS)[number]["value"])}
+                value={userReasonCode}
+                onChange={(e) =>
+                  setUserReasonCode(e.target.value as (typeof USER_REASONS)[number]["value"])
+                }
                 className="input-base w-full"
               >
-                {REASONS.map((r) => (
+                {USER_REASONS.map((r) => (
                   <option key={r.value} value={r.value}>
                     {r.label}
                   </option>
@@ -85,6 +106,17 @@ export default function BookingDisputePage() {
               />
             </div>
 
+            <div className="space-y-2">
+              <label className="text-sm font-medium">רשימת ראיות (שורה לכל פריט, אופציונלי)</label>
+              <textarea
+                value={evidenceLines}
+                onChange={(e) => setEvidenceLines(e.target.value)}
+                rows={3}
+                className="input-base w-full min-h-[72px] resize-y"
+                placeholder={"למשל:\nצילום מצב לפני\nהודעה בתאריך..."}
+              />
+            </div>
+
             <Button onClick={submit} disabled={saving} className="w-full">
               {saving ? "שולח..." : "פתח מחלוקת"}
             </Button>
@@ -94,4 +126,3 @@ export default function BookingDisputePage() {
     </div>
   );
 }
-

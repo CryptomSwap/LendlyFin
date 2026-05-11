@@ -6,6 +6,7 @@ import { needsOnboarding } from "@/lib/auth/onboarding";
 import { generateUniqueBookingRef } from "@/lib/booking-ref";
 import { sendBookingRequestedEmails } from "@/lib/notifications/booking-lifecycle";
 import { trackEvent } from "@/lib/analytics";
+import { getActivePolicyConfig } from "@/lib/policy-config";
 
 export const runtime = "nodejs";
 
@@ -73,6 +74,8 @@ export async function POST(req: Request) {
             "REQUESTED",
             "CONFIRMED",
             "ACTIVE",
+            "NO_SHOW_RENTER",
+            "NO_SHOW_OWNER",
             "RETURNED",
             "IN_DISPUTE",
             "NON_RETURN_PENDING",
@@ -182,6 +185,7 @@ export async function POST(req: Request) {
   });
 
   const bookingRef = await generateUniqueBookingRef();
+  const policy = await getActivePolicyConfig();
 
   const booking = await prisma.$transaction(async (tx) => {
     const b = await tx.booking.create({
@@ -197,6 +201,9 @@ export async function POST(req: Request) {
         depositAmount: summary.depositAmount,
         totalDue: summary.totalDue,
         pickupInstructionsSnapshot: listing.pickupNote?.trim() || null,
+        policyVersion: policy.version,
+        graceMinutesSnapshot: policy.lateReturnGraceMinutes,
+        cancelWindowHoursSnapshot: policy.cancelPenaltyWindowHours,
         riskFlagged: false,
       },
     });

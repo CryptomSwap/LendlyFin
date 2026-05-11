@@ -3,11 +3,17 @@
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 
+type AuthHeaderLinkProps = {
+  hideAuthenticatedProfile?: boolean;
+};
+
 /**
  * Header auth entry: "התחברות" when unauthenticated, "פרופיל" when authenticated.
  * Keeps the existing auth flow; no email/password.
  */
-export default function AuthHeaderLink() {
+export default function AuthHeaderLink({
+  hideAuthenticatedProfile = false,
+}: AuthHeaderLinkProps) {
   const { data: session, status } = useSession();
 
   if (status === "loading") {
@@ -19,6 +25,10 @@ export default function AuthHeaderLink() {
   }
 
   if (session?.user) {
+    if (hideAuthenticatedProfile) {
+      return null;
+    }
+
     return (
       <Link
         href="/profile"

@@ -12,6 +12,10 @@ type Booking = {
     | "REQUESTED"
     | "CONFIRMED"
     | "ACTIVE"
+    | "CANCELLED_BY_RENTER"
+    | "CANCELLED_BY_OWNER"
+    | "NO_SHOW_RENTER"
+    | "NO_SHOW_OWNER"
     | "RETURNED"
     | "IN_DISPUTE"
     | "NON_RETURN_PENDING"
@@ -28,6 +32,13 @@ function fmt(d: string) {
   return new Intl.DateTimeFormat("he-IL").format(new Date(d));
 }
 
+const CANCELLED_OR_NOSHOW_STATUSES: Booking["status"][] = [
+  "CANCELLED_BY_RENTER",
+  "CANCELLED_BY_OWNER",
+  "NO_SHOW_RENTER",
+  "NO_SHOW_OWNER",
+];
+
 function computeCounts(bookings: Booking[]): Record<BookingFilterType, number> {
   const all = bookings.length;
   const REQUESTED = bookings.filter((b) => b.status === "REQUESTED").length;
@@ -37,6 +48,9 @@ function computeCounts(bookings: Booking[]): Record<BookingFilterType, number> {
   const IN_DISPUTE = bookings.filter((b) => b.status === "IN_DISPUTE").length;
   const NON_RETURN_PENDING = bookings.filter((b) => b.status === "NON_RETURN_PENDING").length;
   const NON_RETURN_CONFIRMED = bookings.filter((b) => b.status === "NON_RETURN_CONFIRMED").length;
+  const CANCELLED_NOSHOW = bookings.filter((b) =>
+    CANCELLED_OR_NOSHOW_STATUSES.includes(b.status)
+  ).length;
   const COMPLETED = bookings.filter((b) => b.status === "COMPLETED").length;
   return {
     all,
@@ -47,6 +61,7 @@ function computeCounts(bookings: Booking[]): Record<BookingFilterType, number> {
     IN_DISPUTE,
     NON_RETURN_PENDING,
     NON_RETURN_CONFIRMED,
+    CANCELLED_NOSHOW,
     COMPLETED,
   };
 }
@@ -62,6 +77,9 @@ export function BookingsListSection({ bookings }: BookingsListSectionProps) {
 
   const filtered = useMemo(() => {
     if (activeFilter === "all") return bookings;
+    if (activeFilter === "CANCELLED_NOSHOW") {
+      return bookings.filter((b) => CANCELLED_OR_NOSHOW_STATUSES.includes(b.status));
+    }
     return bookings.filter((b) => b.status === activeFilter);
   }, [bookings, activeFilter]);
 

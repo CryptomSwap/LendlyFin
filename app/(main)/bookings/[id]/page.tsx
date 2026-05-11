@@ -21,6 +21,7 @@ import {
   getBookingProgressPercent,
 } from "@/lib/booking-lifecycle-steps";
 import { prisma } from "@/lib/prisma";
+import { BookingLifecycleActions } from "./booking-lifecycle-actions";
 
 export const runtime = "nodejs";
 
@@ -32,12 +33,21 @@ type Booking = {
     | "REQUESTED"
     | "CONFIRMED"
     | "ACTIVE"
+    | "CANCELLED_BY_RENTER"
+    | "CANCELLED_BY_OWNER"
+    | "NO_SHOW_RENTER"
+    | "NO_SHOW_OWNER"
     | "RETURNED"
     | "IN_DISPUTE"
     | "NON_RETURN_PENDING"
     | "NON_RETURN_CONFIRMED"
     | "COMPLETED"
     | "DISPUTE";
+  cancelledAt?: string | Date | null;
+  cancellationPenaltyAmount?: number | null;
+  refundAmount?: number | null;
+  noShowMarkedAt?: string | Date | null;
+  noShowReason?: string | null;
   startDate: string | Date;
   endDate: string | Date;
   listing: { title: string; deposit: number; ownerId?: string | null };
@@ -51,9 +61,9 @@ type Booking = {
   disputeWindowEndsAt?: string | Date | null;
   returnedAt?: string | Date | null;
   pickupInstructionsSnapshot?: string | null;
-  pickupChecklist?: { completedAt: string | null } | null;
+  pickupChecklist?: { completedAt: Date | string | null } | null;
   returnChecklist?: {
-    completedAt: string | null;
+    completedAt: Date | string | null;
     damageReported?: boolean;
     missingItemsReported?: boolean;
   } | null;
@@ -136,6 +146,14 @@ export default async function BookingStatusPage(props: {
     !!me &&
     (booking?.userId === me.id ||
       (booking?.listing as { ownerId?: string } | undefined)?.ownerId === me.id);
+  const participantActor =
+    me && booking
+      ? me.id === booking.userId
+        ? ("renter" as const)
+        : (booking.listing as { ownerId?: string | null })?.ownerId === me.id
+          ? ("owner" as const)
+          : null
+      : null;
   const hasReviewed = !!me && reviews.some((r: { authorId: string }) => r.authorId === me.id);
 
   if (!booking) {
@@ -190,12 +208,20 @@ export default async function BookingStatusPage(props: {
           </div>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground space-y-1 pt-0">
-          <p>{dot(booking.status, "REQUESTED")} בקשה</p>
-          <p>{dot(booking.status, "CONFIRMED")} אישור</p>
-          <p>{dot(booking.status, "ACTIVE")} פעילה</p>
-          <p>{dot(booking.status, "RETURNED")} הוחזר</p>
-          <p>{dot(booking.status, "IN_DISPUTE")} מחלוקת</p>
-          <p>{dot(booking.status, "COMPLETED")} הושלמה</p>
+          {isShortCircuitedBooking(booking.status) ? (
+            <p className="text-muted-foreground">
+              ההזמנה נסגרה לפני השלמת המחזור ({getBookingStatusLabelDetail(booking.status)}).
+            </p>
+          ) : (
+            <>
+              <p>{dot(booking.status, "REQUESTED")} בקשה</p>
+              <p>{dot(booking.status, "CONFIRMED")} אישור</p>
+              <p>{dot(booking.status, "ACTIVE")} פעילה</p>
+              <p>{dot(booking.status, "RETURNED")} הוחזר</p>
+              <p>{dot(booking.status, "IN_DISPUTE")} מחלוקת</p>
+              <p>{dot(booking.status, "COMPLETED")} הושלמה</p>
+            </>
+          )}
         </CardContent>
       </Card>
 
@@ -243,6 +269,43 @@ export default async function BookingStatusPage(props: {
         </CardContent>
       </Card>
 
+      {(booking.status === "CANCELLED_BY_RENTER" ||
+        booking.status === "CANCELLED_BY_OWNER" ||
+        booking.status === "NO_SHOW_RENTER" ||
+        booking.status === "NO_SHOW_OWNER") && (
+        <Card className="shadow-soft border-border/80">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">פרטי סגירה</CardTitle>
+          </CardHeader>
+          <CardContent className="text-sm text-muted-foreground space-y-2">
+            {(booking.cancellationPenaltyAmount != null || booking.refundAmount != null) && (
+              <>
+                {booking.cancellationPenaltyAmount != null && booking.cancellationPenaltyAmount > 0 && (
+                  <p>
+                    <span className="font-medium text-foreground">קנס לפי מדיניות: </span>
+                    {formatMoneyIls(booking.cancellationPenaltyAmount)}
+                  </p>
+                )}
+                {booking.refundAmount != null && (
+                  <p>
+                    <span className="font-medium text-foreground">סכום החזר משוער: </span>
+                    {formatMoneyIls(booking.refundAmount)}
+                  </p>
+                )}
+              </>
+            )}
+            {booking.noShowMarkedAt && (
+              <p>
+                סומן אי-הגעה: {new Date(booking.noShowMarkedAt).toLocaleString("he-IL")}
+              </p>
+            )}
+            {booking.noShowReason?.trim() && (
+              <p className="whitespace-pre-wrap">{booking.noShowReason.trim()}</p>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {(booking.rentalSubtotal != null || booking.totalDue != null) && (
         <Card>
           <CardHeader className="pb-2">
@@ -279,6 +342,10 @@ export default async function BookingStatusPage(props: {
             )}
           </CardContent>
         </Card>
+      )}
+
+      {participantActor && (
+        <BookingLifecycleActions bookingId={booking.id} status={booking.status} actor={participantActor} />
       )}
 
       {["CONFIRMED", "ACTIVE", "RETURNED", "COMPLETED", "IN_DISPUTE", "DISPUTE", "NON_RETURN_PENDING", "NON_RETURN_CONFIRMED"].includes(booking.status) &&
@@ -386,14 +453,18 @@ export default async function BookingStatusPage(props: {
                   </div>
                 ) : (
                   <ul className="space-y-4 list-none p-0 m-0">
-                    {reviews.map((r: { id: string; authorName: string; targetUserName: string; rating: number; body: string | null; createdAt: string }) => (
+                    {reviews.map((r) => (
                       <li key={r.id}>
                         <ReviewCard
                           authorName={r.authorName}
                           targetUserName={r.targetUserName}
                           rating={r.rating}
                           body={r.body}
-                          createdAt={r.createdAt}
+                          createdAt={
+                            r.createdAt instanceof Date
+                              ? r.createdAt.toISOString()
+                              : String(r.createdAt)
+                          }
                         />
                       </li>
                     ))}
@@ -524,7 +595,24 @@ function getCTA(status: Booking["status"], bookingId: string) {
       return { label: "השאר ביקורת", href: "" };
     case "DISPUTE":
       return { label: "צפה במחלוקת", href: "" };
+    case "CANCELLED_BY_RENTER":
+    case "CANCELLED_BY_OWNER":
+      return { label: "ההזמנה בוטלה", href: "" };
+    case "NO_SHOW_RENTER":
+    case "NO_SHOW_OWNER":
+      return { label: "דווח אי-הגעה", href: "" };
+    default:
+      return { label: "הזמנה", href: `/bookings/${bookingId}` };
   }
+}
+
+function isShortCircuitedBooking(status: Booking["status"]) {
+  return (
+    status === "CANCELLED_BY_RENTER" ||
+    status === "CANCELLED_BY_OWNER" ||
+    status === "NO_SHOW_RENTER" ||
+    status === "NO_SHOW_OWNER"
+  );
 }
 
 function dot(current: Booking["status"], step: Booking["status"]) {
@@ -540,7 +628,10 @@ function dot(current: Booking["status"], step: Booking["status"]) {
     "NON_RETURN_CONFIRMED",
   ];
 
+  const ci = order.indexOf(current);
+  const si = order.indexOf(step);
+  if (ci === -1 || si === -1) return "○";
   if (current === step) return "●";
-  if (order.indexOf(current) > order.indexOf(step)) return "✔";
+  if (ci > si) return "✔";
   return "○";
 }

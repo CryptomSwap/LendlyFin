@@ -145,8 +145,11 @@ export async function PUT(
           data: {
             bookingId,
             reason,
+            userReasonCode: reason,
             status: "OPEN",
             openedByUserId: user?.id ?? null,
+            evidenceChecklist: JSON.stringify(["return_checklist_issue_flagged", "return_photos_submitted"]),
+            evidenceSubmittedAt: new Date(),
           },
         });
         await sendDisputeOpenedEmails(bookingId);

@@ -13,7 +13,9 @@ type TrackEventInput = {
     | "return_checklist_submitted"
     | "dispute_opened"
     | "dispute_resolved"
-    | "booking_completed";
+    | "booking_completed"
+    | "booking_cancelled"
+    | "booking_no_show_marked";
   bookingId?: string;
   userId?: string;
   payload?: Record<string, unknown>;

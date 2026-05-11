@@ -7,6 +7,10 @@ export type BookingStatusForSteps =
   | "REQUESTED"
   | "CONFIRMED"
   | "ACTIVE"
+  | "CANCELLED_BY_RENTER"
+  | "CANCELLED_BY_OWNER"
+  | "NO_SHOW_RENTER"
+  | "NO_SHOW_OWNER"
   | "RETURNED"
   | "IN_DISPUTE"
   | "NON_RETURN_PENDING"
@@ -27,8 +31,14 @@ export function getBookingLifecycleStep(status: BookingStatusForSteps): {
       return { currentStep: 1, totalSteps: BOOKING_FLOW_TOTAL_STEPS, label: "בקשת הזמנה" };
     case "CONFIRMED":
       return { currentStep: 2, totalSteps: BOOKING_FLOW_TOTAL_STEPS, label: "אושר והמתנה לאיסוף" };
+    case "CANCELLED_BY_RENTER":
+    case "CANCELLED_BY_OWNER":
+      return { currentStep: 2, totalSteps: BOOKING_FLOW_TOTAL_STEPS, label: "ההזמנה בוטלה" };
     case "ACTIVE":
       return { currentStep: 3, totalSteps: BOOKING_FLOW_TOTAL_STEPS, label: "השכרה פעילה" };
+    case "NO_SHOW_RENTER":
+    case "NO_SHOW_OWNER":
+      return { currentStep: 3, totalSteps: BOOKING_FLOW_TOTAL_STEPS, label: "דווח אי-הגעה" };
     case "RETURNED":
       return { currentStep: 4, totalSteps: BOOKING_FLOW_TOTAL_STEPS, label: "הוחזר · חלון מחלוקת" };
     case "IN_DISPUTE":

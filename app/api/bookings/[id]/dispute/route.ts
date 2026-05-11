@@ -8,6 +8,19 @@ import { trackEvent } from "@/lib/analytics";
 export const runtime = "nodejs";
 
 const VALID_REASONS = ["damage", "missing_items", "manual"] as const;
+const VALID_USER_REASON_CODES = [
+  "damage",
+  "missing_items",
+  "item_not_as_described",
+  "late_return",
+  "non_return",
+  "item_not_working",
+  "handoff_conflict",
+  "policy_violation",
+  "payment_issue",
+  "communication_issue",
+  "manual",
+] as const;
 
 /** POST: open a dispute (renter, lender, or admin). Enforces return dispute window policy. */
 export async function POST(
@@ -51,7 +64,13 @@ export async function POST(
     }
   }
 
-  let body: { reason?: string; note?: string };
+  let body: {
+    reason?: string;
+    userReasonCode?: string;
+    note?: string;
+    evidenceChecklist?: string[];
+    evidenceSummary?: Record<string, unknown>;
+  };
   try {
     body = await req.json();
   } catch {
@@ -59,22 +78,43 @@ export async function POST(
   }
 
   const reason = (body.reason ?? "manual").trim().toLowerCase();
-  if (!VALID_REASONS.includes(reason as (typeof VALID_REASONS)[number])) {
+  if (body.reason && !VALID_REASONS.includes(reason as (typeof VALID_REASONS)[number])) {
     return NextResponse.json(
       { error: "reason must be one of: damage, missing_items, manual" },
       { status: 400 }
     );
   }
+  const userReasonCode = (body.userReasonCode ?? reason).trim().toLowerCase();
+  if (!VALID_USER_REASON_CODES.includes(userReasonCode as (typeof VALID_USER_REASON_CODES)[number])) {
+    return NextResponse.json(
+      { error: "userReasonCode is invalid" },
+      { status: 400 }
+    );
+  }
+  const legacyReason = VALID_REASONS.includes(userReasonCode as (typeof VALID_REASONS)[number])
+    ? userReasonCode
+    : "manual";
 
   const adminNote = typeof body.note === "string" ? body.note.trim() || null : null;
+  const evidenceChecklist = Array.isArray(body.evidenceChecklist)
+    ? body.evidenceChecklist.filter((item): item is string => typeof item === "string" && item.trim().length > 0)
+    : [];
+  const evidenceSummary =
+    body.evidenceSummary && typeof body.evidenceSummary === "object"
+      ? JSON.stringify(body.evidenceSummary)
+      : null;
 
   const dispute = await prisma.dispute.create({
     data: {
       bookingId,
-      reason,
+      reason: legacyReason,
+      userReasonCode,
       status: "OPEN",
       openedByUserId: user.id,
       adminNote,
+      evidenceChecklist: evidenceChecklist.length > 0 ? JSON.stringify(evidenceChecklist) : null,
+      evidenceSummary,
+      evidenceSubmittedAt: evidenceChecklist.length > 0 || evidenceSummary ? new Date() : null,
     },
   });
 
@@ -88,8 +128,15 @@ export async function POST(
     eventName: "dispute_opened",
     bookingId,
     userId: user.id,
-    payload: { source: "manual_form", reason },
+    payload: { source: "manual_form", reason: legacyReason, userReasonCode },
   });
 
-  return NextResponse.json({ dispute: { id: dispute.id, reason: dispute.reason, status: dispute.status } });
+  return NextResponse.json({
+    dispute: {
+      id: dispute.id,
+      reason: dispute.reason,
+      userReasonCode: dispute.userReasonCode,
+      status: dispute.status,
+    },
+  });
 }

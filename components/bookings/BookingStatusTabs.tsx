@@ -12,7 +12,8 @@ export type BookingFilterType =
   | "COMPLETED"
   | "IN_DISPUTE"
   | "NON_RETURN_PENDING"
-  | "NON_RETURN_CONFIRMED";
+  | "NON_RETURN_CONFIRMED"
+  | "CANCELLED_NOSHOW";
 
 const FILTER_LABELS: Record<BookingFilterType, string> = {
   all: "הכל",
@@ -24,6 +25,7 @@ const FILTER_LABELS: Record<BookingFilterType, string> = {
   IN_DISPUTE: "במחלוקת",
   NON_RETURN_PENDING: "אי-החזרה בבדיקה",
   NON_RETURN_CONFIRMED: "אי-החזרה מאושרת",
+  CANCELLED_NOSHOW: "בוטלו / לא הגיעו",
 };
 
 export interface BookingStatusTabsProps {
@@ -46,6 +48,7 @@ export function BookingStatusTabs({
     "IN_DISPUTE",
     "NON_RETURN_PENDING",
     "NON_RETURN_CONFIRMED",
+    "CANCELLED_NOSHOW",
     "COMPLETED",
   ];
 

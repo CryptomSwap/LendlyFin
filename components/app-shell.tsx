@@ -8,7 +8,6 @@ import BottomNav from "@/components/bottom-nav";
 import AuthHeaderLink from "@/components/auth-header-link";
 import HeaderNav from "@/components/header-nav";
 import DevImpersonationSwitcher from "@/components/dev-impersonation-switcher";
-import ReportBugButton from "@/components/report-bug-button";
 
 export default function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -56,7 +55,6 @@ export default function AppShell({ children }: { children: ReactNode }) {
         >
           {children}
         </main>
-        <ReportBugButton />
         <BottomNav />
       </div>
     </div>

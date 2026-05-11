@@ -52,7 +52,7 @@ export function HomeHeroNav() {
             })}
           </nav>
           <div className="flex items-center gap-2 [&_a]:text-white/95 [&_a:hover]:text-white">
-            <AuthHeaderLink />
+            <AuthHeaderLink hideAuthenticatedProfile />
           </div>
         </div>
       </div>

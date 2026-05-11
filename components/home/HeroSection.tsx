@@ -2,7 +2,7 @@ import Link from "next/link";
 import SearchInput from "@/components/search-input";
 import Logo from "@/components/logo";
 import { Button } from "@/components/ui/button";
-import { Search, Upload, DollarSign } from "lucide-react";
+import { Search, Upload } from "lucide-react";
 import { HeroExperienceBackground } from "@/components/home/HeroExperienceBackground";
 import { DesktopCategoryDiscovery } from "@/components/home/DesktopCategoryDiscovery";
 import { HomeHeroNav } from "@/components/home/HomeHeroNav";
@@ -27,21 +27,6 @@ export function HeroSection({ user }: HeroSectionProps) {
         <HeroExperienceBackground />
         {/* Gradient overlay: stronger at top for text readability on bright images, fades to transparent */}
         <div className="absolute inset-0 z-[5] pointer-events-none bg-gradient-to-b from-black/45 via-black/25 to-transparent" aria-hidden />
-        {/* Desktop: create listing button at bottom right of image — matches homepage mint buttons */}
-        <div className="hidden md:flex absolute bottom-4 right-4 z-10">
-          {user ? (
-            <Button asChild size="lg" variant="mint" className="gap-2 shadow-soft">
-              <Link href="/add" aria-label="פרסום מודעה להשכרה">
-                <DollarSign className="h-5 w-5 shrink-0" aria-hidden />
-                פרסום מודעה להשכרה
-              </Link>
-            </Button>
-          ) : (
-            <Link href="/signin" className="text-sm font-medium text-white/95 hover:text-white hover:underline">
-              משכירים? התחברו עם Google
-            </Link>
-          )}
-        </div>
         <div className="relative z-10 flex-1 flex flex-col justify-center items-center px-4 md:pl-8 md:pr-14 pt-12 md:pt-14 md:pb-14 lg:pt-20 lg:pb-16">
           <div className="w-full max-w-2xl md:mx-auto md:text-center">
             <div className="flex flex-col gap-4 md:gap-6">
@@ -52,7 +37,7 @@ export function HeroSection({ user }: HeroSectionProps) {
                 </div>
                 <div className="space-y-2 md:space-y-2.5">
                   <h1 className="flex items-center justify-center text-2xl font-bold tracking-tight text-white sm:text-3xl md:text-3xl lg:text-4xl">
-                    <span>למה לקנות כשאפשר לשכור?</span>
+                    <span>למה לקנות כשאפשר לשאול?</span>
                   </h1>
                   <p className="text-sm sm:text-base text-white/90 text-center font-normal max-w-md mx-auto">
                     פשוט לשכור ציוד בסביבה, או להשכיר את שלך
@@ -71,10 +56,9 @@ export function HeroSection({ user }: HeroSectionProps) {
                           translucent
                         />
                       </div>
-                      <Link href="/search" className="inline-flex shrink-0 sm:self-stretch" aria-label="חיפוש">
-                        <Button size="lg" variant="mint" className="w-full sm:w-auto sm:min-h-[2.75rem] sm:min-w-[2.75rem] rounded-xl font-semibold">
+                      <Link href="/search" className="inline-flex shrink-0 self-stretch" aria-label="חיפוש">
+                        <Button size="lg" variant="mint" className="h-full aspect-square min-h-[2.75rem] rounded-full p-0">
                           <Search className="h-4 w-4" aria-hidden />
-                          חיפוש
                         </Button>
                       </Link>
                     </div>

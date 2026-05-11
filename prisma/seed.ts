@@ -33,6 +33,7 @@ async function main() {
   await prisma.conversation.deleteMany();
   await prisma.review.deleteMany();
   await prisma.bookingChecklistPhoto.deleteMany();
+  await prisma.bookingHandoffProof.deleteMany();
   await prisma.pickupChecklist.deleteMany();
   await prisma.returnChecklist.deleteMany();
   await prisma.dispute.deleteMany();
@@ -41,6 +42,7 @@ async function main() {
   await prisma.listingBlockedRange.deleteMany();
   await prisma.listing.deleteMany();
   await prisma.auditLog.deleteMany();
+  await prisma.policyConfig.deleteMany();
   await prisma.user.deleteMany();
 
   // ---- Users (personas) ----
@@ -141,6 +143,25 @@ async function main() {
         kycIdUrl: "https://example.com/kyc/rejected-id.jpg",
       },
     ],
+  });
+
+  await prisma.policyConfig.upsert({
+    where: { version: "default-v1" },
+    create: {
+      version: "default-v1",
+      isActive: true,
+      lateReturnGraceMinutes: 30,
+      cancelPenaltyWindowHours: 6,
+      noShowPenaltyMode: "PARTIAL_DEPOSIT",
+      maxLateFeePercent: 100,
+    },
+    update: {
+      isActive: true,
+      lateReturnGraceMinutes: 30,
+      cancelPenaltyWindowHours: 6,
+      noShowPenaltyMode: "PARTIAL_DEPOSIT",
+      maxLateFeePercent: 100,
+    },
   });
 
   // ---- Listings (8+; multiple categories, cities, statuses) ----

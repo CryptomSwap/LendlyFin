@@ -17,9 +17,45 @@ const adapter = new PrismaBetterSqlite3({
 
 const prisma = new PrismaClient({ adapter });
 
-const PLACEHOLDER_IMAGE =
-  "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?auto=format&fit=crop&w=1200&q=80";
+const STOCK_IMAGE_BY_LISTING_ID: Record<string, string> = {
+  "mock-listing-camera":
+    "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=1200&q=80",
+  "mock-listing-camping":
+    "https://images.unsplash.com/photo-1504280390368-3971d53b4f93?auto=format&fit=crop&w=1200&q=80",
+  "mock-listing-tools":
+    "https://images.unsplash.com/photo-1581147036324-c1c8e3a8d0e1?auto=format&fit=crop&w=1200&q=80",
+  "mock-owner-listing-bike":
+    "https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&w=1200&q=80",
+  "mock-owner-listing-laptop":
+    "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=1200&q=80",
+};
 const CHECKLIST_ANGLES = ["front", "side", "accessories"] as const;
+
+async function upsertListingHeroImage(listingId: string) {
+  const stockUrl = STOCK_IMAGE_BY_LISTING_ID[listingId];
+  if (!stockUrl) return;
+
+  const primaryImage = await prisma.listingImage.findFirst({
+    where: { listingId, order: 0 },
+    select: { id: true },
+  });
+
+  if (primaryImage) {
+    await prisma.listingImage.update({
+      where: { id: primaryImage.id },
+      data: { url: stockUrl },
+    });
+    return;
+  }
+
+  await prisma.listingImage.create({
+    data: {
+      listingId,
+      url: stockUrl,
+      order: 0,
+    },
+  });
+}
 
 function addDays(base: Date, days: number) {
   const d = new Date(base);
@@ -147,18 +183,7 @@ async function ensureListings() {
       },
     });
 
-    const existingImages = await prisma.listingImage.count({
-      where: { listingId: listing.id },
-    });
-    if (existingImages === 0) {
-      await prisma.listingImage.create({
-        data: {
-          listingId: listing.id,
-          url: PLACEHOLDER_IMAGE,
-          order: 0,
-        },
-      });
-    }
+    await upsertListingHeroImage(listing.id);
   }
 
   const ownerApprovedListings = [
@@ -216,18 +241,7 @@ async function ensureListings() {
       },
     });
 
-    const existingImages = await prisma.listingImage.count({
-      where: { listingId: listing.id },
-    });
-    if (existingImages === 0) {
-      await prisma.listingImage.create({
-        data: {
-          listingId: listing.id,
-          url: PLACEHOLDER_IMAGE,
-          order: 0,
-        },
-      });
-    }
+    await upsertListingHeroImage(listing.id);
   }
 }
 

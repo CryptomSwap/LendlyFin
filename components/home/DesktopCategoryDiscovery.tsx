@@ -54,7 +54,7 @@ export function DesktopCategoryDiscovery() {
       aria-label="חיפוש לפי קטגוריה"
     >
       <div className="w-full max-w-5xl mx-auto px-4 pt-5 pb-8 sm:px-6 md:pt-36 md:pb-10 flex flex-col min-h-0 flex-1">
-        <h2 className="text-xl font-semibold text-foreground tracking-tight mb-2">
+        <h2 className="text-xl font-semibold text-foreground tracking-tight mb-2 text-center">
           הקטגוריות הכי פופולריות
         </h2>
         {/* Segment tabs — mint accent, matches search primary */}

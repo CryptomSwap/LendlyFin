@@ -7,6 +7,23 @@ import { formatMoneyIls } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
 import { ImageIcon, Star } from "lucide-react";
 
+const STOCK_FALLBACK_IMAGES = [
+  "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=1200&q=80",
+  "https://images.unsplash.com/photo-1504280390368-3971d53b4f93?auto=format&fit=crop&w=1200&q=80",
+  "https://images.unsplash.com/photo-1581147036324-c1c8e3a8d0e1?auto=format&fit=crop&w=1200&q=80",
+  "https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&w=1200&q=80",
+  "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=1200&q=80",
+  "https://images.unsplash.com/photo-1516724562728-afc824a36e84?auto=format&fit=crop&w=1200&q=80",
+];
+
+function getDeterministicFallbackImage(seed: string) {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i += 1) {
+    hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
+  }
+  return STOCK_FALLBACK_IMAGES[hash % STOCK_FALLBACK_IMAGES.length];
+}
+
 export interface ListingCardProps {
   title: string;
   pricePerDay: number;
@@ -41,7 +58,12 @@ export default function ListingCard({
 }: ListingCardProps) {
   const isCompact = size === "compact";
   const [imgError, setImgError] = React.useState(false);
-  const showImage = imageUrl && !imgError;
+  const fallbackImageUrl = React.useMemo(
+    () => getDeterministicFallbackImage(`${title}:${href}`),
+    [title, href]
+  );
+  const resolvedImageUrl = imgError ? fallbackImageUrl : (imageUrl ?? fallbackImageUrl);
+  const showImage = Boolean(resolvedImageUrl);
   const showRating = reviewsCount > 0;
 
   const metaParts = [
@@ -79,10 +101,12 @@ export default function ListingCard({
         {showImage ? (
           /* eslint-disable-next-line @next/next/no-img-element */
           <img
-            src={imageUrl}
+            src={resolvedImageUrl}
             alt=""
             className="h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.02]"
-            onError={() => setImgError(true)}
+            onError={() => {
+              if (!imgError) setImgError(true);
+            }}
           />
         ) : (
           <div
