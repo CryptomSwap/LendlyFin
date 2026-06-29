@@ -37,7 +37,7 @@ export function HeroSection({ user }: HeroSectionProps) {
                 </div>
                 <div className="space-y-2 md:space-y-2.5">
                   <h1 className="flex items-center justify-center text-2xl font-bold tracking-tight text-white sm:text-3xl md:text-3xl lg:text-4xl">
-                    <span>למה לקנות כשאפשר לשאול?</span>
+                    <span>למה לקנות כשאפשר לשכור?</span>
                   </h1>
                   <p className="text-sm sm:text-base text-white/90 text-center font-normal max-w-md mx-auto">
                     פשוט לשכור ציוד בסביבה, או להשכיר את שלך

@@ -1,53 +1,104 @@
-import { CheckCircle2, Shield, Users } from "lucide-react";
+"use client";
 
-const PILLARS = [
+import { useEffect, useRef, useState } from "react";
+
+const ENTRANCE_EASE = "cubic-bezier(0.16, 1, 0.3, 1)";
+
+const TILES = [
   {
-    icon: CheckCircle2,
+    stat: "100%",
     title: "מאומתים",
-    description: "מלווים עוברים אימות זהות. רואים בכל מודעה מי מאומת.",
+    description: "כל משכיר עובר אימות זהות לפני שמוצג בפלטפורמה",
+    bg: "#C5CC7B",
+    lightText: false,
   },
   {
-    icon: Shield,
-    title: "פיקדון",
-    description: "פיקדון מוחזר בהתאם למצב הפריט — שקוף ומגן על שני הצדדים.",
+    stat: "₪0",
+    title: "הפתעות",
+    description: "הפיקדון מוחזר בהתאם למצב הפריט — שקוף ומוגן לשני הצדדים",
+    bg: "#1A8C6A",
+    lightText: true,
   },
   {
-    icon: Users,
-    title: "קהילה",
-    description: "ביקורות, הודעות ותמיכה — כלים ברורים להשכרה בין אנשים.",
+    stat: "+500",
+    title: "פריטים בקהילה",
+    description: "ביקורות, הודעות ותמיכה — כלים ברורים להשכרה בין אנשים",
+    bg: "#2C2C2C",
+    lightText: true,
   },
 ] as const;
 
-/**
- * Three-pillar trust strip: light horizontal row, no heavy cards.
- * Icon + title + short text; mint/primary icon color.
- */
-export function TrustStrip() {
+export default function TrustStrip() {
+  const sectionRef = useRef<HTMLElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.2 }
+    );
+
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <div
-      className="grid grid-cols-1 sm:grid-cols-3 gap-6 md:gap-8"
+    <section
+      ref={sectionRef}
       dir="rtl"
-      role="list"
-      aria-label="אמון ובטיחות"
+      className="mx-auto w-full max-w-[1420px] px-5 py-6"
+      aria-label="למה לסמוך על לנדלי"
     >
-      {PILLARS.map((p, i) => {
-        const Icon = p.icon;
-        return (
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+        {TILES.map((tile, index) => (
           <div
-            key={i}
-            className="flex flex-col sm:flex-row sm:items-start gap-3 text-center sm:text-right"
-            role="listitem"
+            key={tile.title}
+            style={{
+              opacity: visible ? 1 : 0,
+              transform: visible ? "translateY(0)" : "translateY(20px)",
+              transition: `opacity 500ms ${ENTRANCE_EASE}, transform 500ms ${ENTRANCE_EASE}`,
+              transitionDelay: `${index * 100}ms`,
+            }}
           >
-            <div className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--mint-accent)]/15 text-[var(--mint-accent)]">
-              <Icon className="h-4 w-4" aria-hidden />
-            </div>
-            <div className="min-w-0">
-              <h2 className="text-sm font-semibold text-foreground mb-0.5">{p.title}</h2>
-              <p className="text-xs text-muted-foreground leading-relaxed">{p.description}</p>
-            </div>
+            <article
+              className="flex min-h-[160px] cursor-default flex-col justify-between rounded-[8px] p-6 transition-[transform,box-shadow] duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_6px_20px_rgba(0,0,0,0.12)]"
+              style={{ backgroundColor: tile.bg }}
+            >
+              <div>
+                <p
+                  className={`font-sans text-[42px] font-black leading-none ${
+                    tile.lightText ? "text-white" : "text-black"
+                  }`}
+                >
+                  {tile.stat}
+                </p>
+                <p
+                  className={`mt-1 font-sans text-[15px] font-bold ${
+                    tile.lightText ? "text-white/80" : "text-black/80"
+                  }`}
+                >
+                  {tile.title}
+                </p>
+              </div>
+              <p
+                className={`mt-3 font-assistant text-[12px] leading-relaxed ${
+                  tile.lightText ? "text-white/60" : "text-black/55"
+                }`}
+              >
+                {tile.description}
+              </p>
+            </article>
           </div>
-        );
-      })}
-    </div>
+        ))}
+      </div>
+    </section>
   );
 }

@@ -1,11 +1,12 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import Link from "next/link";
+import { ArrowLeft, Package, Star } from "lucide-react";
 import { getCategoryDisplayLabel } from "@/lib/constants";
 import { formatMoneyIls } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
-import { ImageIcon, Star } from "lucide-react";
 
 const STOCK_FALLBACK_IMAGES = [
   "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=1200&q=80",
@@ -32,11 +33,8 @@ export interface ListingCardProps {
   imageUrl?: string | null;
   category?: string | null;
   subcategory?: string | null;
-  /** Optional compact size for carousels; default is default */
   size?: "default" | "compact";
-  /** Cap image height so card is wider but not taller (e.g. homepage featured grid) */
   imageMaxHeight?: string;
-  /** Owner review aggregate — shown as star + number when reviewsCount > 0 */
   reviewsCount?: number;
   averageRating?: number;
   className?: string;
@@ -63,129 +61,94 @@ export default function ListingCard({
     [title, href]
   );
   const resolvedImageUrl = imgError ? fallbackImageUrl : (imageUrl ?? fallbackImageUrl);
-  const showImage = Boolean(resolvedImageUrl);
-  const showRating = reviewsCount > 0;
-
-  const metaParts = [
-    category ? getCategoryDisplayLabel(category, subcategory ?? undefined) : null,
-    location || null,
-  ].filter(Boolean);
-  const metaLine = metaParts.join(" · ");
-
-  const ratingLabel = showRating
-    ? `דירוג ממוצע ${averageRating.toFixed(1)}, ${reviewsCount} ביקורות`
-    : undefined;
+  const showPlaceholder = !resolvedImageUrl || imgError;
+  const categoryLabel = category
+    ? getCategoryDisplayLabel(category, subcategory ?? undefined)
+    : null;
+  const metadataParts = [location, categoryLabel].filter(Boolean);
+  const metadata = metadataParts.join(" · ");
 
   return (
     <Link
       href={href}
       className={cn(
-        "group block overflow-hidden rounded-card border border-border bg-card",
-        "shadow-card transition-all duration-200 hover:shadow-medium hover:border-primary/20",
-        "active:scale-[0.99] cursor-pointer select-none",
+        "group flex flex-col overflow-hidden rounded-[8px] border border-transparent bg-white p-2 pb-4 transition-[border-color,box-shadow] duration-300 ease-in-out hover:border-black/15 hover:shadow-[0_2px_6px_rgba(0,0,0,0.05)]",
         isCompact ? "max-w-[180px]" : "w-full",
         className
       )}
       dir="rtl"
     >
-      {/* Image — full-bleed, aspect 4/3 (or fixed height when imageMaxHeight so card is bigger but not longer) */}
       <div
         className={cn(
-          "relative w-full bg-muted overflow-hidden",
-          isCompact && "aspect-[4/3] max-h-[100px]",
-          !isCompact && !imageMaxHeight && "aspect-[4/3] min-h-[140px]",
-          !isCompact && imageMaxHeight && "min-h-0"
+          "relative w-full shrink-0 overflow-hidden rounded-[10px] transition-[aspect-ratio,transform] duration-300 ease-in-out aspect-[4/3] group-hover:aspect-[4/2.8] group-hover:-translate-y-0.5",
+          isCompact && "aspect-[4/3] max-h-[100px] group-hover:aspect-[4/3] group-hover:translate-y-0"
         )}
-        style={imageMaxHeight ? { height: imageMaxHeight } : undefined}
+        style={imageMaxHeight ? { height: imageMaxHeight, aspectRatio: "auto" } : undefined}
       >
-        {showImage ? (
-          /* eslint-disable-next-line @next/next/no-img-element */
-          <img
-            src={resolvedImageUrl}
-            alt=""
-            className="h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.02]"
-            onError={() => {
-              if (!imgError) setImgError(true);
-            }}
-          />
-        ) : (
-          <div
-            className="flex h-full w-full items-center justify-center text-muted-foreground"
-            aria-hidden
-          >
-            <ImageIcon className={cn(isCompact ? "h-8 w-8" : "h-12 w-12")} />
+        {showPlaceholder ? (
+          <div className="flex h-full w-full items-center justify-center bg-[#F0FAF6]">
+            <Package className="h-10 w-10 text-[#1A8C6A]" aria-hidden />
           </div>
+        ) : (
+          <Image
+            src={resolvedImageUrl}
+            alt={title}
+            fill
+            className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+            onError={() => setImgError(true)}
+            sizes="(max-width: 768px) 100vw, 25vw"
+          />
         )}
       </div>
 
-      {/* Content — title, metadata line, price block */}
       <div
         className={cn(
-          "flex flex-col items-start text-right min-w-0 flex-1",
-          isCompact ? "p-2 gap-0.5" : "px-4 pt-3 pb-4 gap-1.5"
+          "shrink-0 px-[14px] pb-3 pt-3 transition-transform duration-300 ease-in-out group-hover:-translate-y-1",
+          isCompact && "px-2 pb-2 pt-2 group-hover:translate-y-0"
         )}
       >
-        <h3
+        {metadata ? (
+          <p className="font-assistant text-[11px] text-[#888888]">{metadata}</p>
+        ) : null}
+
+        <p
           className={cn(
-            "font-semibold text-foreground line-clamp-2 leading-snug min-w-0 w-full",
-            isCompact ? "text-xs" : "text-base"
+            "mt-0.5 line-clamp-2 font-sans font-black leading-[1.1] tracking-[-0.5px] text-black",
+            isCompact ? "text-xs" : "text-[16px]"
           )}
         >
           {title}
-        </h3>
-        {metaLine ? (
-          <p
-            className={cn(
-              "text-muted-foreground truncate max-w-full min-w-0 w-full",
-              isCompact ? "text-[10px]" : "text-xs"
-            )}
-          >
-            {metaLine}
-          </p>
-        ) : null}
-        {showRating ? (
-          <p
-            className={cn(
-              "inline-flex items-center gap-1 text-primary font-medium tabular-nums",
-              isCompact ? "text-[10px]" : "text-xs"
-            )}
-            aria-label={ratingLabel}
-          >
-            <Star
-              className={cn(
-                "shrink-0 fill-primary text-primary",
-                isCompact ? "h-3 w-3" : "h-3.5 w-3.5"
-              )}
-              aria-hidden
-            />
-            <span>{averageRating.toFixed(1)}</span>
-          </p>
-        ) : null}
-        {/* Price — distinct row, MVP-style bold primary + /יום muted */}
-        <div
-          className={cn(
-            "flex items-baseline gap-0.5 w-full",
-            isCompact ? "pt-0.5" : "pt-2 mt-0.5 border-t border-border"
+        </p>
+
+        <div className="mt-1.5 flex items-center gap-1.5 font-sans text-[11px] font-normal text-[#6B7280]">
+          {reviewsCount > 0 ? (
+            <span className="flex items-center gap-0.5">
+              <Star className="h-3 w-3 fill-[#1A8C6A] text-[#1A8C6A]" />
+              {averageRating.toFixed(1)} ({reviewsCount})
+            </span>
+          ) : (
+            <span className="text-[#AAAAAA]">אין ביקורות</span>
           )}
-        >
-          <span
-            className={cn(
-              "font-bold text-primary",
-              isCompact ? "text-xs" : "text-lg"
-            )}
-          >
+        </div>
+
+        <p className="mt-1.5 flex items-baseline gap-1">
+          <span className={cn("font-sans font-black text-black", isCompact ? "text-sm" : "text-[20px]")}>
             {formatMoneyIls(pricePerDay)}
           </span>
-          <span
-            className={cn(
-              "text-muted-foreground font-normal",
-              isCompact ? "text-[10px]" : "text-sm"
-            )}
-          >
-            /יום
-          </span>
-        </div>
+          <span className="font-assistant text-[13px] text-[#888888]">/ יום</span>
+        </p>
       </div>
+
+      {!isCompact ? (
+        <div className="shrink-0 px-[14px]" dir="rtl">
+          <div className="flex h-9 items-end justify-start overflow-hidden">
+            <span className="inline-flex translate-y-2 items-center justify-center gap-1.5 rounded bg-[#1A8C6A] px-4 py-2 font-sans text-[13px] font-bold text-white opacity-0 transition-[opacity,transform] duration-300 ease-out group-hover:translate-y-0 group-hover:opacity-100">
+              להשכרה
+              <ArrowLeft size={14} strokeWidth={2.25} aria-hidden />
+            </span>
+          </div>
+        </div>
+      ) : null}
     </Link>
   );
 }

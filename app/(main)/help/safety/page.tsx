@@ -6,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { TrustStrip } from "@/components/home/TrustStrip";
+import TrustStrip from "@/components/home/TrustStrip";
 import { Shield, CheckCircle2, AlertTriangle, FileCheck, MessageSquare, Scale } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
