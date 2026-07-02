@@ -14,11 +14,11 @@ const MOCK_BOOKINGS = [
 ];
 
 const STATUS_LABEL: Record<string, string> = {
-  REQUESTED:           "ממתין לתשלום",
-  CONFIRMED:           "מאושרת",
+  REQUESTED:           "ממתין לאישור",
+  CONFIRMED:           "אושרה",
   ACTIVE:              "פעילה",
   COMPLETED:           "הושלמה",
-  CANCELLED_BY_RENTER: "בוטלה",
+  CANCELLED_BY_RENTER: "בוטלה · השוכר",
   IN_DISPUTE:          "במחלוקת",
 };
 
@@ -36,6 +36,7 @@ const NAV = [
   { label: "הזמנות",  href: "/admin/bookings",   active: true  },
   { label: "מודעות",  href: "/admin/listings",   active: false },
   { label: "משתמשים", href: "/admin/users",       active: false },
+  { label: "אימות זהות", href: "/admin/kyc",       active: false },
   { label: "מחלוקות", href: "/admin/disputes",    active: false },
 ];
 
@@ -72,7 +73,7 @@ export default function AdminBookingsPage() {
 
         {/* Top bar */}
         <div className="flex items-center justify-between flex-wrap gap-4">
-          <h1 className="font-sans text-[32px] font-black text-black">לוח בקרה</h1>
+          <h1 className="font-sans text-[32px] font-black text-black">הזמנות – מנהל</h1>
           <nav className="flex gap-2 flex-wrap">
             {NAV.map(item => (
               <Link
@@ -125,7 +126,7 @@ export default function AdminBookingsPage() {
           {/* Rows */}
           {filtered.length === 0 ? (
             <div className="py-16 text-center font-assistant text-[14px] text-[#888888]">
-              לא נמצאו הזמנות
+              אין הזמנות. ההזמנות יופיעו כאן.
             </div>
           ) : (
             filtered.map(b => {

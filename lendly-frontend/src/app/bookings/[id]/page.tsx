@@ -46,13 +46,13 @@ const STEP_INDEX: Record<BookingStatus, number> = {
 };
 
 const STATUS_META: Record<BookingStatus, { label: string; color: string }> = {
-  REQUESTED:           { label: "ממתין לתשלום",       color: "#F59E0B" },
-  CONFIRMED:           { label: "מאושרת",              color: "#1A8C6A" },
+  REQUESTED:           { label: "ממתין לאישור",       color: "#F59E0B" },
+  CONFIRMED:           { label: "אושרה",              color: "#1A8C6A" },
   ACTIVE:              { label: "פעילה",               color: "#1A8C6A" },
   RETURNED:            { label: "הוחזר",               color: "#888888" },
   COMPLETED:           { label: "הושלמה",              color: "#888888" },
-  CANCELLED_BY_RENTER: { label: "בוטלה",               color: "#EF4444" },
-  CANCELLED_BY_OWNER:  { label: 'בוטלה ע"י המשכיר',   color: "#EF4444" },
+  CANCELLED_BY_RENTER: { label: "בוטלה · השוכר",       color: "#EF4444" },
+  CANCELLED_BY_OWNER:  { label: "בוטלה · המשכיר",     color: "#EF4444" },
   IN_DISPUTE:          { label: "במחלוקת",             color: "#EF4444" },
 };
 
@@ -163,10 +163,10 @@ function ActionCard({ status }: { status: BookingStatus }) {
           type="button"
           className="w-full rounded-full font-sans text-[15px] font-black py-3.5 border border-black/15 bg-white text-black hover:bg-black/5 transition-colors duration-200"
         >
-          רשימת איסוף
+          השלם רשימת איסוף
         </button>
         <p className="font-assistant text-[12px] text-[#666666] text-center">
-          יש להשלים רשימת איסוף לפני קבלת הפריט
+          יש להשלים את רשימת האיסוף (תיעוד מצב הפריט ותמונות) לפני שההזמנה תעבור לפעילה.
         </p>
       </div>
     );
@@ -179,7 +179,7 @@ function ActionCard({ status }: { status: BookingStatus }) {
           type="button"
           className="w-full rounded-full font-sans text-[15px] font-black py-3.5 border border-black/15 bg-white text-black hover:bg-black/5 transition-colors duration-200"
         >
-          רשימת החזרה
+          השלם רשימת החזרה
         </button>
       </div>
     );
@@ -192,7 +192,7 @@ function ActionCard({ status }: { status: BookingStatus }) {
           type="button"
           className="w-full rounded-full font-sans text-[15px] font-black py-3.5 border border-black/15 bg-white text-black hover:bg-black/5 transition-colors duration-200"
         >
-          פתח מחלוקת (48 שעות)
+          פתח מחלוקת
         </button>
       </div>
     );
@@ -245,9 +245,9 @@ function ActionCard({ status }: { status: BookingStatus }) {
 function primaryCtaLabel(status: BookingStatus): string | null {
   switch (status) {
     case "REQUESTED":  return "לתשלום";
-    case "CONFIRMED":  return "רשימת איסוף";
-    case "ACTIVE":     return "רשימת החזרה";
-    case "RETURNED":   return "פתח מחלוקת (48 שעות)";
+    case "CONFIRMED":  return "השלם רשימת איסוף";
+    case "ACTIVE":     return "השלם רשימת החזרה";
+    case "RETURNED":   return "פתח מחלוקת";
     case "COMPLETED":  return "שלח ביקורת";
     default:           return null;
   }
@@ -321,7 +321,7 @@ export default function BookingDetailPage() {
         {/* Payment card */}
         <div className="rounded-[8px] border border-black/10 bg-white p-5">
           <p className="font-sans text-[13px] font-bold text-black mb-3">
-            פירוט תשלום
+            סיכום תשלום
           </p>
 
           <div className="space-y-1.5">
@@ -354,7 +354,7 @@ export default function BookingDetailPage() {
           className="w-full rounded-[8px] border border-black/15 bg-white px-4 py-3 font-assistant text-[14px] font-semibold text-black flex items-center justify-center gap-2 hover:bg-black/5 transition-colors duration-200"
         >
           <MessageCircle size={16} />
-          הודעות עם המשכיר
+          שאל שאלה / הודעות
         </button>
 
       </div>

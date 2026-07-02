@@ -25,8 +25,8 @@ const KYC_META: Record<KycStatus, { label: string; color: string; bg: string }> 
 const NAV_CARDS = [
   {
     icon: <LayoutDashboard className="h-5 w-5 text-[#1A8C6A]" />,
-    title: "לוח מלווה",
-    desc: "מודעות, הזמנות, הכנסות",
+    title: "לוח מלווה – מודעות והזמנות",
+    desc: "מודעות, בקשות והזמנות פעילות",
     href: "/owner",
   },
   {
@@ -123,7 +123,7 @@ export default function ProfilePage() {
           </div>
           {user.kycStatus === "APPROVED" ? (
             <p className="font-assistant text-[13px] text-[#888888]">
-              מאומת מסייע לאנשים לבטוח בך
+              מאומת מסייע לרוכשים לבטוח במודעות שלך
             </p>
           ) : (
             <Link

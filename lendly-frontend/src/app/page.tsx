@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { HeroCategories } from "@/components/HeroCategories";
 import HowItWorks from "@/components/HowItWorks";
 import OwnerCTA from "@/components/OwnerCTA";
@@ -132,8 +133,8 @@ export default function Home() {
             השאל, השכר, וחסוך — בקהילה שלך
           </p>
 
-          <button
-            type="button"
+          <Link
+            href="/add"
             className="rounded-full bg-[#1A8C6A] px-10 py-4 font-sans text-[17px] font-bold text-white shadow-[0_6px_24px_rgba(26,140,106,0.35)] transition-all duration-300 hover:-translate-y-[3px] hover:shadow-[0_10px_32px_rgba(26,140,106,0.45)]"
             style={{
               transitionTimingFunction: "cubic-bezier(0.2, 0, 0, 1)",
@@ -143,7 +144,7 @@ export default function Home() {
             }}
           >
             התחל להשכיר ←
-          </button>
+          </Link>
           </div>
 
           <HeroCategories />

@@ -17,17 +17,17 @@ const CARDS = [
   {
     icon: <HelpCircle className="h-5 w-5 text-[#1A8C6A]" />,
     title: "שאלות נפוצות",
-    desc: "תשובות לשאלות הנפוצות ביותר",
+    desc: "תשובות לשאלות שכיחות",
     links: [
       { label: "מהו פיקדון הביטחון?", href: "/help/faq" },
-      { label: "איך עובד התשלום?",    href: "/help/faq" },
+      { label: "איך עובד הביטוח?",    href: "/help/faq" },
       { label: "מה אם משהו נשבר?",   href: "/help/faq" },
     ],
   },
   {
     icon: <MessageSquare className="h-5 w-5 text-[#1A8C6A]" />,
     title: "יצירת קשר",
-    desc: "אנו כאן לעזור לך בכל שאלה",
+    desc: "צריך עזרה? פנה אלינו",
     links: [
       { label: "דיווח על בעיה", href: "mailto:support@lendly.com" },
     ],
@@ -36,7 +36,7 @@ const CARDS = [
   {
     icon: <Shield className="h-5 w-5 text-[#1A8C6A]" />,
     title: "בטיחות ואמון",
-    desc: "כיצד אנו שומרים עליך בטוח",
+    desc: "למד על אמצעי הבטיחות שלנו",
     links: [
       { label: "תהליך אימות",   href: "/help/safety" },
       { label: "ציון אמון",      href: "/help/safety" },
@@ -60,7 +60,7 @@ export default function HelpPage() {
             מרכז עזרה
           </h1>
           <p className="font-assistant text-[15px] text-[#666666] text-center">
-            טיפים ומידע למשכיר ולשוכר
+            טיפים למשכיר ולשוכר בלנדלי
           </p>
         </div>
 

@@ -144,7 +144,7 @@ export default function BookingSuccessPage() {
           href="/bookings"
           className="flex items-center justify-center rounded-full border border-black/15 py-3.5 font-sans text-[14px] font-black text-black transition-colors duration-200 hover:bg-black/5"
         >
-          לטיולים שלי
+          להזמנות שלי
         </Link>
       </motion.div>
       </div>

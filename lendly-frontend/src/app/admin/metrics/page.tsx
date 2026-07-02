@@ -15,6 +15,7 @@ const NAV = [
   { label: "הזמנות",  href: "/admin/bookings",   active: false },
   { label: "מודעות",  href: "/admin/listings",   active: false },
   { label: "משתמשים", href: "/admin/users",       active: false },
+  { label: "אימות זהות", href: "/admin/kyc",       active: false },
   { label: "מחלוקות", href: "/admin/disputes",    active: false },
 ];
 
@@ -26,31 +27,35 @@ const PULSE = [
 
 type MetricRow = { label: string; value: number | string; total?: boolean; alert?: boolean };
 
-const CARDS: { title: string; href: string; rows: MetricRow[] }[] = [
+const CARDS: { title: string; href: string; manageLabel: string; rows: MetricRow[] }[] = [
   {
     title: "משתמשים",
     href: "/admin/users",
+    manageLabel: "לניהול משתמשים",
     rows: [
       { label: 'סה"כ',             value: MOCK.users.totalUsers,       total: true  },
       { label: "אימות אושר",        value: MOCK.users.approvedKycUsers               },
-      { label: "ממתינים לאישור",    value: MOCK.users.pendingKycUsers                },
+      { label: "ממתינים לאימות (נשלח)",    value: MOCK.users.pendingKycUsers                },
       { label: "מושעים",            value: MOCK.users.suspendedUsers                 },
     ],
   },
   {
     title: "מודעות",
     href: "/admin/listings",
+    manageLabel: "לניהול מודעות",
     rows: [
       { label: 'סה"כ',             value: MOCK.listings.totalListings,          total: true },
       { label: "פעילות",            value: MOCK.listings.activeListings                       },
       { label: "ממתינות לאישור",   value: MOCK.listings.pendingApprovalListings               },
       { label: "נדחו",              value: MOCK.listings.rejectedListings                     },
       { label: "מושהה",             value: MOCK.listings.pausedListings                       },
+      { label: "טיוטה",             value: MOCK.listings.draftListings                        },
     ],
   },
   {
     title: "הזמנות",
     href: "/admin/bookings",
+    manageLabel: "לניהול הזמנות",
     rows: [
       { label: 'סה"כ',    value: MOCK.bookings.totalBookings,     total: true },
       { label: "ממתינות", value: MOCK.bookings.requestedBookings               },
@@ -63,9 +68,10 @@ const CARDS: { title: string; href: string; rows: MetricRow[] }[] = [
   {
     title: "מחלוקות",
     href: "/admin/disputes",
+    manageLabel: "לניהול מחלוקות",
     rows: [
       { label: 'סה"כ',   value: MOCK.disputes.totalDisputes,   total: true                                       },
-      { label: "פתוחות", value: MOCK.disputes.openDisputes,    alert: MOCK.disputes.openDisputes > 0             },
+      { label: "פתוחות / בבדיקה", value: MOCK.disputes.openDisputes,    alert: MOCK.disputes.openDisputes > 0             },
       { label: "הוחלט",  value: MOCK.disputes.resolvedDisputes                                                    },
     ],
   },
@@ -79,7 +85,7 @@ export default function AdminMetricsPage() {
 
         {/* Top bar */}
         <div className="flex items-center justify-between flex-wrap gap-4 mb-2">
-          <h1 className="font-sans text-[32px] font-black text-black">לוח בקרה</h1>
+          <h1 className="font-sans text-[32px] font-black text-black">מדדים – מנהל</h1>
 
           <nav className="flex gap-2 flex-wrap">
             {NAV.map(item => (
@@ -101,7 +107,7 @@ export default function AdminMetricsPage() {
         {/* 7-day pulse strip */}
         <div>
           <p className="font-assistant text-[12px] text-[#AAAAAA] mb-3 uppercase tracking-wide">
-            7 ימים אחרונים
+            פעילות 7 ימים אחרונים
           </p>
           <div className="grid grid-cols-3 gap-4">
             {PULSE.map(cell => (
@@ -128,7 +134,7 @@ export default function AdminMetricsPage() {
                   href={card.href}
                   className="font-assistant text-[12px] text-[#1A8C6A] hover:underline cursor-pointer"
                 >
-                  לניהול ←
+                  {card.manageLabel} ←
                 </Link>
               </div>
 

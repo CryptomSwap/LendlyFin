@@ -128,7 +128,7 @@ export default function ListingPage() {
             </div>
 
             <InfoSection label="תיאור" body={MOCK_LISTING.description} />
-            <InfoSection label="איסוף" body={MOCK_LISTING.pickupNote} />
+            <InfoSection label="איסוף וזמינות" body={MOCK_LISTING.pickupNote} />
             <InfoSection label="כללים" body={MOCK_LISTING.rules} />
 
             <div className="mt-4 flex items-center gap-4 rounded-[8px] border border-black/10 bg-white p-5">
@@ -136,11 +136,16 @@ export default function ListingPage() {
                 {ownerInitial}
               </div>
               <div>
+                <p className="font-sans text-[13px] font-bold text-black mb-0.5">המלווה</p>
                 <p className="font-sans text-[15px] font-black text-black">
                   {MOCK_LISTING.owner.name}
                 </p>
                 <p className="font-assistant text-[12px] text-[#666666]">
-                  {MOCK_LISTING.owner.completedRentals} השכרות הושלמו
+                  {MOCK_LISTING.reviewsCount > 0
+                    ? `${MOCK_LISTING.rating.toFixed(1)} · ${MOCK_LISTING.reviewsCount} ביקורות · ${MOCK_LISTING.owner.completedRentals} השכרות הושלמו`
+                    : MOCK_LISTING.owner.completedRentals > 0
+                    ? `${MOCK_LISTING.owner.completedRentals} השכרות הושלמו`
+                    : "אין ביקורות עדיין"}
                 </p>
               </div>
             </div>
@@ -153,24 +158,29 @@ export default function ListingPage() {
                   ₪{MOCK_LISTING.pricePerDay}
                 </span>
                 <span className="font-assistant text-[16px] text-[#666666]">
-                  / יום
+                  ליום
                 </span>
               </div>
 
-              <div className="rounded-[8px] bg-[#F0FAF6] border border-[#1A8C6A]/15 px-3 py-2 flex items-center justify-between">
-                <span className="font-assistant text-[13px] text-[#1A8C6A] font-semibold">פיקדון מוחזר: ₪{MOCK_LISTING.deposit}</span>
-                <Link href="/help/faq" className="font-assistant text-[11px] text-[#1A8C6A] hover:underline">(מה זה?)</Link>
+              <div className="rounded-[8px] bg-[#F0FAF6] border border-[#1A8C6A]/15 px-3 py-2 space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="font-assistant text-[13px] text-[#1A8C6A] font-semibold">פיקדון מוחזר: ₪{MOCK_LISTING.deposit}</span>
+                  <Link href="/help/faq" className="font-assistant text-[11px] text-[#1A8C6A] hover:underline">(מה זה?)</Link>
+                </div>
+                <p className="font-assistant text-[11px] text-[#666666]">
+                  הפיקדון יוחזר בסיום ההשכרה אם הפריט מוחזר תקין
+                </p>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <Input
-                  label="מתאריך"
+                  label="התחלה"
                   type="date"
                   value={fromDate}
                   onChange={(e) => setFromDate(e.target.value)}
                 />
                 <Input
-                  label="עד תאריך"
+                  label="סיום"
                   type="date"
                   value={toDate}
                   onChange={(e) => setToDate(e.target.value)}
@@ -178,11 +188,11 @@ export default function ListingPage() {
               </div>
 
               <Button variant="primary" size="lg" className="w-full">
-                לבקשת השכרה
+                המשך לתשלום
               </Button>
 
               <p className="text-center font-assistant text-[11px] text-[#AAAAAA]">
-                בחירת תאריכים אינה מחייבת — תשלום רק אחרי אישור
+                בחירת תאריכים אינה מחייבת — התשלום רק אחרי יצירת ההזמנה.
               </p>
             </div>
           </aside>

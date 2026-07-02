@@ -15,8 +15,8 @@ const assistant = Assistant({
 });
 
 export const metadata: Metadata = {
-  title: "Lendly",
-  description: "Lendly Frontend",
+  title: "לנדלי — השכרת ציוד בין אנשים",
+  description: "השאל, השכר, וחסוך — בקהילה שלך. פלטפורמת השכרת ציוד בין עמיתים בישראל.",
 };
 
 export default function RootLayout({

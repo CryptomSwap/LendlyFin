@@ -13,13 +13,13 @@ const MOCK_BOOKINGS = [
 ];
 
 const STATUS_META: Record<string, { label: string; color: string }> = {
-  REQUESTED:           { label: "ממתין לתשלום",       color: "#F59E0B" },
-  CONFIRMED:           { label: "מאושרת",              color: "#1A8C6A" },
+  REQUESTED:           { label: "ממתין לאישור",       color: "#F59E0B" },
+  CONFIRMED:           { label: "אושרה",              color: "#1A8C6A" },
   ACTIVE:              { label: "פעילה",               color: "#1A8C6A" },
   RETURNED:            { label: "הוחזר",               color: "#888888" },
   COMPLETED:           { label: "הושלמה",              color: "#888888" },
-  CANCELLED_BY_RENTER: { label: "בוטלה",               color: "#EF4444" },
-  CANCELLED_BY_OWNER:  { label: 'בוטלה ע"י המשכיר',   color: "#EF4444" },
+  CANCELLED_BY_RENTER: { label: "בוטלה · השוכר",       color: "#EF4444" },
+  CANCELLED_BY_OWNER:  { label: "בוטלה · המשכיר",     color: "#EF4444" },
   IN_DISPUTE:          { label: "במחלוקת",             color: "#EF4444" },
 };
 
@@ -69,7 +69,7 @@ export default function BookingsPage() {
 
         {/* Heading */}
         <h1 className="font-sans text-[32px] font-black text-black mb-6">
-          ההזמנות שלי
+          הזמנות
         </h1>
 
         {/* Filter tabs */}
@@ -153,13 +153,13 @@ export default function BookingsPage() {
           /* Empty state */
           <div className="flex flex-col items-center justify-center py-24 gap-3 text-center">
             <p className="font-sans text-[18px] font-black text-black">
-              אין הזמנות כאן
+              אין הזמנות בסטטוס זה
             </p>
             <p className="font-assistant text-[14px] text-[#666666]">
-              לא נמצאו הזמנות בקטגוריה זו
+              נסה לבחור סטטוס אחר או הצג את כל ההזמנות.
             </p>
             <Button variant="primary" size="md" asChild>
-              <a href="/search">לחיפוש</a>
+              <a href="/search">חפשו השכרות</a>
             </Button>
           </div>
         )}
