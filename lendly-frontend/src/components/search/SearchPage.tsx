@@ -209,7 +209,7 @@ function ListingResultCard({
         {proximityFirst && (
           <div className="absolute bottom-3 right-3 rounded-full bg-white/90 px-2.5 py-1 shadow-[0_2px_8px_rgba(0,0,0,0.12)] backdrop-blur-sm">
             <span className="font-assistant text-[11px] font-bold text-black">
-              {listing.distance} ק"מ
+              {listing.distance} ק״מ
             </span>
           </div>
         )}

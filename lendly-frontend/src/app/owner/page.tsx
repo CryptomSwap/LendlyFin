@@ -125,6 +125,10 @@ export default function OwnerDashboardPage() {
           <p className="font-assistant text-[14px] text-[#888888] mt-1">
             סיכום המודעות, ההזמנות והפעולות הבאות
           </p>
+          <p className="font-assistant text-[12px] text-[#AAAAAA] mt-1">
+            {stats.activeListings} מודעות פעילות
+            {stats.pendingRequests > 0 && ` · ${stats.pendingRequests} בקשות ממתינות`}
+          </p>
         </div>
 
         {/* Stats grid */}
