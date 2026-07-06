@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { getBookingStatusLabel, getListingStatusLabel } from "@/lib/status-labels";
 
 const MOCK = {
   ownerName: "יוסי כהן",
@@ -28,14 +29,14 @@ const MOCK = {
 };
 
 const LISTING_STATUS: Record<string, { label: string; color: string }> = {
-  ACTIVE:           { label: "פעיל",           color: "#1A8C6A" },
-  PENDING_APPROVAL: { label: "ממתין לאישור",   color: "#F59E0B" },
-  PAUSED:           { label: "מושהה",           color: "#888888" },
+  ACTIVE:           { label: getListingStatusLabel("ACTIVE"),           color: "#1A8C6A" },
+  PENDING_APPROVAL: { label: getListingStatusLabel("PENDING_APPROVAL"), color: "#F59E0B" },
+  PAUSED:           { label: getListingStatusLabel("PAUSED"),           color: "#888888" },
 };
 
 const BOOKING_STATUS: Record<string, { label: string; color: string }> = {
-  REQUESTED: { label: "ממתין לאישור", color: "#F59E0B" },
-  CONFIRMED: { label: "אושרה",       color: "#1A8C6A" },
+  REQUESTED: { label: getBookingStatusLabel("REQUESTED"), color: "#F59E0B" },
+  CONFIRMED: { label: getBookingStatusLabel("CONFIRMED"), color: "#1A8C6A" },
 };
 
 function hexToRgb(hex: string) {

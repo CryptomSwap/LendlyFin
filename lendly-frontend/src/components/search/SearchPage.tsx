@@ -431,14 +431,14 @@ export default function SearchPage() {
                   אין תוצאות לחיפוש זה
                 </h2>
                 <p className="font-assistant text-[14px] text-[#666666]">
-                  נסו מילים אחרות או שנו סינון. או הציגו את כל המודעות.
+                  נסו מילים אחרות או שנו סינון. או הצגו את כל המודעות.
                 </p>
                 <button
                   type="button"
                   onClick={clearFilters}
                   className="rounded-full border border-black/15 px-5 py-2 font-sans text-[14px] font-bold text-black transition-colors hover:bg-black/5"
                 >
-                  הציגו את כל המודעות
+                  הצגו את כל המודעות
                 </button>
               </div>
             )}

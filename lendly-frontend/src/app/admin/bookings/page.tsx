@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { getBookingStatusLabel } from "@/lib/status-labels";
 
 const MOCK_BOOKINGS = [
   { id: "b1", ref: "LND-2024-00841", listingTitle: "מצלמת סוני A7III",  userName: "דנה לוי",       status: "CONFIRMED",          createdAt: "2024-07-01", pickupDone: true  },
@@ -14,12 +15,12 @@ const MOCK_BOOKINGS = [
 ];
 
 const STATUS_LABEL: Record<string, string> = {
-  REQUESTED:           "ממתין לאישור",
-  CONFIRMED:           "אושרה",
-  ACTIVE:              "פעילה",
-  COMPLETED:           "הושלמה",
-  CANCELLED_BY_RENTER: "בוטלה · השוכר",
-  IN_DISPUTE:          "במחלוקת",
+  REQUESTED:           getBookingStatusLabel("REQUESTED"),
+  CONFIRMED:           getBookingStatusLabel("CONFIRMED"),
+  ACTIVE:              getBookingStatusLabel("ACTIVE"),
+  COMPLETED:           getBookingStatusLabel("COMPLETED"),
+  CANCELLED_BY_RENTER: getBookingStatusLabel("CANCELLED_BY_RENTER"),
+  IN_DISPUTE:          getBookingStatusLabel("IN_DISPUTE"),
 };
 
 const STATUS_COLOR: Record<string, string> = {

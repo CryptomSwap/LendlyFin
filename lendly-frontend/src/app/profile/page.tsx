@@ -4,6 +4,7 @@ import Link from "next/link";
 import { LayoutDashboard, CalendarDays, HelpCircle, ChevronLeft } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { VERIFICATION_REASSURANCE } from "@/lib/copy/help-reassurance";
 
 const MOCK_USER = {
   name: "יוסי כהן",
@@ -16,9 +17,9 @@ const MOCK_USER = {
 type KycStatus = "APPROVED" | "SUBMITTED" | "PENDING" | "REJECTED";
 
 const KYC_META: Record<KycStatus, { label: string; color: string; bg: string }> = {
-  APPROVED:  { label: "מאומת ✓",       color: "#1A8C6A", bg: "#F0FAF6" },
+  APPROVED:  { label: "מאומת",          color: "#1A8C6A", bg: "#F0FAF6" },
   SUBMITTED: { label: "נשלח לאימות",  color: "#F59E0B", bg: "#FFFBEB" },
-  PENDING:   { label: "ממתין לאימות", color: "#888888", bg: "#F5F5F5" },
+  PENDING:   { label: "ממתין",         color: "#888888", bg: "#F5F5F5" },
   REJECTED:  { label: "נדחה",          color: "#EF4444", bg: "#FEF2F2" },
 };
 
@@ -52,6 +53,8 @@ export default function ProfilePage() {
     <div dir="rtl" className="min-h-screen bg-white pb-24">
       <div className="pt-4"><Navbar /></div>
       <div className="max-w-lg mx-auto px-5 pt-8 space-y-4">
+
+        <h1 className="font-sans text-[28px] font-black text-black">פרופיל</h1>
 
         {/* Avatar + name */}
         <div className="text-center mb-2">
@@ -122,17 +125,37 @@ export default function ProfilePage() {
             </span>
           </div>
           {user.kycStatus === "APPROVED" ? (
+            <>
+              <p className="font-assistant text-[13px] text-[#1A8C6A] font-medium">
+                ✅ אימות הזהות שלך אושר בהצלחה.
+              </p>
+              <p className="font-assistant text-[13px] text-[#888888] mt-1">
+                מאומת מסייע לרוכשים לבטוח במודעות שלך
+              </p>
+            </>
+          ) : user.kycStatus === "SUBMITTED" ? (
             <p className="font-assistant text-[13px] text-[#888888]">
-              מאומת מסייע לרוכשים לבטוח במודעות שלך
+              הבקשה שלך נשלחה לאימות. נבדוק אותה ונעדכן אותך בקרוב.
             </p>
           ) : (
-            <Link
-              href="/profile/kyc"
-              className="mt-3 inline-flex rounded-full bg-[#1A8C6A] px-6 py-2.5 font-sans text-[14px] font-black text-white hover:bg-[#157A5A] transition-colors duration-200"
-            >
-              התחל אימות
-            </Link>
+            <>
+              <p className="font-assistant text-[13px] text-[#888888]">
+                אימות זהות נדרש ליצירת הזמנות. נעבור יחד צעד-אחר-צעד בסלפי ותעודה מזהה.
+              </p>
+              <Link
+                href="/profile/kyc"
+                className="mt-3 inline-flex rounded-full bg-[#1A8C6A] px-6 py-2.5 font-sans text-[14px] font-black text-white hover:bg-[#157A5A] transition-colors duration-200"
+              >
+                התחל אימות
+              </Link>
+            </>
           )}
+          <p className="font-assistant text-[12px] text-[#888888] pt-3 mt-3 border-t border-black/10">
+            {VERIFICATION_REASSURANCE.short}{" "}
+            <Link href={VERIFICATION_REASSURANCE.learnMoreHref} className="text-[#1A8C6A] font-medium hover:underline">
+              {VERIFICATION_REASSURANCE.learnMoreLabel}
+            </Link>
+          </p>
         </div>
 
         {/* Sign out */}

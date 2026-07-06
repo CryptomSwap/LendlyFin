@@ -6,6 +6,7 @@ import { ChevronRight } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { PAYMENT_FAQ_ITEMS } from "@/lib/copy/help-reassurance";
 
 const MOCK = {
   title: "מצלמת סוני A7III",
@@ -33,6 +34,7 @@ function formatDate(iso: string) {
 
 export default function CheckoutPage() {
   const [copied, setCopied] = useState(false);
+  const [showPaidReassurance, setShowPaidReassurance] = useState(false);
 
   function handleCopy() {
     navigator.clipboard.writeText(MOCK.bookingRef);
@@ -56,6 +58,7 @@ export default function CheckoutPage() {
 
         {/* Steps card */}
         <div className="rounded-[8px] border-r-4 border-r-[#1A8C6A] border border-black/10 bg-white p-5 space-y-2">
+          <p className="font-sans text-[15px] font-black text-black mb-1">מה לעשות עכשיו</p>
           {STEPS.map((step, i) => (
             <div key={i} className="flex gap-2 items-start">
               <span className="font-sans font-bold text-black shrink-0">
@@ -81,6 +84,9 @@ export default function CheckoutPage() {
           >
             {copied ? "הועתק" : "העתק"}
           </button>
+          <p className="font-assistant text-[12px] text-white/60">
+            ציינו את המספר בתשלום ב-Bit או בפנייה לתמיכה.
+          </p>
         </div>
 
         {/* Order summary card */}
@@ -105,7 +111,7 @@ export default function CheckoutPage() {
             <span>₪{MOCK.serviceFee}</span>
           </div>
           <div className="rounded-[8px] bg-[#F0FAF6] border border-[#1A8C6A]/15 px-3 py-2 flex items-center justify-between">
-            <span className="font-assistant text-[13px] text-[#1A8C6A] font-semibold">פיקדון מוחזר: ₪{MOCK.deposit}</span>
+            <span className="font-assistant text-[13px] text-[#1A8C6A] font-semibold">פיקדון (מוחזר): ₪{MOCK.deposit}</span>
             <Link href="/help/faq" className="font-assistant text-[11px] text-[#1A8C6A] hover:underline">(מה זה?)</Link>
           </div>
 
@@ -117,6 +123,43 @@ export default function CheckoutPage() {
             <span>₪{MOCK.total}</span>
           </div>
         </div>
+
+        <p className="font-assistant text-[13px] text-[#666666]">
+          אחרי התשלום הצוות מאמת ומאשר. עקבו אחר הסטטוס בדף ההזמנה.
+        </p>
+
+        <div className="rounded-[8px] border border-black/10 bg-white p-5 space-y-3">
+          <p className="font-sans text-[15px] font-black text-black">שאלות נפוצות</p>
+          {PAYMENT_FAQ_ITEMS.map((item) => (
+            <div key={item.question}>
+              <p className="font-sans text-[13px] font-bold text-black">{item.question}</p>
+              <p className="font-assistant text-[13px] text-[#666666] mt-0.5">{item.answer}</p>
+            </div>
+          ))}
+          <Link href="/help/faq" className="inline-block font-assistant text-[13px] text-[#1A8C6A] font-semibold hover:underline">
+            כל השאלות והתשובות
+          </Link>
+        </div>
+
+        {!showPaidReassurance ? (
+          <button
+            type="button"
+            onClick={() => setShowPaidReassurance(true)}
+            className="w-full font-assistant text-[13px] text-[#666666] hover:text-black"
+          >
+            כבר שילמתי
+          </button>
+        ) : (
+          <div className="rounded-[8px] bg-[#F5F5F5] p-4 space-y-2 text-right">
+            <p className="font-sans text-[14px] font-bold text-black">התשלום התקבל</p>
+            <p className="font-assistant text-[13px] text-[#666666]">
+              הצוות יאמת ויאשר. עקבו אחר הסטטוס בדף ההזמנה.
+            </p>
+            <Link href="/bookings" className="font-assistant text-[13px] text-[#1A8C6A] font-semibold hover:underline">
+              צפו בסטטוס ההזמנה
+            </Link>
+          </div>
+        )}
 
       </div>
       <Footer />
@@ -134,6 +177,12 @@ export default function CheckoutPage() {
         <Button variant="primary" size="lg" className="w-full">
           לתשלום ב-Bit
         </Button>
+        <p className="font-assistant text-[11px] text-[#AAAAAA] text-center">
+          אחרי אימות — ההזמנה מאושרת. פיקדון מוחזר בהתאם למצב הפריט.
+        </p>
+        <p className="font-assistant text-[11px] text-[#AAAAAA] text-center">
+          פיקדון מוחזר בהתאם למצב הפריט · תמיכה זמינה כשצריך · שאלות? מרכז העזרה
+        </p>
       </div>
     </div>
   );

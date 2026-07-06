@@ -5,6 +5,8 @@ import Link from "next/link";
 import { MessageCircle, ChevronRight } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { getBookingStatusLabel, getBookingStatusLabelDetail } from "@/lib/status-labels";
+import { BOOKING_HELP_CTA } from "@/lib/copy/help-reassurance";
 
 type BookingStatus =
   | "REQUESTED"
@@ -46,14 +48,14 @@ const STEP_INDEX: Record<BookingStatus, number> = {
 };
 
 const STATUS_META: Record<BookingStatus, { label: string; color: string }> = {
-  REQUESTED:           { label: "ממתין לאישור",       color: "#F59E0B" },
-  CONFIRMED:           { label: "אושרה",              color: "#1A8C6A" },
-  ACTIVE:              { label: "פעילה",               color: "#1A8C6A" },
-  RETURNED:            { label: "הוחזר",               color: "#888888" },
-  COMPLETED:           { label: "הושלמה",              color: "#888888" },
-  CANCELLED_BY_RENTER: { label: "בוטלה · השוכר",       color: "#EF4444" },
-  CANCELLED_BY_OWNER:  { label: "בוטלה · המשכיר",     color: "#EF4444" },
-  IN_DISPUTE:          { label: "במחלוקת",             color: "#EF4444" },
+  REQUESTED:           { label: getBookingStatusLabel("REQUESTED"),       color: "#F59E0B" },
+  CONFIRMED:           { label: getBookingStatusLabelDetail("CONFIRMED"), color: "#1A8C6A" },
+  ACTIVE:              { label: getBookingStatusLabel("ACTIVE"),               color: "#1A8C6A" },
+  RETURNED:            { label: getBookingStatusLabel("RETURNED"),               color: "#888888" },
+  COMPLETED:           { label: getBookingStatusLabel("COMPLETED"),              color: "#888888" },
+  CANCELLED_BY_RENTER: { label: getBookingStatusLabel("CANCELLED_BY_RENTER"),       color: "#EF4444" },
+  CANCELLED_BY_OWNER:  { label: getBookingStatusLabel("CANCELLED_BY_OWNER"),     color: "#EF4444" },
+  IN_DISPUTE:          { label: getBookingStatusLabel("IN_DISPUTE"),             color: "#EF4444" },
 };
 
 const MONTH_HE = [
@@ -150,7 +152,7 @@ function ActionCard({ status }: { status: BookingStatus }) {
           href={`/checkout?bookingId=${MOCK_BOOKING.id}`}
           className="block w-full rounded-full font-sans text-[15px] font-black py-3.5 bg-[#1A8C6A] text-white hover:bg-[#158060] transition-colors duration-200 text-center"
         >
-          לתשלום
+          השלם תשלום
         </a>
       </div>
     );
@@ -201,7 +203,7 @@ function ActionCard({ status }: { status: BookingStatus }) {
   if (status === "COMPLETED") {
     return (
       <div className="rounded-[8px] border border-black/10 bg-white p-5 space-y-4">
-        <p className="font-sans text-[14px] font-bold text-black">כתוב ביקורת</p>
+        <p className="font-sans text-[14px] font-bold text-black">השאר ביקורת</p>
 
         {/* Stars */}
         <div className="flex gap-1 justify-center" dir="ltr">
@@ -222,7 +224,7 @@ function ActionCard({ status }: { status: BookingStatus }) {
         <textarea
           value={review}
           onChange={e => setReview(e.target.value)}
-          placeholder="שתפו את החוויה שלכם..."
+          placeholder="איך הייתה החוויה?"
           rows={3}
           className="w-full rounded-[8px] border border-black/10 px-3 py-2.5 font-assistant text-[13px] text-black placeholder:text-[#AAAAAA] resize-none focus:outline-none focus:border-[#1A8C6A]"
         />
@@ -244,11 +246,11 @@ function ActionCard({ status }: { status: BookingStatus }) {
 /* ── Primary CTA label for sticky bar ──────────────────────── */
 function primaryCtaLabel(status: BookingStatus): string | null {
   switch (status) {
-    case "REQUESTED":  return "לתשלום";
+    case "REQUESTED":  return "השלם תשלום";
     case "CONFIRMED":  return "השלם רשימת איסוף";
     case "ACTIVE":     return "השלם רשימת החזרה";
     case "RETURNED":   return "פתח מחלוקת";
-    case "COMPLETED":  return "שלח ביקורת";
+    case "COMPLETED":  return "השאר ביקורת";
     default:           return null;
   }
 }
@@ -340,7 +342,7 @@ export default function BookingDetailPage() {
           </div>
 
           <div className="flex justify-between font-sans text-[17px] font-black text-black border-t border-black/[0.08] pt-3 mt-2">
-            <span>סה"כ</span>
+            <span>סה״כ</span>
             <span>₪{b.totalDue}</span>
           </div>
         </div>
@@ -356,6 +358,13 @@ export default function BookingDetailPage() {
           <MessageCircle size={16} />
           שאל שאלה / הודעות
         </button>
+
+        <p className="text-center font-assistant text-[13px] text-[#666666]">
+          {BOOKING_HELP_CTA.line}{" "}
+          <Link href={BOOKING_HELP_CTA.href} className="text-[#1A8C6A] font-semibold hover:underline">
+            {BOOKING_HELP_CTA.label}
+          </Link>
+        </p>
 
       </div>
       <Footer />

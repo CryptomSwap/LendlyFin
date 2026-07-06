@@ -8,6 +8,7 @@ import Footer from "@/components/Footer";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import StatusPill from "@/components/ui/StatusPill";
+import { getListingStatusLabel } from "@/lib/status-labels";
 
 const MOCK_LISTING = {
   id: "1",
@@ -104,7 +105,7 @@ export default function ListingPage() {
             </div>
 
             <div className="mt-4 space-y-3 rounded-[8px] border border-black/10 bg-white p-6">
-              <StatusPill variant="brand">פעיל</StatusPill>
+              <StatusPill variant="brand">{getListingStatusLabel("ACTIVE")}</StatusPill>
 
               <h1 className="font-sans text-[28px] font-black leading-tight text-black">
                 {MOCK_LISTING.title}
@@ -131,23 +132,34 @@ export default function ListingPage() {
             <InfoSection label="איסוף וזמינות" body={MOCK_LISTING.pickupNote} />
             <InfoSection label="כללים" body={MOCK_LISTING.rules} />
 
-            <div className="mt-4 flex items-center gap-4 rounded-[8px] border border-black/10 bg-white p-5">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#F0FAF6] font-sans text-[18px] font-black text-[#1A8C6A]">
-                {ownerInitial}
+            <div className="mt-4 rounded-[8px] border border-black/10 bg-white p-5">
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#F0FAF6] font-sans text-[18px] font-black text-[#1A8C6A]">
+                  {ownerInitial}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-sans text-[13px] font-bold text-black mb-0.5">המלווה</p>
+                  <p className="font-sans text-[15px] font-black text-black">
+                    {MOCK_LISTING.owner.name}
+                  </p>
+                  <p className="font-assistant text-[12px] text-[#666666]">
+                    {MOCK_LISTING.reviewsCount > 0
+                      ? `${MOCK_LISTING.rating.toFixed(1)} · ${MOCK_LISTING.reviewsCount} ביקורות · ${MOCK_LISTING.owner.completedRentals} השכרות הושלמו`
+                      : MOCK_LISTING.owner.completedRentals > 0
+                      ? `${MOCK_LISTING.owner.completedRentals} השכרות הושלמו`
+                      : "אין ביקורות עדיין"}
+                  </p>
+                </div>
+                <Link
+                  href="/bookings"
+                  className="shrink-0 font-assistant text-[12px] text-[#1A8C6A] font-semibold hover:underline"
+                >
+                  שאל שאלה / הודעות
+                </Link>
               </div>
-              <div>
-                <p className="font-sans text-[13px] font-bold text-black mb-0.5">המלווה</p>
-                <p className="font-sans text-[15px] font-black text-black">
-                  {MOCK_LISTING.owner.name}
-                </p>
-                <p className="font-assistant text-[12px] text-[#666666]">
-                  {MOCK_LISTING.reviewsCount > 0
-                    ? `${MOCK_LISTING.rating.toFixed(1)} · ${MOCK_LISTING.reviewsCount} ביקורות · ${MOCK_LISTING.owner.completedRentals} השכרות הושלמו`
-                    : MOCK_LISTING.owner.completedRentals > 0
-                    ? `${MOCK_LISTING.owner.completedRentals} השכרות הושלמו`
-                    : "אין ביקורות עדיין"}
-                </p>
-              </div>
+              <p className="font-assistant text-[12px] text-[#666666] mt-3 pt-3 border-t border-black/[0.08]">
+                הפיקדון יוחזר בהתאם למצב הפריט. תמיכה זמינה.
+              </p>
             </div>
           </div>
 
@@ -171,6 +183,10 @@ export default function ListingPage() {
                   הפיקדון יוחזר בסיום ההשכרה אם הפריט מוחזר תקין
                 </p>
               </div>
+
+              <p className="font-assistant text-[13px] text-[#666666]">
+                בחרו תאריכים כדי לראות זמינות ולהמשיך להזמנה.
+              </p>
 
               <div className="grid grid-cols-2 gap-3">
                 <Input

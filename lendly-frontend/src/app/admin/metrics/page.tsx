@@ -33,7 +33,7 @@ const CARDS: { title: string; href: string; manageLabel: string; rows: MetricRow
     href: "/admin/users",
     manageLabel: "לניהול משתמשים",
     rows: [
-      { label: 'סה"כ',             value: MOCK.users.totalUsers,       total: true  },
+      { label: "סה״כ משתמשים",             value: MOCK.users.totalUsers,       total: true  },
       { label: "אימות אושר",        value: MOCK.users.approvedKycUsers               },
       { label: "ממתינים לאימות (נשלח)",    value: MOCK.users.pendingKycUsers                },
       { label: "מושעים",            value: MOCK.users.suspendedUsers                 },
@@ -44,7 +44,7 @@ const CARDS: { title: string; href: string; manageLabel: string; rows: MetricRow
     href: "/admin/listings",
     manageLabel: "לניהול מודעות",
     rows: [
-      { label: 'סה"כ',             value: MOCK.listings.totalListings,          total: true },
+      { label: "סה״כ מודעות",             value: MOCK.listings.totalListings,          total: true },
       { label: "פעילות",            value: MOCK.listings.activeListings                       },
       { label: "ממתינות לאישור",   value: MOCK.listings.pendingApprovalListings               },
       { label: "נדחו",              value: MOCK.listings.rejectedListings                     },
@@ -57,7 +57,7 @@ const CARDS: { title: string; href: string; manageLabel: string; rows: MetricRow
     href: "/admin/bookings",
     manageLabel: "לניהול הזמנות",
     rows: [
-      { label: 'סה"כ',    value: MOCK.bookings.totalBookings,     total: true },
+      { label: "סה״כ הזמנות",    value: MOCK.bookings.totalBookings,     total: true },
       { label: "ממתינות", value: MOCK.bookings.requestedBookings               },
       { label: "אושרו",   value: MOCK.bookings.confirmedBookings               },
       { label: "פעילות",  value: MOCK.bookings.activeBookings                  },
@@ -70,7 +70,7 @@ const CARDS: { title: string; href: string; manageLabel: string; rows: MetricRow
     href: "/admin/disputes",
     manageLabel: "לניהול מחלוקות",
     rows: [
-      { label: 'סה"כ',   value: MOCK.disputes.totalDisputes,   total: true                                       },
+      { label: "סה״כ מחלוקות",   value: MOCK.disputes.totalDisputes,   total: true                                       },
       { label: "פתוחות / בבדיקה", value: MOCK.disputes.openDisputes,    alert: MOCK.disputes.openDisputes > 0             },
       { label: "הוחלט",  value: MOCK.disputes.resolvedDisputes                                                    },
     ],
