@@ -23,7 +23,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="he" dir="rtl" className={`${heebo.variable} ${assistant.variable}`} suppressHydrationWarning>
-      <body className="min-h-screen bg-background text-foreground font-sans antialiased">
+      <body
+        className="min-h-screen bg-background text-foreground font-sans antialiased"
+        suppressHydrationWarning
+      >
         <ThemeProvider>
           <SessionProvider>{children}</SessionProvider>
         </ThemeProvider>

@@ -19,9 +19,9 @@ export type DevImpersonationId = (typeof DEV_IMPERSONATION_ALLOWED_IDS)[number];
 
 export const DEV_IMPERSONATION_LABELS: Record<string, string> = {
   "admin-user": "Admin",
-  "dev-user": "Lender (legacy)",
+  "dev-user": "Dev user",
   "qa-renter": "Renter (multi-booking)",
-  "qa-renter-no-bookings": "Renter (no bookings)",
+  "qa-renter-no-bookings": "Regular user",
   "qa-owner-approved": "Owner (approved, active listings)",
   "qa-owner-pending-kyc": "Owner (KYC pending)",
   "qa-onboarding-incomplete": "Onboarding incomplete",

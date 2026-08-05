@@ -12,7 +12,20 @@ async function getListing(id: string) {
   const proto = h.get("x-forwarded-proto") ?? "http";
   const res = await fetch(`${proto}://${host}/api/listings/${id}`, { cache: "no-store" });
   if (!res.ok) return null;
-  return res.json() as Promise<{ id: string; title: string; status: string; pickupNote: string | null; rules: string | null }>;
+  return res.json() as Promise<{
+    id: string;
+    title: string;
+    status: string;
+    description: string | null;
+    category: string;
+    subcategory: string | null;
+    city: string;
+    pricePerDay: number;
+    deposit: number;
+    valueEstimate: number | null;
+    pickupNote: string | null;
+    rules: string | null;
+  }>;
 }
 
 export default async function ListingManagePage(props: {
@@ -46,6 +59,13 @@ export default async function ListingManagePage(props: {
         listingId={id}
         listingTitle={listing.title}
         listingStatus={listing.status}
+        description={listing.description ?? ""}
+        category={listing.category}
+        subcategory={listing.subcategory ?? ""}
+        city={listing.city}
+        pricePerDay={listing.pricePerDay}
+        deposit={listing.deposit}
+        valueEstimate={listing.valueEstimate}
         pickupNote={listing.pickupNote ?? ""}
         rules={listing.rules ?? ""}
       />

@@ -43,3 +43,25 @@ export async function createAuditLog(input: CreateAuditInput) {
     },
   });
 }
+
+/**
+ * Record non-admin security events (rate-limit denials, sensitive file access).
+ * Uses synthetic actor fields because AuditLog requires admin columns.
+ */
+export async function createSystemAuditLog(input: {
+  entityType: AuditEntityType;
+  entityId: string;
+  action: string;
+  reason?: string | null;
+  targetDisplayName?: string | null;
+}) {
+  return createAuditLog({
+    entityType: input.entityType,
+    entityId: input.entityId,
+    action: input.action,
+    adminUserId: "system",
+    adminName: "System",
+    reason: input.reason ?? null,
+    targetDisplayName: input.targetDisplayName ?? null,
+  });
+}

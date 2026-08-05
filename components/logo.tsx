@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 /** Lendly logo from MVP (public/logo.png, fallback public/logo.svg). */
@@ -24,18 +26,23 @@ export default function Logo({
   linkToHome = false,
   className,
 }: LogoProps) {
+  const [logoSrc, setLogoSrc] = useState(LOGO_PNG);
+
   const content = (
     <>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={LOGO_PNG}
+      <Image
+        src={logoSrc}
         alt=""
         className={cn("shrink-0 h-auto", showWordmark && "rounded-lg")}
+        width={size}
+        height={size}
         style={{ height: size, width: "auto" }}
+        unoptimized
         aria-hidden
-        onError={(e) => {
-          const el = e.currentTarget;
-          if (el.src.endsWith(".png")) el.src = LOGO_SVG_FALLBACK;
+        onError={() => {
+          if (logoSrc === LOGO_PNG) {
+            setLogoSrc(LOGO_SVG_FALLBACK);
+          }
         }}
       />
       {showWordmark && (

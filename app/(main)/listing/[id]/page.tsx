@@ -1,9 +1,8 @@
 export const runtime = "nodejs";
 import Link from "next/link";
-import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PageContainer } from "@/components/layout";
-import { StatusPill } from "@/components/ui/status-pill";
+import { PageContainer, SurfaceCard } from "@/components/layout";
+import { RedesignStatusPill } from "@/components/redesign/status-pill";
 import { headers } from "next/headers";
 import CreateBookingCTA from "@/components/create-booking-cta";
 import ListingImageCarousel from "@/components/listing-image-carousel";
@@ -14,6 +13,7 @@ import { FAQBlock } from "@/components/ui/faq-block";
 import { DEPOSIT_DISPUTE_FAQ_ITEMS } from "@/lib/copy/help-reassurance";
 import { Star, MessageCircle, HelpCircle } from "lucide-react";
 import { prisma } from "@/lib/prisma";
+import { mapListingImagesForApi } from "@/lib/listing-images";
 
 async function getListing(id: string) {
   const listing = await prisma.listing.findUnique({
@@ -45,6 +45,7 @@ async function getListing(id: string) {
 
   return {
     ...listing,
+    images: mapListingImagesForApi(listing.images, { allowInline: true }),
     completedBookingsCount,
     reviewsCount: reviewsAggregate?._count.id ?? 0,
     averageRating: Math.round((reviewsAggregate?._avg.rating ?? 0) * 10) / 10,
@@ -112,13 +113,18 @@ export default async function ListingDetailsPage(props: {
   if (!listing) {
     return (
       <div className="min-h-screen w-full app-page-bg py-16" dir="rtl">
-        <div className="w-full max-w-md md:max-w-7xl mx-auto px-4 md:px-8 text-center">
-          <p className="text-foreground font-medium">מודעה לא נמצאה</p>
-          <p className="text-sm text-muted-foreground mt-1">ייתכן שהמודעה הוסרה או שהקישור שגוי.</p>
-          <Link href="/search" className="inline-block mt-6 text-primary font-medium hover:underline">
+        <PageContainer width="wide" className="text-center">
+          <p className="font-sans font-black text-black">מודעה לא נמצאה</p>
+          <p className="mt-1 font-assistant text-sm text-[#888888]">
+            ייתכן שהמודעה הוסרה או שהקישור שגוי.
+          </p>
+          <Link
+            href="/search"
+            className="mt-6 inline-block font-sans font-bold text-[#1A8C6A] hover:text-[#157A5A] hover:underline"
+          >
             חזרה לחיפוש
           </Link>
-        </div>
+        </PageContainer>
       </div>
     );
   }
@@ -131,86 +137,89 @@ export default async function ListingDetailsPage(props: {
       <PageContainer width="wide" className="space-y-6">
         <section className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start" aria-label="פרטי המודעה ותמחור">
           <div className="space-y-5">
-            <div className="rounded-card border border-border/70 bg-card p-3 md:p-4 shadow-card">
+            <SurfaceCard padding="sm" className="md:p-4">
               <ListingImageCarousel images={listing.images ?? []} alt={listing.title} />
-            </div>
+            </SurfaceCard>
 
             {/* Main info */}
-            <section className="rounded-card border border-border/70 bg-card p-4 md:p-6 shadow-soft space-y-2" aria-label="פרטי המודעה">
-              <div className="flex flex-wrap items-center gap-2">
-                <StatusPill variant={statusToPillVariant(listing.status)}>
-                  {statusLabel}
-                </StatusPill>
-              </div>
-              <h1 className="text-2xl font-bold text-foreground leading-tight tracking-tight">
-                {listing.title}
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                {getCategoryDisplayLabel(listing.category, listing.subcategory)}
-              </p>
-              {listing.status === "REJECTED" && listing.statusRejectionReason && (
-                <p className="text-sm text-destructive">
-                  סיבת דחייה: {listing.statusRejectionReason}
-                </p>
-              )}
-              <details className="pt-1 text-start" dir="rtl">
-                <summary className="text-xs text-primary underline underline-offset-4 cursor-pointer inline-flex items-center justify-center w-full list-none">
-                  <span>למה יש פיקדון?</span>
-                </summary>
-                <div className="mt-3 rounded-xl border border-border/70 bg-card/70 p-4 text-sm text-muted-foreground space-y-4 text-right">
-                  <div className="space-y-2">
-                    <p className="font-semibold text-foreground">למה יש פיקדון על הפריט הזה?</p>
-                    <p>הפיקדון נועד לשמור על החפץ ולגרום לכולם להרגיש בנוח.</p>
-                    <p>הוא מחושב אוטומטית לפי:</p>
-                    <ul className="list-disc ps-5 space-y-1">
-                      <li>סוג הפריט</li>
-                      <li>הערך שלו</li>
-                      <li>זמן ההשכרה</li>
-                    </ul>
-                    <p>אם הכל חוזר תקין, הפיקדון משתחרר אליך בסוף ההשכרה.</p>
-                  </div>
-
-                  <div className="h-px w-full bg-border/70" aria-hidden />
-
-                  <div className="space-y-2">
-                    <p className="font-semibold text-foreground">איך אנחנו שומרים על החפץ שלך?</p>
-                    <p>כשמישהו שוכר את הפריט שלך, לנדלי מחזיקה פיקדון.</p>
-                    <p>הפיקדון מחושב לפי סוג הפריט, הערך שלו והזמן שהוא מושכר.</p>
-                    <p>ככה אם משהו קורה, יש כיסוי מספק!</p>
-                    <p>ברוב המקרים הכל חוזר כמו שיצא, והפיקדון משתחרר 🙂</p>
-                  </div>
+            <section aria-label="פרטי המודעה">
+              <SurfaceCard padding="sm" className="space-y-2 md:p-6">
+                <div className="flex flex-wrap items-center gap-2">
+                  <RedesignStatusPill variant={statusToPillVariant(listing.status)}>
+                    {statusLabel}
+                  </RedesignStatusPill>
                 </div>
-              </details>
+                <h1 className="font-sans text-2xl font-black leading-tight tracking-tight text-black">
+                  {listing.title}
+                </h1>
+                <p className="font-assistant text-sm text-[#888888]">
+                  {getCategoryDisplayLabel(listing.category, listing.subcategory)}
+                </p>
+                {listing.status === "REJECTED" && listing.statusRejectionReason && (
+                  <p className="font-assistant text-sm text-red-600">
+                    סיבת דחייה: {listing.statusRejectionReason}
+                  </p>
+                )}
+                <details className="pt-1 text-start" dir="rtl">
+                  <summary className="inline-flex w-full cursor-pointer list-none items-center justify-center font-assistant text-xs text-[#1A8C6A] underline underline-offset-4 hover:text-[#157A5A]">
+                    <span>למה יש פיקדון?</span>
+                  </summary>
+                  <div className="mt-3 space-y-4 rounded-[8px] border border-black/10 bg-white p-4 text-right font-assistant text-sm text-[#888888]">
+                    <div className="space-y-2">
+                      <p className="font-sans font-black text-black">למה יש פיקדון על הפריט הזה?</p>
+                      <p>הפיקדון נועד לשמור על החפץ ולגרום לכולם להרגיש בנוח.</p>
+                      <p>הוא מחושב אוטומטית לפי:</p>
+                      <ul className="list-disc space-y-1 ps-5">
+                        <li>סוג הפריט</li>
+                        <li>הערך שלו</li>
+                        <li>זמן ההשכרה</li>
+                      </ul>
+                      <p>אם הכל חוזר תקין, הפיקדון משתחרר אליך בסוף ההשכרה.</p>
+                    </div>
+
+                    <div className="h-px w-full bg-black/10" aria-hidden />
+
+                    <div className="space-y-2">
+                      <p className="font-sans font-black text-black">איך אנחנו שומרים על החפץ שלך?</p>
+                      <p>כשמישהו שוכר את הפריט שלך, לנדלי מחזיקה פיקדון.</p>
+                      <p>הפיקדון מחושב לפי סוג הפריט, הערך שלו והזמן שהוא מושכר.</p>
+                      <p>ככה אם משהו קורה, יש כיסוי מספק!</p>
+                      <p>ברוב המקרים הכל חוזר כמו שיצא, והפיקדון משתחרר 🙂</p>
+                    </div>
+                  </div>
+                </details>
+              </SurfaceCard>
             </section>
           </div>
 
           {/* Price & deposit */}
-          <aside className="lg:sticky lg:top-24 space-y-4" aria-label="מחיר והפיקדון">
-            <Card variant="priceBox" className="py-6">
-              <CardHeader className="py-0 pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground text-center">
-                  מחיר ליום
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0 flex flex-col gap-4">
+          <aside className="space-y-4 lg:sticky lg:top-24" aria-label="מחיר והפיקדון">
+            <SurfaceCard className="py-6">
+              <p className="text-center font-assistant text-sm font-medium text-[#888888]">
+                מחיר ליום
+              </p>
+              <div className="mt-2 flex flex-col gap-4">
                 <div className="text-center">
-                  <span className="text-3xl font-bold text-foreground">
+                  <span className="font-sans text-3xl font-black text-black">
                     {formatMoneyIls(listing.pricePerDay)}
                   </span>
-                  <span className="text-lg font-medium text-muted-foreground me-1">
+                  <span className="me-1 font-assistant text-lg font-medium text-[#888888]">
                     ליום
                   </span>
                 </div>
-                <div className="border-t border-primary/10 pt-4 space-y-1 text-center text-sm">
-                  <p className="text-muted-foreground">
-                    פיקדון מוחזר: <span className="font-semibold text-foreground">{formatMoneyIls(listing.deposit)}</span>
+                <div className="space-y-1 border-t border-[#1A8C6A]/15 pt-4 text-center font-assistant text-sm">
+                  <p className="text-[#888888]">
+                    פיקדון מוחזר:{" "}
+                    <span className="font-sans font-black text-black">
+                      {formatMoneyIls(listing.deposit)}
+                    </span>
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-[#888888]">
                     הפיקדון יוחזר בסיום ההשכרה אם הפריט מוחזר תקין
                   </p>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </SurfaceCard>
           </aside>
         </section>
 
@@ -218,7 +227,7 @@ export default async function ListingDetailsPage(props: {
       {listing.description && (
         <section className="mb-6" aria-label="תיאור">
           <h2 className="section-title mb-2">תיאור</h2>
-          <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
+          <p className="whitespace-pre-wrap font-assistant text-sm leading-relaxed text-[#888888]">
             {listing.description}
           </p>
         </section>
@@ -226,90 +235,88 @@ export default async function ListingDetailsPage(props: {
 
       {/* Pickup / logistics */}
       <section className="mb-6" aria-label="איסוף וזמינות">
-        <Card variant="elevated" className="py-4">
-          <CardHeader className="py-0">
-            <CardTitle className="text-base">איסוף וזמינות</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-2 text-sm text-muted-foreground">
+        <SurfaceCard padding="sm">
+          <h2 className="font-sans text-base font-black text-black">איסוף וזמינות</h2>
+          <div className="pt-2 font-assistant text-sm text-[#888888]">
             {listing.pickupNote ? (
               <p className="whitespace-pre-wrap">{listing.pickupNote}</p>
             ) : (
               <p>זמינות משתנה · איסוף עצמי</p>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </SurfaceCard>
       </section>
 
       {/* Rules */}
       {listing.rules && (
         <section className="mb-6" aria-label="כללים">
-          <Card variant="elevated" className="py-4">
-            <CardHeader className="py-0">
-              <CardTitle className="text-base">כללים</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-2 text-sm text-muted-foreground whitespace-pre-wrap">
+          <SurfaceCard padding="sm">
+            <h2 className="font-sans text-base font-black text-black">כללים</h2>
+            <div className="whitespace-pre-wrap pt-2 font-assistant text-sm text-[#888888]">
               {listing.rules}
-            </CardContent>
-          </Card>
+            </div>
+          </SurfaceCard>
         </section>
       )}
 
       {/* Liability */}
       <section className="mb-6" aria-label="אחריות">
-        <Card className="py-4">
-          <CardHeader className="py-0">
-            <CardTitle className="text-base">אחריות</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-2 text-sm text-muted-foreground">
+        <SurfaceCard padding="sm">
+          <h2 className="font-sans text-base font-black text-black">אחריות</h2>
+          <div className="pt-2 font-assistant text-sm text-[#888888]">
             <p>אחריות השוכר מוגבלת לערך הפריט.</p>
-          </CardContent>
-        </Card>
+          </div>
+        </SurfaceCard>
       </section>
 
       {/* FAQ / help — renting, deposit, payment */}
       <section className="mb-6" aria-label="מידע על השכרה">
-        <Card className="py-4">
-          <CardHeader className="py-0">
-            <CardTitle className="text-base inline-flex items-center gap-2">
-              <HelpCircle className="h-4 w-4 text-muted-foreground" aria-hidden />
-              רוצה לדעת יותר?
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-3 text-sm text-muted-foreground space-y-2">
-            <p>בוחרים תאריכים, משלמים ב-Bit אחרי יצירת ההזמנה, והצוות מאמת. פיקדון מוחזר בהתאם למצב הפריט.</p>
-            <Link href="/help/faq" className="inline-flex items-center gap-1 text-primary font-medium hover:underline">
+        <SurfaceCard padding="sm">
+          <h2 className="inline-flex items-center gap-2 font-sans text-base font-black text-black">
+            <HelpCircle className="h-4 w-4 text-[#888888]" aria-hidden />
+            רוצה לדעת יותר?
+          </h2>
+          <div className="space-y-2 pt-3 font-assistant text-sm text-[#888888]">
+            <p>
+              בוחרים תאריכים, משלמים בכרטיס אשראי אחרי יצירת ההזמנה, וההזמנה מאושרת אוטומטית. פיקדון מוחזר בהתאם למצב הפריט.
+            </p>
+            <Link
+              href="/help/faq"
+              className="inline-flex items-center gap-1 font-sans font-bold text-[#1A8C6A] hover:text-[#157A5A] hover:underline"
+            >
               שאלות נפוצות והנחיות
             </Link>
-          </CardContent>
-        </Card>
+          </div>
+        </SurfaceCard>
         <FAQBlock
           title="פיקדון ומחלוקות"
           items={DEPOSIT_DISPUTE_FAQ_ITEMS}
           moreLink={{ href: "/help/faq", label: "כל השאלות" }}
-          className="mt-4"
+          className="mt-4 rounded-[8px] border border-black/10 bg-white shadow-none"
         />
       </section>
 
       {/* Lender / trust */}
       <section className="mb-6" aria-label="המלווה">
-        <Card variant="elevated" className="py-4">
-          <CardHeader className="py-0">
-            <CardTitle className="text-base">המלווה</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-3 flex flex-col gap-3">
-            <div className="flex items-center gap-2 flex-wrap">
-              <p className="font-medium text-foreground">
+        <SurfaceCard padding="sm">
+          <h2 className="font-sans text-base font-black text-black">המלווה</h2>
+          <div className="flex flex-col gap-3 pt-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="font-sans font-black text-black">
                 {listing.owner?.name ?? "—"}
               </p>
-              <Link href="/bookings" className="text-sm text-primary hover:underline inline-flex items-center gap-1 mr-auto">
+              <Link
+                href="/bookings"
+                className="mr-auto inline-flex items-center gap-1 font-assistant text-sm text-[#1A8C6A] hover:text-[#157A5A] hover:underline"
+              >
                 <MessageCircle className="h-4 w-4" aria-hidden />
                 שאל שאלה / הודעות
               </Link>
             </div>
-            <p className="text-sm text-muted-foreground inline-flex items-center gap-1.5 flex-wrap">
+            <p className="inline-flex flex-wrap items-center gap-1.5 font-assistant text-sm text-[#888888]">
               {(listing.reviewsCount ?? 0) > 0 ? (
                 <>
-                  <Star className="h-4 w-4 fill-primary text-primary shrink-0" aria-hidden />
+                  <Star className="h-4 w-4 shrink-0 fill-[#1A8C6A] text-[#1A8C6A]" aria-hidden />
                   <span>{(listing.averageRating ?? 0).toFixed(1)}</span>
                   <span>·</span>
                   <span>{listing.reviewsCount} ביקורות</span>
@@ -326,28 +333,29 @@ export default async function ListingDetailsPage(props: {
                 <span>אין ביקורות עדיין</span>
               )}
             </p>
-            <p className="text-xs text-muted-foreground pt-2 border-t border-border mt-2">
+            <p className="mt-2 border-t border-black/10 pt-2 font-assistant text-xs text-[#888888]">
               הפיקדון יוחזר בהתאם למצב הפריט. תמיכה זמינה.
             </p>
-          </CardContent>
-        </Card>
+          </div>
+        </SurfaceCard>
       </section>
 
       {/* Owner/admin: manage availability */}
       {isOwnerOrAdmin && (
         <section className="mb-6">
-          <Card className="py-4">
-            <CardContent className="pt-0">
-              <Link href={`/listing/${listing.id}/manage`} className="block">
-                <Button variant="outline" className="w-full justify-center">
-                  ניהול זמינות
-                </Button>
-              </Link>
-              <p className="text-xs text-muted-foreground mt-2 text-center">
-                ניהול תאריכים חסומים (מתי הפריט לא זמין להשכרה).
-              </p>
-            </CardContent>
-          </Card>
+          <SurfaceCard padding="sm">
+            <Link href={`/listing/${listing.id}/manage`} className="block">
+              <Button
+                variant="outline"
+                className="w-full justify-center rounded-full border-black/15 bg-white text-black hover:border-[#1A8C6A] hover:bg-[#1A8C6A]/5 hover:text-[#1A8C6A]"
+              >
+                ניהול זמינות
+              </Button>
+            </Link>
+            <p className="mt-2 text-center font-assistant text-xs text-[#888888]">
+              ניהול תאריכים חסומים (מתי הפריט לא זמין להשכרה).
+            </p>
+          </SurfaceCard>
         </section>
       )}
 
@@ -355,10 +363,10 @@ export default async function ListingDetailsPage(props: {
       {isActive && (
         <section className="mt-8" aria-label="הזמנה">
           <h2 className="section-title mb-2">הזמנה</h2>
-          <p className="text-sm text-muted-foreground mb-2">
+          <p className="mb-2 font-assistant text-sm text-[#888888]">
             בחרו תאריכים כדי לראות זמינות ולהמשיך להזמנה.
           </p>
-          <p className="text-xs text-muted-foreground mb-4">
+          <p className="mb-4 font-assistant text-xs text-[#888888]">
             בחירת תאריכים אינה מחייבת — התשלום רק אחרי יצירת ההזמנה.
           </p>
           <CreateBookingCTA listingId={listing.id} />
@@ -366,7 +374,7 @@ export default async function ListingDetailsPage(props: {
       )}
 
       {!isActive && listing.status === "PENDING_APPROVAL" && (
-        <p className="text-sm text-muted-foreground text-center py-4">
+        <p className="py-4 text-center font-assistant text-sm text-[#888888]">
           המודעה ממתינה לאישור. אחרי האישור תוכלו להזמין.
         </p>
       )}

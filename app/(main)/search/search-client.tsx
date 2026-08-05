@@ -12,7 +12,6 @@ import { ListingCardSkeleton } from "@/components/ui/listing-card-skeleton";
 import { Button } from "@/components/ui/button";
 import Chip from "@/components/ui/chips";
 import { SearchHero } from "@/components/search/SearchHero";
-import Logo from "@/components/logo";
 import { SurfaceCard, SEARCH_PAGE_INNER_CLASS } from "@/components/layout";
 import { CATEGORY_LIST, getCategoryLabel, getSubcategoriesForCategory } from "@/lib/constants";
 import { cn } from "@/lib/utils";
@@ -28,7 +27,7 @@ type SearchListing = {
   subcategory?: string | null;
   lat: number | null;
   lng: number | null;
-  images: { url: string }[];
+  coverImageUrl?: string | null;
   owner?: { id: string; kycStatus?: string | null; phoneNumber?: string | null } | null;
   completedBookingsCount?: number;
   reviewsCount?: number;
@@ -167,7 +166,7 @@ export default function SearchClient() {
     : "גלו ציוד להשכרה מכל הקטגוריות — כלי עבודה, צילום, קמפינג, מוזיקה ועוד.";
 
   const viewToggle = (
-    <div className="flex rounded-card border border-border/80 overflow-hidden bg-card shadow-soft">
+    <div className="flex overflow-hidden rounded-full border border-black/15 bg-white">
       <button
         type="button"
         onClick={() => {
@@ -175,10 +174,10 @@ export default function SearchClient() {
           syncViewToUrl("list");
         }}
         className={cn(
-          "flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors",
+          "flex items-center gap-2 px-4 py-2.5 font-sans text-[13px] font-bold transition-colors",
           view === "list"
-            ? "bg-[var(--mint-accent)] text-white"
-            : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
+            ? "bg-[#1A8C6A] text-white"
+            : "text-[#888888] hover:bg-black/5 hover:text-black"
         )}
         aria-pressed={view === "list"}
       >
@@ -192,10 +191,10 @@ export default function SearchClient() {
           syncViewToUrl("map");
         }}
         className={cn(
-          "flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors",
+          "flex items-center gap-2 px-4 py-2.5 font-sans text-[13px] font-bold transition-colors",
           view === "map"
-            ? "bg-[var(--mint-accent)] text-white"
-            : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
+            ? "bg-[#1A8C6A] text-white"
+            : "text-[#888888] hover:bg-black/5 hover:text-black"
         )}
         aria-pressed={view === "map"}
       >
@@ -218,12 +217,10 @@ export default function SearchClient() {
           title="מה בא לך להשכיר היום?"
           subtitle=""
         >
-          {/* Search row: logo + search bar, same column width */}
-          <div className="flex items-center gap-4 w-full">
-            <Logo size={80} linkToHome className="hidden md:block shrink-0 [&_img]:brightness-0 [&_img]:invert [&_img]:opacity-95" />
-            <div className="rounded-xl overflow-hidden border border-white/10 bg-white/5 shadow-soft flex-1 min-w-0 max-w-xl">
+          <div className="flex w-full items-center gap-4">
+            <div className="min-w-0 max-w-xl flex-1 overflow-hidden rounded-full border border-black/15 bg-white shadow-[0_2px_6px_rgba(0,0,0,0.05)]">
               <div className="relative">
-                <Search className="absolute start-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/70 pointer-events-none" aria-hidden />
+                <Search className="pointer-events-none absolute start-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#AAAAAA]" aria-hidden />
                 <input
                   type="search"
                   value={q}
@@ -234,29 +231,25 @@ export default function SearchClient() {
                   placeholder="ציוד, כלים, מצלמות, קמפינג..."
                   className={cn(
                     inputBase,
-                    "w-full ps-12 pe-4 py-3.5 md:py-4 rounded-none border-0 shadow-none text-base md:text-lg placeholder:text-white/60 focus:ring-0 bg-transparent text-white"
+                    "w-full rounded-none border-0 bg-transparent py-3.5 ps-12 pe-4 text-base text-black shadow-none placeholder:text-[#AAAAAA] focus:ring-0 md:py-4 md:text-lg"
                   )}
                   aria-label="מילות חיפוש"
                 />
               </div>
             </div>
           </div>
-          {/* Category chips: horizontal scroll on mobile, wrap on desktop */}
-          <div className="w-full px-0 md:px-0 -mx-4 md:mx-0">
-            <div className="flex gap-2 overflow-x-auto whitespace-nowrap px-4 md:flex-wrap md:overflow-visible md:whitespace-normal md:gap-x-3 md:gap-y-3 md:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              <Link
-                href="/search"
-                className="flex-shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/75"
-              >
-                <Chip label="הכל" variant="category" selected={!category} className="border-white/30 text-white bg-white/10 hover:bg-white/15" />
+          <div className="-mx-4 w-full px-0 md:mx-0 md:px-0">
+            <div className="flex gap-2 overflow-x-auto whitespace-nowrap px-4 [scrollbar-width:none] md:flex-wrap md:gap-x-3 md:gap-y-3 md:overflow-visible md:whitespace-normal md:px-0 [&::-webkit-scrollbar]:hidden">
+              <Link href="/search" className="flex-shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1A8C6A]/40">
+                <Chip label="הכל" variant="category" selected={!category} />
               </Link>
               {CATEGORY_LIST.map((c) => (
                 <Link
                   key={c.slug}
                   href={`/search?category=${encodeURIComponent(c.slug)}`}
-                  className="flex-shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/75"
+                  className="flex-shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1A8C6A]/40"
                 >
-                  <Chip label={c.labelHe} variant="category" selected={category === c.slug} className={category === c.slug ? "border-white/60 text-white bg-white/15" : "border-white/30 text-white/90 bg-white/5 hover:bg-white/10"} />
+                  <Chip label={c.labelHe} variant="category" selected={category === c.slug} />
                 </Link>
               ))}
             </div>
@@ -269,18 +262,18 @@ export default function SearchClient() {
         <div className={SEARCH_PAGE_INNER_CLASS}>
           {/* ——— Subcategory section: editorial hierarchy when category selected ——— */}
           {category && (
-            <div className="border-s-2 border-[var(--mint-accent)]/30 ps-5 py-2 mb-8 md:mb-10">
-              <h2 className="text-lg font-semibold text-foreground m-0">{categoryTitle}</h2>
-              <p className="text-sm text-muted-foreground m-0 mt-2 leading-relaxed max-w-2xl">{categoryDescription}</p>
+            <div className="mb-8 border-s-2 border-[#1A8C6A]/30 py-2 ps-5 md:mb-10">
+              <h2 className="m-0 font-sans text-[22px] font-black text-black md:text-[28px]">{categoryTitle}</h2>
+              <p className="m-0 mt-2 max-w-2xl font-assistant text-[14px] leading-relaxed text-[#888888]">{categoryDescription}</p>
               {getSubcategoriesForCategory(category).length > 0 && (
-                <div className="flex flex-wrap gap-2.5 mt-5">
+                <div className="mt-5 flex flex-wrap gap-2.5">
                   <Link
                     href={`/search?category=${encodeURIComponent(category)}`}
                     className={cn(
-                      "inline-flex items-center rounded-full border px-3 py-1.5 text-sm font-medium transition-colors",
+                      "inline-flex items-center rounded-full border px-3 py-1.5 font-sans text-[13px] font-bold transition-colors",
                       !subcategory
-                        ? "border-[var(--mint-accent)]/40 bg-[var(--mint-accent)]/10 text-[var(--mint-accent)]"
-                        : "border-border/80 bg-card/60 text-muted-foreground hover:border-[var(--mint-accent)]/40 hover:bg-[var(--mint-accent)]/5 hover:text-foreground"
+                        ? "border-[#1A8C6A] bg-[#1A8C6A] text-white"
+                        : "border-black/15 bg-white text-black hover:border-black/30"
                     )}
                   >
                     הכל
@@ -290,10 +283,10 @@ export default function SearchClient() {
                       key={sub.key}
                       href={`/search?category=${encodeURIComponent(category)}&subcategory=${encodeURIComponent(sub.slug)}`}
                       className={cn(
-                        "inline-flex items-center rounded-full border px-3 py-1.5 text-sm font-medium transition-colors",
+                        "inline-flex items-center rounded-full border px-3 py-1.5 font-sans text-[13px] font-bold transition-colors",
                         subcategory === sub.slug
-                          ? "border-[var(--mint-accent)]/40 bg-[var(--mint-accent)]/10 text-[var(--mint-accent)]"
-                          : "border-border/80 bg-card/60 text-muted-foreground hover:border-[var(--mint-accent)]/40 hover:bg-[var(--mint-accent)]/5 hover:text-foreground"
+                          ? "border-[#1A8C6A] bg-[#1A8C6A] text-white"
+                          : "border-black/15 bg-white text-black hover:border-black/30"
                       )}
                     >
                       {sub.label}
@@ -304,9 +297,8 @@ export default function SearchClient() {
             </div>
           )}
 
-          {/* ——— Results toolbar: mobile = 3 rows. Desktop: right = sort/category/price/clear, left = count + list/map toggle ——— */}
           <div
-            className="flex flex-col gap-4 mb-6 border-b border-border/60 pb-4 md:flex-row md:flex-wrap md:items-center md:justify-between md:gap-4"
+            className="mb-6 flex flex-col gap-4 border-b border-black/10 pb-4 md:flex-row md:flex-wrap md:items-center md:justify-between md:gap-4"
             role="region"
             aria-label="תוצאות וסינון"
           >
@@ -489,7 +481,7 @@ export default function SearchClient() {
                 pricePerDay={item.pricePerDay}
                 location={item.city}
                 href={`/listing/${item.id}`}
-                imageUrl={item.images?.[0]?.url}
+                imageUrl={item.coverImageUrl}
                 category={item.category}
                 subcategory={item.subcategory ?? undefined}
                 reviewsCount={item.reviewsCount}

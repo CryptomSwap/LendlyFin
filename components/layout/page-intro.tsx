@@ -12,7 +12,7 @@ export function PageIntro({ title, subtitle, className }: PageIntroProps) {
     <header className={cn("mb-6 md:mb-8", className)}>
       <h1 className="page-title">{title}</h1>
       {subtitle != null && (
-        <p className="text-sm text-muted-foreground mt-1 max-w-xl leading-relaxed">
+        <p className="mt-2 max-w-xl font-assistant text-[14px] leading-relaxed text-[#888888]">
           {subtitle}
         </p>
       )}

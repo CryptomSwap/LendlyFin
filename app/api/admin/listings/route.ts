@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin";
+import { listingCoverImageUrl } from "@/lib/listing-images";
 
 export const runtime = "nodejs";
 
@@ -15,9 +17,9 @@ export async function GET(req: Request) {
   const page = Math.max(1, Number(searchParams.get("page") ?? 1));
   const limit = Math.min(100, Math.max(1, Number(searchParams.get("limit") ?? 20)));
 
-  const where: { status?: string } = {};
+  const where: Prisma.ListingWhereInput = {};
   if (status && VALID_STATUSES.includes(status as (typeof VALID_STATUSES)[number])) {
-    where.status = status;
+    where.status = status as (typeof VALID_STATUSES)[number];
   }
 
   const [listings, total] = await Promise.all([
@@ -35,11 +37,15 @@ export async function GET(req: Request) {
   ]);
 
   return NextResponse.json({
-    listings: listings.map((l) => ({
-      ...l,
-      ownerId: l.ownerId ?? null,
-      ownerName: l.owner?.name ?? null,
-    })),
+    listings: listings.map((l) => {
+      const { images, owner, ...rest } = l;
+      return {
+        ...rest,
+        ownerId: l.ownerId ?? null,
+        ownerName: owner?.name ?? null,
+        coverImageUrl: listingCoverImageUrl(images),
+      };
+    }),
     page,
     limit,
     total,

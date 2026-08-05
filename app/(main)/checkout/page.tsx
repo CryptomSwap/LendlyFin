@@ -1,19 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import StickyCTA from "@/components/ui/sticky-cta";
 import { TrustCTARow } from "@/components/ui/trust-cta-row";
 import { Alert } from "@/components/ui/alert";
-import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { FAQBlock } from "@/components/ui/faq-block";
 import { LoadingBlock } from "@/components/ui/loading-block";
 import { PageContainer } from "@/components/layout";
 import { formatMoneyIls } from "@/lib/pricing";
 import { PAYMENT_FAQ_ITEMS } from "@/lib/copy/help-reassurance";
-import { Copy, Check, ChevronDown } from "lucide-react";
+
+type PaymentProvider = "mangopay" | "manual_bit" | "mock";
 
 type Summary = {
   bookingId: string;
@@ -28,21 +28,25 @@ type Summary = {
   paymentStatus?: string;
   paymentMethod?: string | null;
   paymentLink?: string | null;
+  paymentProvider?: PaymentProvider;
 };
+
+const PRIMARY_BTN =
+  "w-full rounded-full bg-[#1A8C6A] font-sans font-bold text-white shadow-[0_6px_24px_rgba(26,140,106,0.35)] hover:bg-[#167A5C] hover:-translate-y-[2px] hover:shadow-[0_10px_32px_rgba(26,140,106,0.45)] transition-all duration-300";
 
 function fmt(d: string) {
   return new Intl.DateTimeFormat("he-IL").format(new Date(d));
 }
 
-export default function CheckoutPage() {
+function CheckoutPageContent() {
   const searchParams = useSearchParams();
   const bookingId = searchParams.get("bookingId");
+  const paidReturn = searchParams.get("paid") === "1";
+  const canceledReturn = searchParams.get("canceled") === "1";
 
   const [summary, setSummary] = useState<Summary | null>(null);
   const [loading, setLoading] = useState(false);
   const [payError, setPayError] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
-  const [showPaidReassurance, setShowPaidReassurance] = useState(false);
 
   useEffect(() => {
     if (!bookingId) return;
@@ -83,8 +87,9 @@ export default function CheckoutPage() {
       return;
     }
 
-    if (data.paymentLink) {
-      window.location.href = data.paymentLink;
+    const redirectUrl = data.checkoutUrl ?? data.paymentLink;
+    if (redirectUrl) {
+      window.location.href = redirectUrl;
       return;
     }
 
@@ -93,8 +98,8 @@ export default function CheckoutPage() {
 
   if (!bookingId) {
     return (
-    <div className="min-h-screen w-full app-page-bg pb-24" dir="rtl">
-      <PageContainer width="narrow" className="space-y-4">
+    <div className="min-h-screen w-full bg-white pb-24" dir="rtl">
+      <PageContainer width="default" className="space-y-4 max-w-2xl">
         <Alert variant="default">חסר פרטי הזמנה. יש לגשת מהזמנה או מהקישור שנשלח.</Alert>
       </PageContainer>
     </div>
@@ -102,10 +107,10 @@ export default function CheckoutPage() {
   }
   if (!summary) {
     return (
-    <div className="min-h-screen w-full app-page-bg pb-24" dir="rtl">
-      <PageContainer width="narrow" className="space-y-4">
+    <div className="min-h-screen w-full bg-white pb-24" dir="rtl">
+      <PageContainer width="default" className="space-y-4 max-w-2xl">
         <h1 className="page-title">תשלום</h1>
-        <div className="rounded-xl border border-border bg-card p-8 shadow-soft">
+        <div className="rounded-[8px] border border-black/10 bg-white p-4 md:p-6">
           <LoadingBlock message="טוען פרטי הזמנה..." variant="full" />
         </div>
       </PageContainer>
@@ -114,139 +119,70 @@ export default function CheckoutPage() {
   }
 
   const totalNow = summary.totalDue ?? summary.rentalSubtotal + summary.depositAmount + (summary.serviceFee ?? 0);
-  const ref = summary.bookingRef ?? "";
-
-  async function handleCopyRef() {
-    if (!ref) return;
-    try {
-      await navigator.clipboard.writeText(ref);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      setCopied(false);
-    }
-  }
+  const provider = summary.paymentProvider ?? "mangopay";
+  const isMangopay = provider === "mangopay";
+  const isConfirmed = summary.paymentStatus === "SUCCEEDED";
 
   return (
-    <div className="min-h-screen w-full app-page-bg pb-24" dir="rtl">
-      <PageContainer width="narrow" className="space-y-6">
+    <div className="min-h-screen w-full bg-white pb-24" dir="rtl">
+      <PageContainer width="default" className="space-y-6 max-w-2xl">
       <h1 className="page-title">תשלום</h1>
 
-      {/* What to do — clear steps */}
-      <Card className="border-primary/20 bg-primary/5">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base">מה לעשות עכשיו</CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm text-muted-foreground space-y-2">
-          <p className="flex gap-2">
-            <span className="font-semibold text-foreground shrink-0">1.</span>
-            ציינו את מספר ההזמנה (למטה) בעת התשלום ב-Bit.
-          </p>
-          <p className="flex gap-2">
-            <span className="font-semibold text-foreground shrink-0">2.</span>
-            לחצו &quot;לתשלום ב-Bit&quot; ובצעו את התשלום.
-          </p>
-          <p className="flex gap-2">
-            <span className="font-semibold text-foreground shrink-0">3.</span>
-            אחרי התשלום הצוות מאמת ומאשר — תקבלו עדכון כשההזמנה אושרה.
-          </p>
-        </CardContent>
-      </Card>
-
-      {/* Booking reference — prominent + copy */}
-      {ref && (
-        <Card className="border-primary/30 bg-primary/5">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">מספר הזמנה (לציין ב-Bit)</CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm space-y-3">
-            <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center">
-              <p className="font-mono text-lg font-bold text-foreground" dir="ltr">
-                {ref}
-              </p>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleCopyRef}
-                className="shrink-0 gap-1"
-              >
-                {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                {copied ? "הועתק" : "העתק"}
-              </Button>
-            </div>
-            <p className="text-muted-foreground">
-              ציינו את המספר בתשלום ב-Bit או בפנייה לתמיכה.
-            </p>
-          </CardContent>
-        </Card>
+      {paidReturn && (
+        <Alert variant="default">
+          {isConfirmed
+            ? "התשלום התקבל וההזמנה אושרה. ניתן לעקוב בדף ההזמנה."
+            : "התשלום התקבל. מאשרים את ההזמנה — רעננו בעוד רגע או עברו לדף ההזמנה."}
+        </Alert>
       )}
 
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base">סיכום הזמנה</CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm text-muted-foreground space-y-1">
-          <p className="font-medium text-foreground">{summary.title}</p>
-          <p>
-            {fmt(summary.startDate)} → {fmt(summary.endDate)}
-          </p>
-        </CardContent>
-      </Card>
+      {canceledReturn && (
+        <Alert variant="default">התשלום בוטל. אפשר לנסות שוב בלחיצה על כפתור התשלום.</Alert>
+      )}
 
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base">פירוט תשלום</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2 text-sm">
-          <p className="text-muted-foreground">השכרה: {formatMoneyIls(summary.rentalSubtotal)}</p>
-          {typeof summary.serviceFee === "number" && summary.serviceFee > 0 && (
-            <p className="text-muted-foreground">עמלת פלטפורמה: {formatMoneyIls(summary.serviceFee)}</p>
-          )}
-          <p className="text-muted-foreground">פיקדון (מוחזר): {formatMoneyIls(summary.depositAmount)}</p>
-          <hr className="border-border" />
-          <p className="font-semibold text-foreground text-base">
-            סה״כ לתשלום עכשיו: {formatMoneyIls(totalNow)}
+      <div className="rounded-[8px] border border-[#1A8C6A]/20 bg-[#F0FAF6] p-4 md:p-6 space-y-2">
+        <h2 className="font-sans text-base font-bold text-black">מה לעשות עכשיו</h2>
+        <div className="font-assistant text-[14px] text-[#888888] space-y-2">
+          <p className="flex gap-2">
+            <span className="font-sans font-bold text-black shrink-0">1.</span>
+            לחצו על כפתור התשלום למטה.
           </p>
-        </CardContent>
-      </Card>
+          <p className="flex gap-2">
+            <span className="font-sans font-bold text-black shrink-0">2.</span>
+            השלימו את התשלום בעמוד התשלום המאובטח (כרטיס אשראי).
+          </p>
+          <p className="flex gap-2">
+            <span className="font-sans font-bold text-black shrink-0">3.</span>
+            ההזמנה תאושר אוטומטית לאחר תשלום מוצלח.
+          </p>
+        </div>
+      </div>
 
-      {summary.paymentStatus === "PENDING" && (
-        <p className="text-sm text-muted-foreground">
-          אחרי התשלום הצוות מאמת ומאשר. עקבו אחר הסטטוס בדף ההזמנה.
+      <div className="rounded-[8px] border border-black/10 bg-white p-4 md:p-6 space-y-1">
+        <h2 className="font-sans text-base font-bold text-black mb-2">סיכום הזמנה</h2>
+        <p className="font-sans font-bold text-black">{summary.title}</p>
+        <p className="font-assistant text-[14px] text-[#888888]">
+          {fmt(summary.startDate)} → {fmt(summary.endDate)}
         </p>
-      )}
+      </div>
 
-      {/* "I've paid" — frontend-only reassurance */}
-      {summary.paymentStatus === "PENDING" && (
-        <Card>
-          <CardContent className="pt-4">
-            {!showPaidReassurance ? (
-              <Button
-                type="button"
-                variant="ghost"
-                className="w-full justify-center gap-1 text-muted-foreground hover:text-foreground"
-                onClick={() => setShowPaidReassurance(true)}
-              >
-                <ChevronDown className="h-4 w-4" aria-hidden />
-                כבר שילמתי
-              </Button>
-            ) : (
-              <div className="text-sm space-y-2 rounded-lg bg-muted/50 p-3">
-                <p className="font-medium text-foreground">התשלום התקבל</p>
-                <p className="text-muted-foreground">
-                  הצוות יאמת ויאשר. עקבו אחר הסטטוס בדף ההזמנה.
-                </p>
-                <Link
-                  href={`/bookings/${summary.bookingId}`}
-                  className="inline-flex font-medium text-primary hover:underline"
-                >
-                  צפו בסטטוס ההזמנה
-                </Link>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+      <div className="rounded-[8px] border border-black/10 bg-white p-4 md:p-6 space-y-2">
+        <h2 className="font-sans text-base font-bold text-black mb-2">פירוט תשלום</h2>
+        <p className="font-assistant text-[14px] text-[#888888]">השכרה: {formatMoneyIls(summary.rentalSubtotal)}</p>
+        {typeof summary.serviceFee === "number" && summary.serviceFee > 0 && (
+          <p className="font-assistant text-[14px] text-[#888888]">עמלת פלטפורמה: {formatMoneyIls(summary.serviceFee)}</p>
+        )}
+        <p className="font-assistant text-[14px] text-[#888888]">פיקדון (מוחזר): {formatMoneyIls(summary.depositAmount)}</p>
+        <hr className="border-black/10" />
+        <p className="font-sans font-bold text-black text-base">
+          סה״כ לתשלום עכשיו: {formatMoneyIls(totalNow)}
+        </p>
+      </div>
+
+      {summary.paymentStatus === "PENDING" && isMangopay && (
+        <p className="font-assistant text-[14px] text-[#888888]">
+          לאחר תשלום מוצלח ההזמנה תאושר אוטומטית.
+        </p>
       )}
 
       {payError && (
@@ -263,31 +199,58 @@ export default function CheckoutPage() {
 
       <StickyCTA width="narrow">
         <div className="space-y-3">
-          <p className="text-xs text-muted-foreground text-center">
+          <p className="font-assistant text-[12px] text-[#888888] text-center">
             בלחיצה על תשלום אתם מאשרים את{" "}
-            <Link href="/help/terms" className="underline underline-offset-2 hover:text-foreground">
+            <Link href="/help/terms" className="underline underline-offset-2 hover:text-black">
               תנאי השימוש
             </Link>{" "}
             ,{" "}
-            <Link href="/help/faq" className="underline underline-offset-2 hover:text-foreground">
+            <Link href="/help/faq" className="underline underline-offset-2 hover:text-black">
               מדיניות התמיכה
             </Link>{" "}
             ו{" "}
-            <Link href="/help/insurance-terms" className="underline underline-offset-2 hover:text-foreground">
+            <Link href="/help/insurance-terms" className="underline underline-offset-2 hover:text-black">
               תנאי הכיסוי
             </Link>
             .
           </p>
-          <Button className="w-full" onClick={handlePay} disabled={loading}>
-            {loading ? "מעביר לתשלום..." : "לתשלום ב-Bit"}
+          <Button
+            className={PRIMARY_BTN}
+            onClick={handlePay}
+            disabled={loading || isConfirmed}
+          >
+            {loading
+              ? "מעביר לתשלום..."
+              : isConfirmed
+                ? "התשלום הושלם"
+                : "לתשלום בכרטיס אשראי"}
           </Button>
-          <p className="text-xs text-muted-foreground text-center">
-            אחרי אימות — ההזמנה מאושרת. פיקדון מוחזר בהתאם למצב הפריט.
+          <p className="font-assistant text-[12px] text-[#888888] text-center">
+            תשלום מאובטח. פיקדון מוחזר בהתאם למדיניות ההחזרה.
           </p>
           <TrustCTARow />
         </div>
       </StickyCTA>
       </PageContainer>
     </div>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen w-full bg-white pb-24" dir="rtl">
+          <PageContainer width="default" className="space-y-4 max-w-2xl">
+            <h1 className="page-title">תשלום</h1>
+            <div className="rounded-[8px] border border-black/10 bg-white p-4 md:p-6">
+              <LoadingBlock message="טוען פרטי הזמנה..." variant="full" />
+            </div>
+          </PageContainer>
+        </div>
+      }
+    >
+      <CheckoutPageContent />
+    </Suspense>
   );
 }

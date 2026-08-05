@@ -7,12 +7,14 @@ import { Button } from "@/components/ui/button";
 export function SuspendActions({
   userId,
   suspended,
+  userName,
 }: {
   userId: string;
   suspended: boolean;
+  userName: string;
 }) {
   const router = useRouter();
-  const [loading, setLoading] = useState<"suspend" | "unsuspend" | null>(null);
+  const [loading, setLoading] = useState<"suspend" | "unsuspend" | "delete" | null>(null);
   const [reason, setReason] = useState("");
   const [message, setMessage] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
@@ -61,6 +63,25 @@ export function SuspendActions({
     }
   }
 
+  async function handleDelete() {
+    if (!window.confirm(`למחוק את המשתמש "${userName}"? פעולה זו בלתי הפיכה – כל המודעות, ההזמנות והנתונים של המשתמש יימחקו.`)) return;
+    setLoading("delete");
+    setMessage(null);
+    try {
+      const res = await fetch(`/api/admin/users/${userId}`, { method: "DELETE" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setMessage({ type: "err", text: data.error || "שגיאה במחיקה" });
+        return;
+      }
+      router.push("/admin/users");
+    } catch {
+      setMessage({ type: "err", text: "שגיאת רשת" });
+    } finally {
+      setLoading(null);
+    }
+  }
+
   return (
     <div className="space-y-3" dir="rtl">
       {message && (
@@ -94,6 +115,20 @@ export function SuspendActions({
           </Button>
         </div>
       )}
+
+      <div className="border-t border-red-200 pt-3 mt-3">
+        <p className="mb-2 font-assistant text-[12px] text-[#888888]">
+          מחיקה תסיר את המשתמש, המודעות וההזמנות שלו לצמיתות. לא ניתן למחוק עם הזמנות פעילות.
+        </p>
+        <Button
+          variant="outline"
+          className="text-red-600 border-red-300 hover:bg-red-50"
+          onClick={handleDelete}
+          disabled={!!loading}
+        >
+          {loading === "delete" ? "מוחק..." : "מחק משתמש"}
+        </Button>
+      </div>
     </div>
   );
 }

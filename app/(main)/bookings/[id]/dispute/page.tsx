@@ -3,32 +3,24 @@
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/alert";
+import { PageContainer } from "@/components/layout";
 
-/** Matches app/api/bookings/[id]/dispute/route.ts VALID_USER_REASON_CODES */
-const USER_REASONS = [
+const REASONS = [
   { value: "damage", label: "נזק" },
   { value: "missing_items", label: "פריטים חסרים" },
-  { value: "item_not_as_described", label: "הפריט לא כמתואר" },
-  { value: "late_return", label: "איחור בהחזרה" },
-  { value: "non_return", label: "אי-החזרה" },
-  { value: "item_not_working", label: "תקלה / לא עובד" },
-  { value: "handoff_conflict", label: "סכסוך איסוף/החזרה" },
-  { value: "policy_violation", label: "הפרת מדיניות" },
-  { value: "payment_issue", label: "תשלום / החזר" },
-  { value: "communication_issue", label: "תקשורת / תיאום" },
   { value: "manual", label: "אחר" },
 ] as const;
+
+const PRIMARY_BTN =
+  "w-full rounded-full bg-[#1A8C6A] font-sans font-bold text-white shadow-[0_6px_24px_rgba(26,140,106,0.35)] hover:bg-[#167A5C] hover:-translate-y-[2px] transition-all duration-300";
 
 export default function BookingDisputePage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const [userReasonCode, setUserReasonCode] =
-    useState<(typeof USER_REASONS)[number]["value"]>("damage");
+  const [reason, setReason] = useState<(typeof REASONS)[number]["value"]>("damage");
   const [note, setNote] = useState("");
-  const [evidenceLines, setEvidenceLines] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -36,18 +28,10 @@ export default function BookingDisputePage() {
     setSaving(true);
     setError(null);
     try {
-      const evidenceChecklist = evidenceLines
-        .split("\n")
-        .map((s) => s.trim())
-        .filter(Boolean);
       const res = await fetch(`/api/bookings/${id}/dispute`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userReasonCode,
-          note: note.trim() || undefined,
-          ...(evidenceChecklist.length > 0 ? { evidenceChecklist } : {}),
-        }),
+        body: JSON.stringify({ reason, note }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -65,64 +49,48 @@ export default function BookingDisputePage() {
   }
 
   return (
-    <div className="min-h-screen w-full app-page-bg pb-24" dir="rtl">
-      <div className="max-w-md mx-auto px-4 py-6 space-y-4">
-        <Link href={`/bookings/${id}`} className="text-sm text-muted-foreground hover:text-foreground">
+    <div className="min-h-screen w-full bg-white pb-24" dir="rtl">
+      <PageContainer width="default" className="max-w-md space-y-4 py-6">
+        <Link href={`/bookings/${id}`} className="font-assistant text-[14px] text-[#888888] hover:text-black">
           חזרה להזמנה
         </Link>
 
-        <Card className="shadow-soft">
-          <CardHeader>
-            <CardTitle>פתיחת מחלוקת</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {error && <Alert variant="error">{error}</Alert>}
+        <div className="rounded-[8px] border border-black/10 bg-white p-4 md:p-6 space-y-4">
+          <h1 className="page-title text-[24px] md:text-[28px]">פתיחת מחלוקת</h1>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">סיבה</label>
-              <select
-                value={userReasonCode}
-                onChange={(e) =>
-                  setUserReasonCode(e.target.value as (typeof USER_REASONS)[number]["value"])
-                }
-                className="input-base w-full"
-              >
-                {USER_REASONS.map((r) => (
-                  <option key={r.value} value={r.value}>
-                    {r.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+          {error && <Alert variant="error">{error}</Alert>}
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">הערות (אופציונלי)</label>
-              <textarea
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                rows={4}
-                className="input-base w-full min-h-[100px] resize-y"
-                placeholder="פרטו מה קרה כדי לעזור לצוות התמיכה."
-              />
-            </div>
+          <div className="space-y-2">
+            <label className="font-sans text-sm font-bold text-black">סיבה</label>
+            <select
+              value={reason}
+              onChange={(e) => setReason(e.target.value as (typeof REASONS)[number]["value"])}
+              className="input-base w-full"
+            >
+              {REASONS.map((r) => (
+                <option key={r.value} value={r.value}>
+                  {r.label}
+                </option>
+              ))}
+            </select>
+          </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">רשימת ראיות (שורה לכל פריט, אופציונלי)</label>
-              <textarea
-                value={evidenceLines}
-                onChange={(e) => setEvidenceLines(e.target.value)}
-                rows={3}
-                className="input-base w-full min-h-[72px] resize-y"
-                placeholder={"למשל:\nצילום מצב לפני\nהודעה בתאריך..."}
-              />
-            </div>
+          <div className="space-y-2">
+            <label className="font-sans text-sm font-bold text-black">הערות (אופציונלי)</label>
+            <textarea
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              rows={4}
+              className="input-base w-full min-h-[100px] resize-y"
+              placeholder="פרטו מה קרה כדי לעזור לצוות התמיכה."
+            />
+          </div>
 
-            <Button onClick={submit} disabled={saving} className="w-full">
-              {saving ? "שולח..." : "פתח מחלוקת"}
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+          <Button onClick={submit} disabled={saving} className={PRIMARY_BTN}>
+            {saving ? "שולח..." : "פתח מחלוקת"}
+          </Button>
+        </div>
+      </PageContainer>
     </div>
   );
 }

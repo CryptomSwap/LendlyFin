@@ -46,7 +46,7 @@ export function FeaturedListings({ listings }: FeaturedListingsProps) {
             pricePerDay={item.pricePerDay}
             location={item.city}
             href={`/listing/${item.id}`}
-            imageUrl={item.images?.[0]?.url}
+            imageUrl={item.coverImageUrl}
             category={item.category}
             subcategory={item.subcategory ?? undefined}
             reviewsCount={item.reviewsCount}

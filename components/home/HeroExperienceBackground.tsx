@@ -1,46 +1,41 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import NextImage from "next/image";
 
 const ROTATE_INTERVAL_MS = 20_000;
 const CROSSFADE_DURATION_MS = 1800;
 
 /** All hero images; rotation cycles through these in order (0 → 1 → 2 → 3 → 0 …). */
-const EXPERIENCE_BASES = [
-  "party",
-  "gardning",
-  "experience-camping",
-  "experience-diy",
+const HERO_IMAGE_SOURCES = [
+  ["/hero/party.png", "/hero/party.jpg"],
+  ["/hero/gardning.png"],
+  ["/hero/experience-camping.png"],
+  ["/hero/experience-diy.png"],
 ];
 
-/** Try .png first, then .jpg, .jpeg, then no extension */
-const EXTENSIONS = [".png", ".jpg", ".jpeg", ""];
-
-function getImageSrc(baseName: string, extensionIndex: number): string {
-  return `/hero/${baseName}${EXTENSIONS[extensionIndex]}`;
-}
-
-function preloadImage(baseName: string, extensionIndex: number = 0) {
-  const src = getImageSrc(baseName, extensionIndex);
+function preloadImage(imageSources: string[], sourceIndex: number = 0) {
+  const src = imageSources[sourceIndex];
+  if (!src) return;
   const img = new Image();
   img.src = src;
 }
 
 function WallpaperLayer({
-  baseName,
-  extensionIndex,
+  imageSources,
+  sourceIndex,
   onError,
   visible,
   transitionMs,
 }: {
-  baseName: string;
-  extensionIndex: number;
+  imageSources: string[];
+  sourceIndex: number;
   onError: () => void;
   visible: boolean;
   transitionMs: number;
 }) {
-  const src = getImageSrc(baseName, extensionIndex);
-  const hasMoreExtensions = extensionIndex < EXTENSIONS.length - 1;
+  const src = imageSources[sourceIndex] ?? imageSources[0];
+  const hasMoreSources = sourceIndex < imageSources.length - 1;
 
   return (
     <div
@@ -50,17 +45,20 @@ function WallpaperLayer({
         transitionDuration: `${transitionMs}ms`,
       }}
     >
-      <img
+      <NextImage
         src={src}
         alt=""
-        className="h-full w-full object-cover object-right"
-        onError={hasMoreExtensions ? onError : undefined}
+        fill
+        sizes="100vw"
+        className="object-cover object-right"
+        unoptimized
+        onError={hasMoreSources ? onError : undefined}
       />
     </div>
   );
 }
 
-const N = EXPERIENCE_BASES.length;
+const N = HERO_IMAGE_SOURCES.length;
 
 export function HeroExperienceBackground() {
   // The index of the image we're currently showing. Cycles 0 → 1 → 2 → 3 → 0 …
@@ -73,7 +71,7 @@ export function HeroExperienceBackground() {
   const crossfadeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    EXPERIENCE_BASES.forEach((base) => preloadImage(base, 0));
+    HERO_IMAGE_SOURCES.forEach((sources) => preloadImage(sources, 0));
   }, []);
 
   useEffect(() => {
@@ -107,7 +105,8 @@ export function HeroExperienceBackground() {
   const handleError = (slot: 0 | 1, index: number) => {
     setFallbackExt((prev) => {
       const current = prev[index] ?? 0;
-      if (current >= EXTENSIONS.length - 1) return prev;
+      const maxIndex = (HERO_IMAGE_SOURCES[index]?.length ?? 1) - 1;
+      if (current >= maxIndex) return prev;
       return { ...prev, [index]: current + 1 };
     });
   };
@@ -123,15 +122,15 @@ export function HeroExperienceBackground() {
       {/* Image fills full hero area; rounded bottom corners */}
       <div className="absolute inset-0 overflow-hidden rounded-b-2xl">
         <WallpaperLayer
-          baseName={EXPERIENCE_BASES[indexA]}
-          extensionIndex={fallbackExt[indexA] ?? 0}
+          imageSources={HERO_IMAGE_SOURCES[indexA]}
+          sourceIndex={fallbackExt[indexA] ?? 0}
           onError={() => handleError(0, indexA)}
           visible={showA}
           transitionMs={transitionMs}
         />
         <WallpaperLayer
-          baseName={EXPERIENCE_BASES[indexB]}
-          extensionIndex={fallbackExt[indexB] ?? 0}
+          imageSources={HERO_IMAGE_SOURCES[indexB]}
+          sourceIndex={fallbackExt[indexB] ?? 0}
           onError={() => handleError(1, indexB)}
           visible={showB}
           transitionMs={transitionMs}

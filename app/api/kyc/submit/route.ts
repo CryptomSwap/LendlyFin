@@ -3,35 +3,63 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/admin";
 import { trackEvent } from "@/lib/analytics";
 import { recordSystemAlert } from "@/lib/observability";
+import {
+  kycRefBelongsToUser,
+  kycUrlsForApiResponse,
+  parseKycStoredRef,
+} from "@/lib/kyc-stored-ref";
 
 export const runtime = "nodejs";
 
+function validateSubmitRefs(
+  selfieUrl: string,
+  idUrl: string,
+  userId: string,
+  isProduction: boolean
+): string | null {
+  if (
+    !kycRefBelongsToUser(selfieUrl, userId, "selfie") ||
+    !kycRefBelongsToUser(idUrl, userId, "id")
+  ) {
+    return "Invalid KYC document references";
+  }
+  const selfieParsed = parseKycStoredRef(selfieUrl);
+  const idParsed = parseKycStoredRef(idUrl);
+  if (!selfieParsed || !idParsed) {
+    return "Invalid KYC document references";
+  }
+  if (isProduction) {
+    if (selfieParsed.kind !== "s3" || idParsed.kind !== "s3") {
+      return "Invalid KYC document references for production";
+    }
+  } else if (selfieParsed.kind !== "local" || idParsed.kind !== "local") {
+    return "Invalid KYC document references";
+  }
+  return null;
+}
+
 export async function POST(req: Request) {
   try {
-    console.log("[KYC Submit] Starting KYC submission process");
-
     const user = await getCurrentUser();
     if (!user) {
-      console.error("[KYC Submit] Unauthorized: No user found");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    console.log("[KYC Submit] User authenticated:", { userId: user.id, userName: user.name, currentKycStatus: user.kycStatus });
-
-    // Prevent re-submission if already submitted, approved, or rejected
-    if (user.kycStatus === "SUBMITTED" || user.kycStatus === "APPROVED" || user.kycStatus === "REJECTED") {
-      console.error("[KYC Submit] User already has KYC status:", user.kycStatus);
+    if (user.kycStatus === "SUBMITTED" || user.kycStatus === "APPROVED") {
       return NextResponse.json(
-        { error: `Cannot submit KYC: already ${user.kycStatus === "SUBMITTED" ? "submitted" : user.kycStatus === "APPROVED" ? "approved" : "rejected"}` },
+        {
+          error: `Cannot submit KYC: already ${
+            user.kycStatus === "SUBMITTED" ? "submitted" : "approved"
+          }`,
+        },
         { status: 400 }
       );
     }
 
-    let body;
+    let body: { selfieUrl?: string; idUrl?: string };
     try {
       body = await req.json();
-    } catch (parseError) {
-      console.error("[KYC Submit] Failed to parse request body:", parseError);
+    } catch {
       return NextResponse.json(
         { error: "Invalid request body" },
         { status: 400 }
@@ -39,78 +67,72 @@ export async function POST(req: Request) {
     }
 
     const { selfieUrl, idUrl } = body;
-    console.log("[KYC Submit] Received URLs:", { selfieUrl, idUrl });
-
-    if (!selfieUrl || !idUrl) {
-      console.error("[KYC Submit] Missing required fields:", { selfieUrl: !!selfieUrl, idUrl: !!idUrl });
+    if (
+      typeof selfieUrl !== "string" ||
+      typeof idUrl !== "string" ||
+      !selfieUrl ||
+      !idUrl
+    ) {
       return NextResponse.json(
         { error: "Missing selfieUrl or idUrl" },
         { status: 400 }
       );
     }
 
-    // Update user's KYC status and store image URLs
-    console.log("[KYC Submit] Updating user in database...");
-    let updatedUser;
-    try {
-      updatedUser = await prisma.user.update({
-        where: { id: user.id },
-        data: {
-          kycStatus: "SUBMITTED",
-          kycSelfieUrl: selfieUrl,
-          kycIdUrl: idUrl,
-          kycSubmittedAt: new Date(),
-        },
-      });
-      console.log("[KYC Submit] User updated successfully:", {
-        userId: updatedUser.id,
-        kycStatus: updatedUser.kycStatus,
-        hasSelfieUrl: !!updatedUser.kycSelfieUrl,
-        hasIdUrl: !!updatedUser.kycIdUrl,
-        submittedAt: updatedUser.kycSubmittedAt,
-      });
-    } catch (prismaError) {
-      console.error("[KYC Submit] Prisma update failed:", prismaError);
-      // Re-throw to be caught by outer catch block
-      throw prismaError;
+    const isProduction = process.env.NODE_ENV === "production";
+    const refError = validateSubmitRefs(selfieUrl, idUrl, user.id, isProduction);
+    if (refError) {
+      return NextResponse.json({ error: refError }, { status: 400 });
     }
 
-    const response = {
-      success: true,
-      user: {
-        id: updatedUser.id,
-        kycStatus: updatedUser.kycStatus,
-        kycSelfieUrl: updatedUser.kycSelfieUrl,
-        kycIdUrl: updatedUser.kycIdUrl,
-        kycSubmittedAt: updatedUser.kycSubmittedAt,
+    const updatedUser = await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        kycStatus: "SUBMITTED",
+        kycSelfieUrl: selfieUrl,
+        kycIdUrl: idUrl,
+        kycSubmittedAt: new Date(),
+        kycRejectedReason: null,
       },
-    };
+    });
+
+    const publicUrls = kycUrlsForApiResponse(
+      updatedUser.id,
+      updatedUser.kycSelfieUrl,
+      updatedUser.kycIdUrl
+    );
+
     await trackEvent({
       eventName: "kyc_submitted",
       userId: user.id,
       payload: { hasSelfieUrl: Boolean(selfieUrl), hasIdUrl: Boolean(idUrl) },
     });
 
-    console.log("[KYC Submit] Submission completed successfully");
-    return NextResponse.json(response);
+    return NextResponse.json({
+      success: true,
+      user: {
+        id: updatedUser.id,
+        kycStatus: updatedUser.kycStatus,
+        kycSelfieUrl: publicUrls.kycSelfieUrl,
+        kycIdUrl: publicUrls.kycIdUrl,
+        kycSubmittedAt: updatedUser.kycSubmittedAt,
+      },
+    });
   } catch (error) {
-    console.error("[KYC Submit] Error occurred:", error);
+    console.error("[KYC Submit] Error:", error);
     await recordSystemAlert({
       level: "error",
       source: "kyc.submit",
       message: "KYC submission failed",
       context: { error: error instanceof Error ? error.message : String(error) },
     });
-    
-    // Provide more detailed error in development
-    const isDev = process.env.NODE_ENV === "development";
-    const errorMessage = isDev && error instanceof Error
-      ? `Failed to submit KYC documents: ${error.message}`
-      : "Failed to submit KYC documents";
 
-    return NextResponse.json(
-      { error: errorMessage },
-      { status: 500 }
-    );
+    const isDev = process.env.NODE_ENV === "development";
+    const errorMessage =
+      isDev && error instanceof Error
+        ? `Failed to submit KYC documents: ${error.message}`
+        : "Failed to submit KYC documents";
+
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

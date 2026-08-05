@@ -5,15 +5,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Search, Menu, ArrowLeft } from "lucide-react";
 
-const STATIC_TEXT = "אני רוצה להשכיר\u00A0 ";
+const STATIC_TEXT = "מה מחפשים? ";
 const PHRASES = [
-  "מצלמה מקצועית...",
-  "אוהל ל-6 אנשים...",
-  "סוללה למקיטה...",
-  "כיסאות לאירוע...",
-  "שמלת כלה...",
-  "קורקינט חשמלי...",
-  "גיטרה לערב...",
+  "ציוד, כלים, מצלמות...",
+  "אוהל, כיסאות, שולחן...",
+  "מקדחה, סולם, כלי גינון...",
+  "מצלמה, עדשה, תאורה...",
+  "גיטרה, מיקרופון, רמקול...",
+  "קורקינט, אופניים, ציוד ספורט...",
 ];
 
 const SEARCH_CATEGORIES = ["צילום וידאו", "כלי עבודה", "קמפינג", "אירועים", "ספורט", "מוזיקה"];
@@ -95,7 +94,7 @@ function useTypewriter() {
   return { displayedDynamic, start, stop };
 }
 
-export default function Navbar() {
+export default function Navbar({ floating = false }: { floating?: boolean }) {
   const router = useRouter();
   const [inputValue, setInputValue] = useState("");
   const [isFocused, setIsFocused] = useState(false);
@@ -138,7 +137,11 @@ export default function Navbar() {
   return (
     <nav
       dir="rtl"
-      className="sticky top-4 z-50 mx-auto max-w-[700px]"
+      className={
+        floating
+          ? "relative z-50 mx-auto max-w-[700px]"
+          : "sticky top-4 z-50 mx-auto max-w-[700px]"
+      }
     >
       <div className="relative">
         <div
@@ -300,21 +303,21 @@ export default function Navbar() {
                 fontSize: "16px",
               }}
             >
-              <MenuLink href="/owner">פרסם פריט להשכרה</MenuLink>
+              <MenuLink href="/add">העלו ציוד</MenuLink>
               <MenuLink href="/owner">הפריטים שלי</MenuLink>
               <MenuLink href="/bookings">ההזמנות שלי</MenuLink>
 
               <div className="my-3" style={{ height: "1px", backgroundColor: "rgba(0,0,0,0.1)" }} />
 
-              <MenuLink href="/search">חיפוש מתקדם</MenuLink>
-              <MenuLink href="/search">כל הקטגוריות</MenuLink>
+              <MenuLink href="/search">חיפוש</MenuLink>
+              <MenuLink href="/search">קטגוריות</MenuLink>
 
               <div className="my-3" style={{ height: "1px", backgroundColor: "rgba(0,0,0,0.1)" }} />
 
               <MenuLink href="/profile">הפרופיל שלי</MenuLink>
-              <MenuLink href="/">איך לנדלי עובד?</MenuLink>
-              <MenuLink href="/help">תמיכה</MenuLink>
-              <MenuLink href="/signin">התנתק</MenuLink>
+              <MenuLink href="/home#how-it-works">איך זה עובד</MenuLink>
+              <MenuLink href="/help">מרכז העזרה</MenuLink>
+              <MenuLink href="/signin">התחברות</MenuLink>
             </div>
 
             {/* Left column: promo block */}

@@ -3,6 +3,41 @@ import TestimonialSlideshowCard, {
   TESTIMONIAL_SLIDE_STAGGER_MS,
   type TestimonialSlide,
 } from "@/components/home/TestimonialSlideshowCard";
+import { HOME_TESTIMONIALS } from "@/lib/copy/help-reassurance";
+
+const AVATAR_IDS = ["47", "33", "25", "44", "12"] as const;
+
+function quoteToLines(quote: string): readonly [string, string] {
+  const sentences = quote.match(/[^.!?…]+[.!?…]?/g)?.map((part) => part.trim()).filter(Boolean);
+  if (sentences && sentences.length >= 2) {
+    const midpoint = Math.ceil(sentences.length / 2);
+    return [
+      sentences.slice(0, midpoint).join(" "),
+      sentences.slice(midpoint).join(" "),
+    ];
+  }
+
+  const midpoint = Math.ceil(quote.length / 2);
+  const breakAt = quote.lastIndexOf(" ", midpoint);
+  if (breakAt > 24) {
+    return [quote.slice(0, breakAt).trim(), quote.slice(breakAt).trim()];
+  }
+
+  return [quote, ""];
+}
+
+function toTestimonialSlides(): TestimonialSlide[] {
+  return HOME_TESTIMONIALS.map((item, index) => ({
+    lines: quoteToLines(item.quote),
+    name: `${item.name} · ${item.city}`,
+    avatar: `https://i.pravatar.cc/150?img=${AVATAR_IDS[index % AVATAR_IDS.length]}`,
+    rating: 5,
+  }));
+}
+
+const TESTIMONIAL_SLIDES = toTestimonialSlides();
+const TOP_TESTIMONIALS = TESTIMONIAL_SLIDES.slice(0, 3);
+const BOTTOM_TESTIMONIALS = TESTIMONIAL_SLIDES.slice(3);
 
 const TOP_ROW_FLIPS = [
   {
@@ -20,8 +55,8 @@ const TOP_ROW_FLIPS = [
     stat: "2 דק'",
     label: "להעלאת מודעה",
     lightText: true,
-    backText: "התחל להרוויח היום",
-    buttonText: "העלה מודעה ←",
+    backText: "העלו מודעה, הגדירו מחיר ותאריכים",
+    buttonText: "העלו מודעה ←",
   },
 ] as const;
 
@@ -30,81 +65,21 @@ const BOTTOM_ROW_FLIPS = [
     frontBg: "#2C2C2C",
     backBg: "#1A1A1A",
     stat: "100%",
-    label: "מאובטח ובטוח",
+    label: "מאומתים",
     lightText: true,
-    backText: "אנחנו שומרים עליך",
+    backText: "מלווים עוברים אימות זהות",
     buttonText: "קרא עוד ←",
   },
   {
     frontBg: "#1A8C6A",
     backBg: "#157A5A",
     stat: "+500",
-    label: "פריטים להשכרה",
+    label: "פריטים בקהילה",
     lightText: true,
-    backText: "מצא מה אתה צריך",
+    backText: "גלו ציוד להשכרה בקרבתכם",
     buttonText: "לחיפוש ←",
   },
 ] as const;
-
-const TOP_TESTIMONIALS: readonly TestimonialSlide[] = [
-  {
-    lines: [
-      "השכרתי מצלמה לסוף השבוע וחסכתי אלפי שקלים.",
-      "התהליך היה פשוט ומהיר.",
-    ],
-    name: "נועה לוי",
-    avatar: "https://i.pravatar.cc/150?img=47",
-    rating: 5.0,
-  },
-  {
-    lines: [
-      "שכרתי מקדחה לשיפוץ הבית במקום לקנות.",
-      "חזרתי על ההשקעה כבר ביום הראשון.",
-    ],
-    name: "דוד שטרן",
-    avatar: "https://i.pravatar.cc/150?img=33",
-    rating: 4.8,
-  },
-  {
-    lines: [
-      "מצאתי אוהל וציוד לטיול בדיוק ליד הבית.",
-      "הכל היה מוכן לאיסוף תוך שעה.",
-    ],
-    name: "מיכל אברהם",
-    avatar: "https://i.pravatar.cc/150?img=25",
-    rating: 4.9,
-  },
-];
-
-const BOTTOM_TESTIMONIALS: readonly TestimonialSlide[] = [
-  {
-    lines: [
-      "העליתי את הציוד שלי ותוך יומיים",
-      "כבר קיבלתי הזמנה ראשונה. מדהים.",
-    ],
-    name: "יוסי כהן",
-    avatar: "https://i.pravatar.cc/150?img=12",
-    rating: 4.9,
-  },
-  {
-    lines: [
-      "השכרתי אופניים לסוף השבוע עם המשפחה.",
-      "המחיר היה הוגן והתהליך קל מאוד.",
-    ],
-    name: "רונית גל",
-    avatar: "https://i.pravatar.cc/150?img=44",
-    rating: 5.0,
-  },
-  {
-    lines: [
-      "פרסמתי מקרן וקיבלתי פניות תוך שעות.",
-      "לנדלי באמת עובדת בשבילך.",
-    ],
-    name: "עומר חדד",
-    avatar: "https://i.pravatar.cc/150?img=15",
-    rating: 4.7,
-  },
-];
 
 function FlipStatCard({
   frontBg,
@@ -172,22 +147,14 @@ function FlipStatCard({
 
 export default function RecommendationsSection() {
   return (
-    <section dir="rtl" className="mx-auto w-full max-w-[1420px] pb-12 pt-20">
+    <section dir="rtl" className="mx-auto w-full max-w-[1420px] pb-12 pt-20" aria-label="מה אומרים המשתמשים">
       <header className="mb-12 px-5 text-center">
         <ScrollRevealTitle className="font-sans text-[48px] font-black leading-none tracking-[-2px] text-black">
-          הם אהבו את לנדלי
-        </ScrollRevealTitle>
-        <ScrollRevealTitle
-          as="p"
-          delay={90}
-          className="mt-2 font-assistant text-[48px] font-normal leading-none text-[#AAAAAA]"
-        >
-          אלפי משתמשים כבר משכירים ומשאילים
+          אנשים מספרים ❤️
         </ScrollRevealTitle>
       </header>
 
       <div className="flex flex-col gap-3 px-5">
-        {/* Row 1: flip · flip · testimonial */}
         <div className="flex items-stretch gap-3" dir="ltr">
           {TOP_ROW_FLIPS.map((card) => (
             <FlipStatCard
@@ -204,7 +171,6 @@ export default function RecommendationsSection() {
           <TestimonialSlideshowCard testimonials={TOP_TESTIMONIALS} />
         </div>
 
-        {/* Row 2: testimonial · flip · flip */}
         <div className="flex items-stretch gap-3" dir="ltr">
           <TestimonialSlideshowCard
             testimonials={BOTTOM_TESTIMONIALS}

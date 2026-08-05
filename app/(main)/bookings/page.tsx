@@ -3,6 +3,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { BookingsListSection } from "@/components/bookings/BookingsListSection";
 import { PageContainer, PageIntro } from "@/components/layout";
 import { CalendarDays } from "lucide-react";
+import { redirect } from "next/navigation";
 
 export const runtime = "nodejs";
 
@@ -12,10 +13,6 @@ type Booking = {
     | "REQUESTED"
     | "CONFIRMED"
     | "ACTIVE"
-    | "CANCELLED_BY_RENTER"
-    | "CANCELLED_BY_OWNER"
-    | "NO_SHOW_RENTER"
-    | "NO_SHOW_OWNER"
     | "RETURNED"
     | "IN_DISPUTE"
     | "NON_RETURN_PENDING"
@@ -40,6 +37,9 @@ async function getBookings(): Promise<Booking[]> {
     cache: "no-store",
     headers: cookie ? { cookie } : undefined,
   });
+  if (res.status === 401) {
+    redirect("/signin?callbackUrl=/bookings");
+  }
   if (!res.ok) {
     const text = await res.text();
     throw new Error(`Failed to load bookings: ${res.status} ${text}`);
@@ -52,11 +52,11 @@ export default async function BookingsPage() {
 
   if (bookings.length === 0) {
     return (
-      <div className="min-h-screen pb-6 md:pb-10 w-full app-page-bg" dir="rtl">
-        <PageContainer noPadding>
+      <div className="min-h-screen w-full bg-white pb-24" dir="rtl">
+        <PageContainer width="default" className="space-y-6 pt-6">
           <PageIntro title="הזמנות" />
           <EmptyState
-            icon={<CalendarDays className="h-12 w-12 text-primary" aria-hidden />}
+            icon={<CalendarDays className="h-12 w-12 text-[#1A8C6A]" aria-hidden />}
             title="אין הזמנות עדיין"
             subtitle="ההזמנות שלכם יופיעו כאן. גלו ציוד להשכרה והזמינו."
             ctaLabel="חפשו השכרות"
@@ -68,12 +68,11 @@ export default async function BookingsPage() {
   }
 
   return (
-    <div className="min-h-screen pb-6 md:pb-10 w-full app-page-bg" dir="rtl">
-      <PageContainer noPadding>
+    <div className="min-h-screen w-full bg-white pb-24" dir="rtl">
+      <PageContainer width="default" className="space-y-6 pt-6">
         <PageIntro title="הזמנות" />
         <BookingsListSection bookings={bookings} />
       </PageContainer>
     </div>
   );
 }
-

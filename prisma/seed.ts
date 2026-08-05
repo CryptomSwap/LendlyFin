@@ -1,6 +1,5 @@
-import { PrismaClient } from "@prisma/client";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { getBookingSummary } from "../lib/pricing";
+import { createSeedClient } from "./seed-db";
 import {
   QA_USER_IDS,
   QA_LISTING_IDS,
@@ -8,11 +7,7 @@ import {
   QA_DISPUTE_IDS,
 } from "../lib/dev/qa-scenarios";
 
-const adapter = new PrismaBetterSqlite3({
-  url: "file:./prisma/dev.db",
-});
-
-const prisma = new PrismaClient({ adapter });
+const { prisma, pool } = createSeedClient();
 
 /** Deterministic city coords for QA (no jitter). */
 function cityCoords(city: string) {
@@ -33,7 +28,6 @@ async function main() {
   await prisma.conversation.deleteMany();
   await prisma.review.deleteMany();
   await prisma.bookingChecklistPhoto.deleteMany();
-  await prisma.bookingHandoffProof.deleteMany();
   await prisma.pickupChecklist.deleteMany();
   await prisma.returnChecklist.deleteMany();
   await prisma.dispute.deleteMany();
@@ -42,7 +36,6 @@ async function main() {
   await prisma.listingBlockedRange.deleteMany();
   await prisma.listing.deleteMany();
   await prisma.auditLog.deleteMany();
-  await prisma.policyConfig.deleteMany();
   await prisma.user.deleteMany();
 
   // ---- Users (personas) ----
@@ -143,25 +136,6 @@ async function main() {
         kycIdUrl: "https://example.com/kyc/rejected-id.jpg",
       },
     ],
-  });
-
-  await prisma.policyConfig.upsert({
-    where: { version: "default-v1" },
-    create: {
-      version: "default-v1",
-      isActive: true,
-      lateReturnGraceMinutes: 30,
-      cancelPenaltyWindowHours: 6,
-      noShowPenaltyMode: "PARTIAL_DEPOSIT",
-      maxLateFeePercent: 100,
-    },
-    update: {
-      isActive: true,
-      lateReturnGraceMinutes: 30,
-      cancelPenaltyWindowHours: 6,
-      noShowPenaltyMode: "PARTIAL_DEPOSIT",
-      maxLateFeePercent: 100,
-    },
   });
 
   // ---- Listings (8+; multiple categories, cities, statuses) ----
@@ -644,9 +618,13 @@ async function main() {
 }
 
 main()
-  .then(async () => prisma.$disconnect())
+  .then(async () => {
+    await prisma.$disconnect();
+    await pool.end();
+  })
   .catch(async (e) => {
     console.error(e);
     await prisma.$disconnect();
+    await pool.end();
     process.exit(1);
   });

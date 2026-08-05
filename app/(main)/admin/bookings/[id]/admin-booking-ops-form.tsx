@@ -5,12 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/alert";
 
-type Action =
-  | "mark_non_return_pending"
-  | "confirm_non_return"
-  | "complete_after_dispute_window"
-  | "mark_no_show_renter"
-  | "mark_no_show_owner";
+type Action = "mark_non_return_pending" | "confirm_non_return" | "complete_after_dispute_window" | "force_cancel";
 
 export function AdminBookingOpsForm({
   bookingId,
@@ -57,7 +52,7 @@ export function AdminBookingOpsForm({
         className="input-base w-full min-h-[80px] resize-y"
         placeholder="הערת מנהל (אופציונלי)"
       />
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <Button
           type="button"
           variant="outline"
@@ -84,23 +79,15 @@ export function AdminBookingOpsForm({
         </Button>
         <Button
           type="button"
-          variant="outline"
-          disabled={
-            saving !== null || (currentStatus !== "CONFIRMED" && currentStatus !== "ACTIVE")
-          }
-          onClick={() => run("mark_no_show_renter")}
+          variant="destructive"
+          disabled={saving !== null || currentStatus === "COMPLETED" || currentStatus === "CANCELLED"}
+          onClick={() => {
+            if (confirm("האם אתה בטוח שברצונך לבטל הזמנה זו? פעולה זו אינה הפיכה.")) {
+              run("force_cancel");
+            }
+          }}
         >
-          סמן אי-הגעה · שוכר
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          disabled={
-            saving !== null || (currentStatus !== "CONFIRMED" && currentStatus !== "ACTIVE")
-          }
-          onClick={() => run("mark_no_show_owner")}
-        >
-          סמן אי-הגעה · משכיר
+          {saving === "force_cancel" ? "מבטל..." : "ביטול הזמנה (כפוי)"}
         </Button>
       </div>
     </div>

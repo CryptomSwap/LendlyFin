@@ -1,5 +1,4 @@
 import "server-only";
-import { getAppBaseUrl } from "../client";
 
 export type BookingConfirmedPayload = {
   bookingRef: string;

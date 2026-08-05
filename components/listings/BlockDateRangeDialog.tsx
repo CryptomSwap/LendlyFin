@@ -19,7 +19,6 @@ export default function BlockDateRangeDialog({
   open,
   onClose,
   onBlock,
-  suggestedMonth,
 }: BlockDateRangeDialogProps) {
   const today = new Date().toISOString().slice(0, 10);
   const [startDate, setStartDate] = useState("");

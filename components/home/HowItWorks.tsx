@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import ScrollRevealTitle from "@/components/home/ScrollRevealTitle";
 
@@ -7,19 +8,19 @@ const STEP_LABELS = ["שלב 1", "שלב 2", "שלב 3"] as const;
 
 const CARDS = [
   {
-    title: "מחפשים ציוד",
+    title: "יש ציוד לשכן שלך",
     items: [
-      "מחפשים לפי קטגוריה, מחיר ומיקום",
+      "מחפשים ציוד לפי קטגוריה, מחיר ומיקום",
       "בוחרים תאריכי השכרה",
-      "שולחים בקשה למשכיר",
+      "שולחים למשכיר",
     ],
   },
   {
     title: "מתאמים ומשלמים",
     items: [
-      "המשכיר מאשר את הבקשה",
-      "משלמים בצורה מאובטחת",
-      "קובעים איסוף או משלוח",
+      "לאחר אישור המשכיר, אפשר לשלם ולקבוע איסוף או משלוח",
+      "בסוף התהליך מקבלים הוראות איסוף",
+      "פרטים נוספים מהמשכיר",
     ],
   },
   {
@@ -27,7 +28,7 @@ const CARDS = [
     items: [
       "אוספים את הציוד מהמשכיר",
       "משתמשים ונהנים",
-      "מחזירים בדיוק כמו שהגיע",
+      "מחזירים בדיוק כמו שהגיע אליכם",
     ],
   },
 ] as const;
@@ -97,23 +98,20 @@ export default function HowItWorks() {
       dir="rtl"
       className="mx-auto w-full max-w-[1420px] px-5 py-24"
       aria-label="איך זה עובד"
+      id="how-it-works"
     >
       <div className="flex flex-col items-center gap-4 text-center">
-        <p className="whitespace-nowrap font-assistant text-[56px] leading-[1.1] text-[#AAAAAA]">
-          השכרת ציוד מעולם לא הייתה פשוטה יותר
-        </p>
-
         <div className="mx-auto flex max-w-[720px] flex-col items-center gap-4">
         <ScrollRevealTitle className="font-sans text-[48px] font-black leading-none tracking-[-2px] text-black">
-          איך זה עובד?
+          איך זה עובד
         </ScrollRevealTitle>
 
-        <a
-          href="#"
+        <Link
+          href="/search"
           className="font-sans text-[16px] font-bold text-[#1A8C6A] transition-opacity hover:opacity-80"
         >
-          התחל להשכיר ←
-        </a>
+          חפשו השכרות ←
+        </Link>
         </div>
       </div>
 

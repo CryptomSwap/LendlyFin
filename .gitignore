@@ -9,8 +9,10 @@ out/
 .env
 .env.local
 
-# prisma
+# prisma (legacy local SQLite file if present)
 prisma/dev.db
+prisma/dev.db-journal
+prisma/backups/
 
 # uploads (KYC selfie/ID photos, etc. – never commit)
 public/uploads/
@@ -20,6 +22,10 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# TypeScript incremental build cache
+*.tsbuildinfo
+
 # OS
 .DS_Store
 Thumbs.db
+.vercel

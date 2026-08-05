@@ -11,6 +11,7 @@ const LINKS = [
   { href: "/admin/bookings", label: "הזמנות" },
   { href: "/admin/disputes", label: "מחלוקות" },
   { href: "/admin/kyc", label: "אימות זהות" },
+  { href: "/admin/security", label: "אבטחה" },
 ] as const;
 
 export function AdminNav() {

@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Card, CardContent } from "@/components/ui/card";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -16,16 +15,17 @@ type Message = {
   senderName: string;
 };
 
+const PRIMARY_BTN =
+  "rounded-full bg-[#1A8C6A] font-sans font-bold text-white shadow-[0_6px_24px_rgba(26,140,106,0.35)] hover:bg-[#167A5C] hover:-translate-y-[2px] transition-all duration-300 w-full sm:w-auto sm:self-end";
+
 export function BookingMessagesView({
   bookingId,
   initialMessages,
   currentUserId,
-  bookingRef = null,
 }: {
   bookingId: string;
   initialMessages: Message[];
   currentUserId: string | null;
-  bookingRef?: string | null;
 }) {
   const router = useRouter();
   const [messages, setMessages] = useState<Message[]>(initialMessages);
@@ -62,60 +62,58 @@ export function BookingMessagesView({
 
   return (
     <div className="space-y-4" dir="rtl">
-      <Card className="shadow-soft">
-        <CardContent className="py-4 min-h-[200px] max-h-[50vh] overflow-y-auto flex flex-col gap-4">
-          {messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <MessageSquare className="h-12 w-12 text-muted-foreground mb-3" aria-hidden />
-              <p className="font-medium text-foreground">אין הודעות עדיין</p>
-              <p className="text-sm text-muted-foreground mt-0.5 max-w-sm">
-                שלחו הודעה כדי להתחיל שיחה עם המלווה או השוכר לגבי ההזמנה.
-              </p>
-            </div>
-          ) : (
-            <ul className="space-y-4 list-none p-0 m-0" aria-label="הודעות">
-              {messages.map((m) => {
-                const isMe = m.senderId === currentUserId;
-                return (
-                  <li
-                    key={m.id}
-                    className={`flex flex-col gap-1 ${isMe ? "items-end" : "items-start"}`}
+      <div className="rounded-[8px] border border-black/10 bg-white p-4 md:p-6 min-h-[200px] max-h-[50vh] overflow-y-auto flex flex-col gap-4">
+        {messages.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-8 text-center">
+            <MessageSquare className="h-12 w-12 text-[#1A8C6A]/40 mb-3" aria-hidden />
+            <p className="font-sans font-bold text-black">אין הודעות עדיין</p>
+            <p className="font-assistant text-[14px] text-[#888888] mt-0.5 max-w-sm">
+              שלחו הודעה כדי להתחיל שיחה עם המלווה או השוכר לגבי ההזמנה.
+            </p>
+          </div>
+        ) : (
+          <ul className="space-y-4 list-none p-0 m-0" aria-label="הודעות">
+            {messages.map((m) => {
+              const isMe = m.senderId === currentUserId;
+              return (
+                <li
+                  key={m.id}
+                  className={`flex flex-col gap-1 ${isMe ? "items-end" : "items-start"}`}
+                >
+                  <span className="font-assistant text-xs font-medium text-[#888888]">
+                    {m.senderName}
+                    {isMe ? " (אני)" : ""}
+                  </span>
+                  <div
+                    className={`rounded-[8px] px-3 py-2.5 font-assistant text-[14px] max-w-[85%] ${
+                      isMe
+                        ? "bg-[#1A8C6A] text-white"
+                        : "bg-black/5 text-black border border-black/10"
+                    }`}
                   >
-                    <span className="text-xs font-medium text-muted-foreground">
-                      {m.senderName}
-                      {isMe ? " (אני)" : ""}
-                    </span>
-                    <div
-                      className={`rounded-xl px-3 py-2.5 text-sm max-w-[85%] ${
-                        isMe
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted text-foreground border border-border"
-                      }`}
-                    >
-                      <p className="whitespace-pre-wrap break-words">{m.body}</p>
-                    </div>
-                    <span className="text-xs text-muted-foreground">
-                      {new Date(m.createdAt).toLocaleString("he-IL", {
-                        dateStyle: "short",
-                        timeStyle: "short",
-                      })}
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
+                    <p className="whitespace-pre-wrap break-words">{m.body}</p>
+                  </div>
+                  <span className="font-assistant text-xs text-[#888888]">
+                    {new Date(m.createdAt).toLocaleString("he-IL", {
+                      dateStyle: "short",
+                      timeStyle: "short",
+                    })}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
 
       {messages.length > 0 && (
-        <p className="text-xs text-muted-foreground text-center">
+        <p className="font-assistant text-[12px] text-[#888888] text-center">
           הודעות שמורות להקשר ההזמנה. לתמיכה נוספת צור קשר.
         </p>
       )}
 
       {!currentUserId ? (
-        <p className="text-sm text-muted-foreground">יש להתחבר כדי לשלוח הודעות.</p>
+        <p className="font-assistant text-[14px] text-[#888888]">יש להתחבר כדי לשלוח הודעות.</p>
       ) : (
         <>
           {error && <Alert variant="error">{error}</Alert>}
@@ -135,7 +133,7 @@ export function BookingMessagesView({
             <Button
               onClick={handleSend}
               disabled={sending || !body.trim()}
-              className="w-full sm:w-auto sm:self-end"
+              className={PRIMARY_BTN}
             >
               {sending ? "שולח..." : "שלח"}
             </Button>

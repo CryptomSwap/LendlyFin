@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import KYCFlow from "@/components/kyc-flow";
-import { PageContainer } from "@/components/layout";
+import { PageContainer, SurfaceCard } from "@/components/layout";
 
 export const runtime = "nodejs";
 
@@ -30,16 +30,26 @@ export default async function KYCPage() {
 
   const kycStatus = me.user?.kycStatus || me.kycStatus || "PENDING";
 
-  // If already submitted, approved, or rejected, redirect to profile
-  if (kycStatus === "SUBMITTED" || kycStatus === "APPROVED" || kycStatus === "REJECTED") {
+  // Only block when already in review or approved.
+  // Rejected users should be allowed to re-submit.
+  if (kycStatus === "SUBMITTED" || kycStatus === "APPROVED") {
     redirect("/profile");
   }
 
   return (
-    <div className="min-h-screen w-full app-page-bg pb-24">
-      <PageContainer width="narrow" className="space-y-6 lg:max-w-[62rem]" >
-        <h1 className="page-title">אימות זהות</h1>
-        <KYCFlow />
+    <div className="min-h-screen w-full bg-white pb-24" dir="rtl">
+      <PageContainer width="narrow" className="space-y-6 pt-8 lg:max-w-[62rem]">
+        <div>
+          <h1 className="font-sans text-[28px] font-black tracking-[-1px] text-black md:text-[36px]">
+            אימות זהות
+          </h1>
+          <p className="mt-2 font-assistant text-[14px] text-[#888888]">
+            נעבור יחד צעד-אחר-צעד כדי לאמת את זהותך.
+          </p>
+        </div>
+        <SurfaceCard padding="lg">
+          <KYCFlow />
+        </SurfaceCard>
       </PageContainer>
     </div>
   );

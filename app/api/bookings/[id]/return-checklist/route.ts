@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireBookingAccess } from "@/lib/booking-auth";
+import { requireBookingParticipantAccess } from "@/lib/booking-auth";
 import { RETURN_PHOTO_ANGLES } from "@/lib/booking-auth";
 import {
   sendDisputeOpenedEmails,
@@ -15,7 +15,7 @@ export async function GET(
   ctx: { params: Promise<{ id: string }> }
 ) {
   const { id: bookingId } = await ctx.params;
-  const { error, booking } = await requireBookingAccess(bookingId);
+  const { error, booking } = await requireBookingParticipantAccess(bookingId);
   if (error) return error;
   if (!booking) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
@@ -56,7 +56,7 @@ export async function PUT(
   ctx: { params: Promise<{ id: string }> }
 ) {
   const { id: bookingId } = await ctx.params;
-  const { error, booking, user } = await requireBookingAccess(bookingId);
+  const { error, booking, user } = await requireBookingParticipantAccess(bookingId);
   if (error) return error;
   if (!booking) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
@@ -145,11 +145,8 @@ export async function PUT(
           data: {
             bookingId,
             reason,
-            userReasonCode: reason,
             status: "OPEN",
             openedByUserId: user?.id ?? null,
-            evidenceChecklist: JSON.stringify(["return_checklist_issue_flagged", "return_photos_submitted"]),
-            evidenceSubmittedAt: new Date(),
           },
         });
         await sendDisputeOpenedEmails(bookingId);

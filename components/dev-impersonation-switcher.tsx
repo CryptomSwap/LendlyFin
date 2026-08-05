@@ -8,6 +8,12 @@ import {
   DEV_IMPERSONATION_LABELS,
 } from "@/lib/auth/dev-impersonation";
 
+/** Avoid requesting dev-only APIs on production builds (cleaner console, no wasted 404). */
+const IS_PRODUCTION_BUILD = process.env.NODE_ENV === "production";
+
+const DEV_DEFAULT_USER_ID = "dev-user";
+const REGULAR_DEFAULT_USER_ID = "qa-renter-no-bookings";
+
 type Status = {
   impersonationAvailable: boolean;
   currentUser: { id: string; name: string | null } | null;
@@ -19,19 +25,32 @@ export default function DevImpersonationSwitcher() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    if (IS_PRODUCTION_BUILD) return;
     fetch("/api/dev/status")
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => data && setStatus(data))
       .catch(() => setStatus(null));
   }, []);
 
-  if (!status?.impersonationAvailable) return null;
+  if (IS_PRODUCTION_BUILD || !status?.impersonationAvailable) return null;
 
   const currentId = status.currentUser?.id ?? "";
   const allowedSet = new Set(DEV_IMPERSONATION_ALLOWED_IDS);
+  const priorityOrder = [
+    DEV_DEFAULT_USER_ID,
+    REGULAR_DEFAULT_USER_ID,
+  ] as const;
+  const restIds = DEV_IMPERSONATION_ALLOWED_IDS.filter(
+    (id) => !priorityOrder.includes(id as (typeof priorityOrder)[number])
+  );
+
   const options = [
     { id: "", label: "ברירת מחדל (env)" },
-    ...DEV_IMPERSONATION_ALLOWED_IDS.map((id) => ({
+    ...priorityOrder.map((id) => ({
+      id,
+      label: DEV_IMPERSONATION_LABELS[id] ?? id,
+    })),
+    ...restIds.map((id) => ({
       id,
       label: DEV_IMPERSONATION_LABELS[id] ?? id,
     })),
@@ -65,7 +84,7 @@ export default function DevImpersonationSwitcher() {
         QA
       </Link>
       <label htmlFor="dev-impersonate" className="text-xs text-muted-foreground whitespace-nowrap">
-        כניסה כ:
+        תצוגת משתמש:
       </label>
       <select
         id="dev-impersonate"

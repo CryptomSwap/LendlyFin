@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 
 type TrackEventInput = {
   eventName:
@@ -13,9 +14,7 @@ type TrackEventInput = {
     | "return_checklist_submitted"
     | "dispute_opened"
     | "dispute_resolved"
-    | "booking_completed"
-    | "booking_cancelled"
-    | "booking_no_show_marked";
+    | "booking_completed";
   bookingId?: string;
   userId?: string;
   payload?: Record<string, unknown>;
@@ -26,13 +25,24 @@ type TrackEventInput = {
  * This intentionally stores raw event rows without external BI dependencies.
  */
 export async function trackEvent(input: TrackEventInput) {
-  await prisma.analyticsEvent.create({
-    data: {
-      eventName: input.eventName,
-      bookingId: input.bookingId ?? null,
-      userId: input.userId ?? null,
-      payload: input.payload ? JSON.stringify(input.payload) : null,
-    },
-  });
+  try {
+    await prisma.analyticsEvent.create({
+      data: {
+        eventName: input.eventName,
+        bookingId: input.bookingId ?? null,
+        userId: input.userId ?? null,
+        payload: input.payload ? JSON.stringify(input.payload) : null,
+      },
+    });
+  } catch (error) {
+    // Analytics is non-critical; never block core product flows.
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2021" || error.code === "P2022" || error.code === "P2010") {
+        console.warn("analyticsEvent table/query unavailable; skipping trackEvent");
+        return;
+      }
+    }
+    console.warn("trackEvent failed", error);
+  }
 }
 

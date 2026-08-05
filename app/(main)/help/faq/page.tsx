@@ -1,13 +1,9 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
-import { Card, CardContent } from "@/components/ui/card";
-import { HelpCircle } from "lucide-react";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import { Button } from "@/components/ui/button";
+import { PageContainer } from "@/components/layout";
+import { HelpCircle, ChevronDown } from "lucide-react";
 
 const faqs = [
   {
@@ -77,12 +73,12 @@ const faqs = [
     category: "תשלומים",
     questions: [
       {
-        question: "איך משלמים ב-Bit?",
-        answer: "לאחר יצירת ההזמנה תועבר לתשלום ב-Bit. יש לציין את מספר ההזמנה (LND-XXXXXX) בעת התשלום. לאחר ביצוע התשלום ההזמנה תאושר ידנית על ידי הצוות — תקבל הודעה ברגע שההזמנה אושרה.",
+        question: "איך משלמים?",
+        answer: "לאחר יצירת ההזמנה תועברו לעמוד תשלום מאובטח. משלמים בכרטיס אשראי, וההזמנה מאושרת אוטומטית מיד לאחר תשלום מוצלח.",
       },
       {
         question: "מתי משלמים על ההשכרה?",
-        answer: "התשלום מתבצע לאחר יצירת ההזמנה, דרך Bit. דמי ההשכרה והפיקדון נגבים יחד. הפיקדון מוחזר לאחר החזרת הפריט במצב תקין.",
+        answer: "התשלום מתבצע לאחר יצירת ההזמנה, בכרטיס אשראי בעמוד מאובטח. דמי ההשכרה והפיקדון נגבים יחד. הפיקדון מוחזר לאחר החזרת הפריט במצב תקין.",
       },
       {
         question: "מתי אקבל את הפיקדון בחזרה?",
@@ -90,7 +86,7 @@ const faqs = [
       },
       {
         question: "אילו אמצעי תשלום מתקבלים?",
-        answer: "התשלום מתבצע דרך Bit. יש לציין את מספר ההזמנה בעת התשלום או בפניית תמיכה.",
+        answer: "התשלום מתבצע בכרטיס אשראי (Visa, Mastercard) בעמוד תשלום מאובטח.",
       },
       {
         question: "האם יש עמלות נוספות?",
@@ -118,54 +114,89 @@ const faqs = [
 ];
 
 export default function FAQPage() {
+  const [openIndex, setOpenIndex] = useState<string | null>(null);
+
+  function toggle(key: string) {
+    setOpenIndex((prev) => (prev === key ? null : key));
+  }
+
   return (
-    <div className="min-h-screen w-full app-page-bg space-y-6 pb-24 max-w-4xl mx-auto" dir="rtl">
-      <div className="text-center mb-8">
-        <HelpCircle className="h-16 w-16 mx-auto mb-4 text-primary" />
-        <h1 className="page-title mb-2">שאלות נפוצות</h1>
-        <p className="text-sm text-muted-foreground">
-          תשובות לשאלות נפוצות על השימוש בפלטפורמה
-        </p>
-      </div>
+    <div className="min-h-screen w-full app-page-bg pb-24" dir="rtl">
+      <PageContainer width="narrow" className="space-y-6">
+        <div className="mb-8 text-center">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#F0FAF6]">
+            <HelpCircle className="h-7 w-7 text-[#1A8C6A]" />
+          </div>
+          <h1 className="font-sans text-[28px] font-black tracking-[-1px] text-black md:text-[36px]">
+            שאלות נפוצות
+          </h1>
+          <p className="mt-2 font-assistant text-[15px] text-[#888888]">
+            תשובות לשאלות נפוצות על השימוש בפלטפורמה
+          </p>
+        </div>
 
-      <div className="space-y-6">
-        {faqs.map((category, categoryIndex) => (
-          <Card key={categoryIndex} className="shadow-soft">
-            <CardContent className="p-6">
-              <h2 className="text-lg font-semibold mb-4 text-primary">{category.category}</h2>
-              <Accordion type="single" collapsible className="w-full">
-                {category.questions.map((faq, index) => (
-                  <AccordionItem key={index} value={`item-${categoryIndex}-${index}`}>
-                    <AccordionTrigger className="text-right">
-                      {faq.question}
-                    </AccordionTrigger>
-                    <AccordionContent className="text-muted-foreground">
-                      {faq.answer}
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+        <div className="space-y-3">
+          {faqs.map((cat, ci) => (
+            <div key={ci}>
+              <p className="mb-1 mt-2 font-sans text-[13px] font-black uppercase tracking-wide text-[#1A8C6A]">
+                {cat.category}
+              </p>
+              <div className="rounded-[8px] border border-black/10 bg-white px-5">
+                {cat.questions.map((faq, qi) => {
+                  const key = `${ci}-${qi}`;
+                  const isOpen = openIndex === key;
+                  return (
+                    <div key={qi}>
+                      <button
+                        type="button"
+                        onClick={() => toggle(key)}
+                        className="flex w-full cursor-pointer items-center justify-between border-b border-black/[0.08] py-4 last:border-b-0"
+                      >
+                        <span className="flex-1 text-right font-assistant text-[14px] font-semibold text-black">
+                          {faq.question}
+                        </span>
+                        <ChevronDown
+                          className="mr-3 h-4 w-4 shrink-0 text-[#888888] transition-transform duration-200"
+                          style={{ transform: isOpen ? "rotate(180deg)" : "rotate(0deg)" }}
+                        />
+                      </button>
+                      <div
+                        className="overflow-hidden transition-all duration-300"
+                        style={{ maxHeight: isOpen ? "500px" : "0px" }}
+                      >
+                        <p className="pb-4 pt-1 font-assistant text-[13px] leading-relaxed text-[#888888]">
+                          {faq.answer}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
 
-      <Card className="mt-8 shadow-soft bg-muted/50">
-        <CardContent className="p-8 text-center">
-          <h2 className="text-xl font-semibold mb-4">עדיין יש שאלות?</h2>
-          <p className="text-muted-foreground mb-6">
+        <div className="mt-4 rounded-[8px] border border-[#1A8C6A]/15 bg-[#F0FAF6] p-6 text-center">
+          <p className="font-sans text-[18px] font-black text-black">עדיין יש שאלות?</p>
+          <p className="mt-1 mb-4 font-assistant text-[13px] text-[#888888]">
             לא מצאת מה שחיפשת? צוות התמיכה שלנו כאן לעזור.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/help">
-              <Button>יצירת קשר</Button>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <Link
+              href="/help"
+              className="rounded-full bg-[#1A8C6A] px-6 py-2.5 font-sans text-[14px] font-black text-white transition-colors hover:bg-[#157A5A]"
+            >
+              יצירת קשר
             </Link>
-            <Link href="/help">
-              <Button variant="outline">חזרה למרכז העזרה</Button>
+            <Link
+              href="/help"
+              className="rounded-full border border-black/15 bg-white px-6 py-2.5 font-sans text-[14px] font-black text-black transition-colors hover:bg-black/5"
+            >
+              חזרה למרכז העזרה
             </Link>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </PageContainer>
     </div>
   );
 }

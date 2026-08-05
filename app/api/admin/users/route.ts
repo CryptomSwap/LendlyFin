@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin";
 
 export const runtime = "nodejs";
+const VALID_KYC_STATUSES = ["PENDING", "IN_PROGRESS", "SUBMITTED", "APPROVED", "REJECTED"] as const;
 
 /**
  * GET /api/admin/users
@@ -20,20 +22,17 @@ export async function GET(req: Request) {
   const limit = Math.min(50, Math.max(1, parseInt(searchParams.get("limit") || "20", 10)));
   const skip = (page - 1) * limit;
 
-  const where: {
-    OR?: Array<{ name?: { contains: string }; id?: { contains: string } }>;
-    kycStatus?: string;
-    suspendedAt?: null | { not: null };
-  } = {};
+  const where: Prisma.UserWhereInput = {};
 
   if (q) {
     where.OR = [
       { name: { contains: q } },
+      { email: { contains: q } },
       { id: { contains: q } },
     ];
   }
-  if (kycStatus) {
-    where.kycStatus = kycStatus;
+  if (kycStatus && VALID_KYC_STATUSES.includes(kycStatus as (typeof VALID_KYC_STATUSES)[number])) {
+    where.kycStatus = kycStatus as (typeof VALID_KYC_STATUSES)[number];
   }
   if (suspendedParam === "true") {
     where.suspendedAt = { not: null };
@@ -50,6 +49,7 @@ export async function GET(req: Request) {
       select: {
         id: true,
         name: true,
+        email: true,
         kycStatus: true,
         isAdmin: true,
         suspendedAt: true,
@@ -85,6 +85,7 @@ export async function GET(req: Request) {
   const list = users.map((u) => ({
     id: u.id,
     name: u.name,
+    email: u.email ?? null,
     kycStatus: u.kycStatus ?? null,
     isAdmin: u.isAdmin,
     suspendedAt: u.suspendedAt?.toISOString() ?? null,

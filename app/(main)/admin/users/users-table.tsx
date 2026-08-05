@@ -1,9 +1,12 @@
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/empty-state";
+import { RedesignStatusPill } from "@/components/redesign/status-pill";
+import type { RedesignStatusVariant } from "@/components/redesign/status-pill";
 
 type UserRow = {
   id: string;
   name: string;
+  email: string | null;
   kycStatus: string | null;
   isAdmin: boolean;
   suspendedAt: string | null;
@@ -12,6 +15,14 @@ type UserRow = {
   listingsCount: number;
   bookingsCount: number;
   disputesOpenedCount: number;
+};
+
+const KYC_PILL: Record<string, RedesignStatusVariant> = {
+  PENDING: "warning",
+  IN_PROGRESS: "warning",
+  SUBMITTED: "brand",
+  APPROVED: "success",
+  REJECTED: "danger",
 };
 
 export function AdminUsersTable({
@@ -48,38 +59,80 @@ export function AdminUsersTable({
   return (
     <div className="space-y-4">
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[760px] text-sm border-separate border-spacing-0">
+        <table className="w-full min-w-[760px] border-separate border-spacing-0 text-sm">
           <thead>
-            <tr className="bg-muted/30">
-              <th className="text-right py-3 px-3 font-medium text-muted-foreground">שם</th>
-              <th className="text-right py-3 px-3 font-medium text-muted-foreground">אימות</th>
-              <th className="text-right py-3 px-3 font-medium text-muted-foreground">מושעה</th>
-              <th className="text-right py-3 px-3 font-medium text-muted-foreground">מודעות</th>
-              <th className="text-right py-3 px-3 font-medium text-muted-foreground">הזמנות</th>
-              <th className="text-right py-3 px-3 font-medium text-muted-foreground">מחלוקות</th>
-              <th className="text-right py-3 px-3 font-medium text-muted-foreground"></th>
+            <tr className="border-b border-black/10">
+              <th className="px-3 py-2.5 text-right font-sans text-[12px] font-bold text-[#888888]">
+                שם
+              </th>
+              <th className="px-3 py-2.5 text-right font-sans text-[12px] font-bold text-[#888888]">
+                אימייל
+              </th>
+              <th className="px-3 py-2.5 text-right font-sans text-[12px] font-bold text-[#888888]">
+                אימות
+              </th>
+              <th className="px-3 py-2.5 text-right font-sans text-[12px] font-bold text-[#888888]">
+                מושעה
+              </th>
+              <th className="px-3 py-2.5 text-right font-sans text-[12px] font-bold text-[#888888]">
+                מודעות
+              </th>
+              <th className="px-3 py-2.5 text-right font-sans text-[12px] font-bold text-[#888888]">
+                הזמנות
+              </th>
+              <th className="px-3 py-2.5 text-right font-sans text-[12px] font-bold text-[#888888]">
+                מחלוקות
+              </th>
+              <th className="px-3 py-2.5 text-right font-sans text-[12px] font-bold text-[#888888]" />
             </tr>
           </thead>
           <tbody>
             {users.map((u) => (
-              <tr key={u.id} className="border-b border-border/60 hover:bg-muted/20 transition-colors">
-                <td className="py-3 px-3">
-                  <span className="font-medium">{u.name}</span>
-                  {u.isAdmin && <span className="text-muted-foreground text-xs mr-1">(מנהל)</span>}
-                </td>
-                <td className="py-3 px-3">{kycLabels[u.kycStatus ?? ""] ?? u.kycStatus ?? "—"}</td>
-                <td className="py-3 px-3">
-                  {u.suspendedAt ? (
-                    <span className="text-warning">מושעה</span>
-                  ) : (
-                    <span className="text-muted-foreground">—</span>
+              <tr
+                key={u.id}
+                className="border-b border-black/10 transition-colors hover:bg-black/[0.02]"
+              >
+                <td className="px-3 py-2.5">
+                  <span className="font-sans text-[13px] font-bold text-black">{u.name}</span>
+                  {u.isAdmin && (
+                    <span className="mr-1 font-assistant text-[11px] text-[#888888]">(מנהל)</span>
                   )}
                 </td>
-                <td className="py-3 px-3">{u.listingsCount}</td>
-                <td className="py-3 px-3">{u.bookingsCount}</td>
-                <td className="py-3 px-3">{u.disputesOpenedCount}</td>
-                <td className="py-3 px-3">
-                  <Link href={`/admin/users/${u.id}`} className="text-primary font-medium hover:underline">
+                <td className="px-3 py-2.5" dir="ltr">
+                  <span className="font-assistant text-[13px] text-[#888888]">
+                    {u.email ?? "—"}
+                  </span>
+                </td>
+                <td className="px-3 py-2.5">
+                  {u.kycStatus ? (
+                    <RedesignStatusPill variant={KYC_PILL[u.kycStatus] ?? "muted"}>
+                      {kycLabels[u.kycStatus] ?? u.kycStatus}
+                    </RedesignStatusPill>
+                  ) : (
+                    <span className="font-assistant text-[13px] text-[#888888]">—</span>
+                  )}
+                </td>
+                <td className="px-3 py-2.5">
+                  {u.suspendedAt ? (
+                    <RedesignStatusPill variant="warning">מושעה</RedesignStatusPill>
+                  ) : (
+                    <span className="font-assistant text-[13px] text-[#888888]">—</span>
+                  )}
+                </td>
+                <td className="px-3 py-2.5 font-assistant text-[13px] text-black">
+                  {u.listingsCount}
+                </td>
+                <td className="px-3 py-2.5 font-assistant text-[13px] text-black">
+                  {u.bookingsCount}
+                </td>
+                <td className="px-3 py-2.5 font-assistant text-[13px] text-black">
+                  {u.disputesOpenedCount}
+                </td>
+                <td className="px-3 py-2.5">
+                  <Link
+                    href={`/admin/users/${u.id}`}
+                    className="font-sans text-[13px] font-bold text-[#1A8C6A] hover:underline"
+                  >
                     צפה
                   </Link>
                 </td>
@@ -89,22 +142,22 @@ export function AdminUsersTable({
         </table>
       </div>
       {totalPages > 1 && (
-        <div className="flex gap-2 flex-wrap justify-center pt-2">
+        <div className="flex flex-wrap justify-center gap-2 pt-2">
           {page > 1 && (
             <Link
               href={`/admin/users?${base.toString()}&page=${page - 1}`}
-              className="text-sm text-primary hover:underline"
+              className="font-sans text-[13px] font-bold text-[#1A8C6A] hover:underline"
             >
               ← הקודם
             </Link>
           )}
-          <span className="text-sm text-muted-foreground">
+          <span className="font-assistant text-[13px] text-[#888888]">
             עמוד {page} מתוך {totalPages}
           </span>
           {page < totalPages && (
             <Link
               href={`/admin/users?${base.toString()}&page=${page + 1}`}
-              className="text-sm text-primary hover:underline"
+              className="font-sans text-[13px] font-bold text-[#1A8C6A] hover:underline"
             >
               הבא →
             </Link>

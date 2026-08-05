@@ -7,15 +7,12 @@ export const BOOKING_STATUS_LABELS: Record<string, string> = {
   REQUESTED: "ממתין לאישור",
   CONFIRMED: "אושרה",
   ACTIVE: "פעילה",
-  CANCELLED_BY_RENTER: "בוטלה · השוכר",
-  CANCELLED_BY_OWNER: "בוטלה · המשכיר",
-  NO_SHOW_RENTER: "לא הגיע · השוכר",
-  NO_SHOW_OWNER: "לא הגיע · המשכיר",
   RETURNED: "הוחזר",
   IN_DISPUTE: "במחלוקת",
   NON_RETURN_PENDING: "אי-החזרה בבדיקה",
   NON_RETURN_CONFIRMED: "אי-החזרה מאושרת",
   COMPLETED: "הושלמה",
+  CANCELLED: "בוטלה",
   DISPUTE: "במחלוקת",
 };
 
@@ -23,15 +20,12 @@ export const BOOKING_STATUS_LABEL_DETAIL: Record<string, string> = {
   REQUESTED: "ממתין לאישור",
   CONFIRMED: "אושרה · ממתין לאיסוף",
   ACTIVE: "פעילה",
-  CANCELLED_BY_RENTER: "בוטלה על ידי השוכר",
-  CANCELLED_BY_OWNER: "בוטלה על ידי המשכיר",
-  NO_SHOW_RENTER: "השוכר לא הגיע",
-  NO_SHOW_OWNER: "המשכיר לא הגיע",
   RETURNED: "הוחזר · חלון מחלוקת פתוח",
   IN_DISPUTE: "מחלוקת פתוחה",
   NON_RETURN_PENDING: "אי-החזרה בבדיקה",
   NON_RETURN_CONFIRMED: "אי-החזרה אושרה",
   COMPLETED: "הושלמה",
+  CANCELLED: "בוטלה",
   DISPUTE: "מחלוקת פתוחה",
 };
 
@@ -50,10 +44,6 @@ const BOOKING_STATUS_PILL_VARIANT: Record<string, BookingStatusPillVariant> = {
   REQUESTED: "warning",
   CONFIRMED: "primary",
   ACTIVE: "success",
-  CANCELLED_BY_RENTER: "muted",
-  CANCELLED_BY_OWNER: "muted",
-  NO_SHOW_RENTER: "warning",
-  NO_SHOW_OWNER: "warning",
   RETURNED: "primary",
   IN_DISPUTE: "danger",
   NON_RETURN_PENDING: "warning",
@@ -132,15 +122,7 @@ export function getDisputeStatusLabel(status: string | null | undefined): string
 export const DISPUTE_REASON_LABELS: Record<string, string> = {
   damage: "נזק",
   missing_items: "פריטים חסרים",
-  manual: "אחר",
-  item_not_as_described: "הפריט לא כמתואר",
-  late_return: "איחור בהחזרה",
-  non_return: "אי-החזרה",
-  item_not_working: "תקלה / לא עובד",
-  handoff_conflict: "סכסוך איסוף/החזרה",
-  policy_violation: "הפרת מדיניות",
-  payment_issue: "תשלום / החזר",
-  communication_issue: "תקשורת / תיאום",
+  manual: "ידני",
 };
 
 export function getDisputeReasonLabel(reason: string | null | undefined): string {

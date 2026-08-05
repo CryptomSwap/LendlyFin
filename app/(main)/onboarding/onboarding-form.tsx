@@ -1,12 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { useRouter } from "next/navigation";
+import { SurfaceCard } from "@/components/layout";
+import { RedesignButton } from "@/components/redesign/button";
+import { RedesignInput } from "@/components/redesign/input";
 
 type Props = {
   defaultName: string;
@@ -20,8 +18,6 @@ export default function OnboardingForm({
   defaultCity,
 }: Props) {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") ?? "/profile";
 
   const [name, setName] = useState(defaultName);
   const [phoneNumber, setPhoneNumber] = useState(defaultPhone);
@@ -43,12 +39,42 @@ export default function OnboardingForm({
           city: city.trim(),
         }),
       });
+      const raw = await res.text();
+      let payload: unknown = null;
+      try {
+        payload = raw ? JSON.parse(raw) : null;
+      } catch {
+        payload = null;
+      }
+      const obj =
+        payload && typeof payload === "object"
+          ? (payload as { error?: unknown })
+          : null;
+      const apiError = obj?.error;
+      const messageFromApi =
+        typeof apiError === "string"
+          ? apiError
+          : apiError != null
+            ? String(apiError)
+            : null;
+
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setError((data.error as string) || "שגיאה בעדכון");
+        if (messageFromApi) {
+          setError(`${messageFromApi} (HTTP ${res.status})`);
+        } else if (res.status === 401) {
+          setError("לא מורשה — נסה להתחבר מחדש.");
+        } else if (raw.trimStart().startsWith("<!") || raw.trimStart().startsWith("<html")) {
+          setError(
+            `שגיאת שרת (HTTP ${res.status}). התקבלה תשובת HTML במקום JSON — בדוק לוגים ב-Vercel ו־DATABASE_URL.`
+          );
+        } else {
+          setError(`שגיאה בעדכון (HTTP ${res.status}). פתח כלי מפתחים ← רשת ← PATCH /api/profile/onboarding לפרטים.`);
+        }
         return;
       }
-      router.push(callbackUrl);
+      // Force NextAuth JWT refresh so middleware sees updated onboardingComplete
+      await fetch("/api/auth/session");
+      router.push("/profile");
       router.refresh();
     } catch {
       setError("שגיאת רשת");
@@ -58,57 +84,51 @@ export default function OnboardingForm({
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>פרטי פרופיל</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-5" dir="rtl">
-          <div className="form-group">
-            <Label htmlFor="onboarding-name">שם מלא</Label>
-            <Input
-              id="onboarding-name"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="שם מלא"
-              required
-              className="w-full"
-              dir="rtl"
-            />
+    <SurfaceCard padding="lg">
+      <p className="mb-5 font-sans text-[15px] font-black text-black">פרטי פרופיל</p>
+      <form onSubmit={handleSubmit} className="space-y-5" dir="rtl">
+        <RedesignInput
+          id="onboarding-name"
+          label="שם מלא"
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="שם מלא"
+          required
+          dir="rtl"
+        />
+        <RedesignInput
+          id="onboarding-phone"
+          label="מספר טלפון"
+          type="tel"
+          value={phoneNumber}
+          onChange={(e) => setPhoneNumber(e.target.value)}
+          placeholder="050-0000000"
+          required
+          dir="ltr"
+        />
+        <RedesignInput
+          id="onboarding-city"
+          label="עיר"
+          type="text"
+          value={city}
+          onChange={(e) => setCity(e.target.value)}
+          placeholder="עיר"
+          required
+          dir="rtl"
+        />
+        {error && (
+          <div
+            role="alert"
+            className="rounded-[8px] border border-red-200 bg-red-50 p-3 font-assistant text-[13px] break-words text-red-600"
+          >
+            {error}
           </div>
-          <div className="form-group">
-            <Label htmlFor="onboarding-phone">מספר טלפון</Label>
-            <Input
-              id="onboarding-phone"
-              type="tel"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              placeholder="050-0000000"
-              required
-              className="w-full"
-              dir="ltr"
-            />
-          </div>
-          <div className="form-group">
-            <Label htmlFor="onboarding-city">עיר</Label>
-            <Input
-              id="onboarding-city"
-              type="text"
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-              placeholder="עיר"
-              required
-              className="w-full"
-              dir="rtl"
-            />
-          </div>
-          {error && <Alert variant="error" role="alert">{error}</Alert>}
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "שומר…" : "המשך"}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+        )}
+        <RedesignButton type="submit" className="w-full" size="lg" disabled={loading}>
+          {loading ? "שומר…" : "המשך"}
+        </RedesignButton>
+      </form>
+    </SurfaceCard>
   );
 }

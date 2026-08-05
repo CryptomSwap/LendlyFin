@@ -5,8 +5,14 @@
 
 import * as dev from "./dev-adapter";
 import * as session from "./session-adapter";
+import { validateRuntimeEnv } from "@/lib/env";
 
-const useDevAdapter = process.env.DEV_AUTH_BYPASS === "true";
+validateRuntimeEnv();
+
+const bypassRequested = process.env.DEV_AUTH_BYPASS === "true";
+const useDevAdapter =
+  bypassRequested &&
+  process.env.NODE_ENV !== "production";
 const adapter = useDevAdapter ? dev : session;
 
 export type { AuthUser } from "./types";

@@ -5,7 +5,7 @@ const FOOTER_LINKS = {
     title: "אודות",
     links: [
       { label: "אודות לנדלי", href: "/help" },
-      { label: "איך זה עובד", href: "/#how-it-works" },
+      { label: "איך זה עובד", href: "/home#how-it-works" },
       { label: "אמון ובטיחות", href: "/help/safety" },
       { label: "שאלות נפוצות", href: "/help/faq" },
       { label: "תנאים והגבלות", href: "/help" },
@@ -32,9 +32,9 @@ const FOOTER_LINKS = {
     ],
   },
   owners: {
-    title: "למשכירים",
+    title: "למשכירים ולקטגוריות",
     links: [
-      { label: "כלי עבודה להשכרה", href: "/search" },
+      { label: "כלי עבודה להשכרה לידכם", href: "/search" },
       { label: "מצלמות וציוד", href: "/search" },
       { label: "ציוד חוץ וקמפינג", href: "/search" },
       { label: "ציוד מוזיקה ואירועים", href: "/search" },

@@ -40,7 +40,7 @@ Landly-web/
 │   └── globals.css
 ├── components/         # ui/*, admin-kyc-review, booking-card, kyc-flow, listing-card, listings-map, etc.
 ├── lib/                # admin.ts, prisma.ts, utils.ts
-├── prisma/             # schema (SQLite): User (KYC), Listing, Booking, ListingImage, KYCAuditLog
+├── prisma/             # schema (PostgreSQL): User (KYC), Listing, Booking, ListingImage, AuditLog, etc.
 └── public/
 ```
 
@@ -110,8 +110,8 @@ User, Account, Session, Listing (status PENDING/APPROVED/REJECTED/PAUSED), Booki
 | **Framework** | Next.js 16.1, React 19, single app (no monorepo) |
 | **Routing** | `app/(main)/*` — add, admin/kyc, bookings (list, [id], pickup, return), checkout, home, listing/[id], profile, profile/kyc, search |
 | **API** | `app/api/admin/kyc/*`, `app/api/bookings/*`, `app/api/checkout/summary`, `app/api/kyc/*`, `app/api/listings/*`, `app/api/me`, `app/api/payments/create-intent`, `app/api/payments/confirm` |
-| **Database** | **SQLite**, Prisma 7.x, `@prisma/adapter-better-sqlite3` |
-| **Auth** | Dev bypass only: `DEV_AUTH_BYPASS`, `lib/admin.ts` getCurrentUser; no NextAuth/Stripe yet in codebase |
+| **Database** | **PostgreSQL**, Prisma 7.x, `@prisma/adapter-pg` + `pg`; `DATABASE_URL` in `prisma.config.ts` |
+| **Auth** | NextAuth (Google) + optional `DEV_AUTH_BYPASS` for local QA; `lib/auth/adapter.ts`, `proxy.ts` for protected routes |
 | **Payments** | Mock payment intent + confirm: `api/payments/create-intent`, `api/payments/confirm` (placeholder for future Stripe) |
 | **Storage** | KYC uploads (api/kyc/upload) — writes under `public/` |
 | **Admin** | KYC only: admin/kyc (queue), admin/kyc/[userId], admin/kyc/audit |
@@ -210,7 +210,7 @@ User (name, kycStatus, kycSelfieUrl, kycIdUrl, kycSubmittedAt, kycRejectedReason
 ## 5. What Repo A Has That Repo B Should NOT Reuse
 
 - **Turborepo structure** — Do not merge the monorepo (apps/server, apps/mobile, packages) into B. B stays a single Next.js app. Take only logic (e.g. shared utils/schemas) and reimplement in B where needed.
-- **A’s PostgreSQL schema and migrations** — Do not adopt A’s DB as-is. B keeps SQLite and its schema; add only new models/fields (e.g. Dispute, Checklist) designed for B.
+- **A’s PostgreSQL schema and migrations** — Do not adopt A’s DB as-is. B keeps its own PostgreSQL schema and migrations; add only new models/fields designed for B.
 - **A’s JWT auth (apps/server)** — B will adopt its own auth (e.g. Supabase/session or NextAuth). Use A’s session/NextAuth pattern from lendly only as a reference, not the Turborepo JWT.
 - **A’s “Item” naming** — B uses “Listing”; keep B’s naming and API surface.
 - **Duplicate Prisma schemas** — Do not merge `lendly/prisma/schema.prisma` or `apps/server/prisma/schema.prisma` into B. Use them only as reference for new entities (Dispute, Checklist, Review, etc.).
@@ -274,7 +274,7 @@ User (name, kycStatus, kycSelfieUrl, kycIdUrl, kycSubmittedAt, kycRejectedReason
 
 1. **Two schemas in A** — Turborepo (PostgreSQL, Item/Booking/Message/Review) and lendly (SQLite, Listing/Booking/Dispute/Checklist). B must not merge either schema; only add new B-native models/fields inspired by A.  
 2. **Auth gap in B** — B relies on `DEV_AUTH_BYPASS`. Adding features that depend on “current user” or “admin” without a real auth layer will require rework when auth is added.  
-3. **Database** — B uses SQLite; A’s Turborepo uses PostgreSQL. Any ported logic (e.g. deposit, pricing) must stay DB-agnostic; schema design must suit SQLite (e.g. JSON columns where A uses relations).  
+3. **Database** — B and A’s Turborepo both use PostgreSQL via Prisma. Ported logic (e.g. deposit, pricing) should stay DB-agnostic where possible; prefer B’s existing models and enums.  
 4. **Naming** — B uses “Listing” and “listing”; A uses “Item” in Turborepo and “Listing” in lendly. Keep B’s naming everywhere.  
 5. **Payment intent** — B’s create-intent/confirm are mocks. When replacing with Stripe (or other), ensure deposit/insurance amounts and booking lifecycle stay consistent with A’s pricing logic.  
 6. **Admin scope** — B admin is KYC-only today. Adding listing/dispute/user admin will require a clear admin layout and permission model aligned with B’s future auth.

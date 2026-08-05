@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { UpcomingItem } from "@/lib/owner/dashboard";
 import { cn } from "@/lib/utils";
 import { Calendar, RotateCcw } from "lucide-react";
@@ -32,18 +31,18 @@ function ItemList({
   if (items.length === 0) {
     return (
       <div>
-        <p className="text-sm font-medium text-foreground mb-1 flex items-center gap-1">
-          <Icon className="h-4 w-4 text-muted-foreground" />
+        <p className="mb-1 flex items-center gap-1 font-sans text-[14px] font-bold text-black">
+          <Icon className="h-4 w-4 text-[#1A8C6A]" />
           {title}
         </p>
-        <p className="text-sm text-muted-foreground">{emptyMessage}</p>
+        <p className="font-assistant text-[13px] text-[#888888]">{emptyMessage}</p>
       </div>
     );
   }
   return (
     <div>
-      <p className="text-sm font-medium text-foreground mb-2 flex items-center gap-1">
-        <Icon className="h-4 w-4 text-muted-foreground" />
+      <p className="mb-2 flex items-center gap-1 font-sans text-[14px] font-bold text-black">
+        <Icon className="h-4 w-4 text-[#1A8C6A]" />
         {title}
       </p>
       <ul className="space-y-3">
@@ -51,13 +50,13 @@ function ItemList({
           <li key={b.id}>
             <Link
               href={`/bookings/${b.id}`}
-              className="block rounded-lg border border-border bg-card p-3 md:p-4 text-sm hover:bg-muted/30 transition-colors"
+              className="block rounded-[8px] border border-black/10 bg-white p-3 transition-colors hover:bg-black/[0.02] md:p-4"
             >
-              <p className="font-medium text-foreground">{b.listingTitle}</p>
-              <p className="text-muted-foreground text-xs">
+              <p className="font-sans text-[14px] font-bold text-black">{b.listingTitle}</p>
+              <p className="font-assistant text-[12px] text-[#888888]">
                 {b.renterName} · {fmt(b.startDate)}
                 {b.bookingRef && (
-                  <span className="font-mono mr-1" dir="ltr">
+                  <span className="mr-1 font-mono" dir="ltr">
                     {" "}
                     {b.bookingRef}
                   </span>
@@ -77,11 +76,14 @@ export default function OwnerUpcomingBookings({
   className,
 }: OwnerUpcomingBookingsProps) {
   return (
-    <Card className={cn("shadow-soft", className)} dir="rtl">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-base">איסופים והחזרות קרובים</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-6">
+    <div
+      className={cn("rounded-[8px] border border-black/10 bg-white p-5", className)}
+      dir="rtl"
+    >
+      <h2 className="mb-4 font-sans text-[16px] font-black text-black">
+        איסופים והחזרות קרובים
+      </h2>
+      <div className="space-y-6 lg:grid lg:grid-cols-2 lg:gap-6 lg:space-y-0">
         <ItemList
           items={upcomingPickups}
           emptyMessage="אין איסופים מתוכננים"
@@ -94,7 +96,7 @@ export default function OwnerUpcomingBookings({
           title="החזרות קרובות"
           icon={RotateCcw}
         />
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

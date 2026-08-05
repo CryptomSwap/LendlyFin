@@ -12,7 +12,7 @@ const paddingMap = {
   none: "",
   sm: "p-4",
   default: "p-6",
-  lg: "p-6 md:p-8",
+  lg: "p-8",
 };
 
 export function SurfaceCard({
@@ -23,7 +23,7 @@ export function SurfaceCard({
   return (
     <div
       className={cn(
-        "rounded-card bg-card border border-border/80 shadow-soft",
+        "rounded-[8px] border border-black/10 bg-white",
         paddingMap[padding],
         className
       )}

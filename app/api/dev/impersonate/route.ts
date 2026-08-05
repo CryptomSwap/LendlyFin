@@ -9,7 +9,10 @@ const MAX_AGE = 60 * 60 * 24 * 7; // 7 days
  * Only when DEV_AUTH_BYPASS=true. Body: { userId: string }.
  */
 export async function POST(req: Request) {
-  if (process.env.DEV_AUTH_BYPASS !== "true") {
+  if (
+    process.env.NODE_ENV === "production" ||
+    process.env.DEV_AUTH_BYPASS !== "true"
+  ) {
     return NextResponse.json({ error: "Not available" }, { status: 404 });
   }
 

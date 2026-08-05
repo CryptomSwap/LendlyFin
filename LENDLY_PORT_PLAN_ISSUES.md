@@ -262,7 +262,7 @@ This document turns each module we decided to bring from Repo A into Repo B into
 - [ ] Booking create (or availability check) respects blocked dates and rejects overlapping requests.
 - [ ] UI and data shape aligned with A’s concept; implementation uses B’s schema.
 
-**Notes:** A uses JSON string; B can use Prisma Json type if supported with SQLite, or keep as string.
+**Notes:** A uses JSON string; B can use Prisma `Json` type (PostgreSQL) or keep as string.
 
 ---
 

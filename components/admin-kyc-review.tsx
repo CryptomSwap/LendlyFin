@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert } from "@/components/ui/alert";
 import Image from "next/image";
 
@@ -155,12 +154,12 @@ export default function AdminKYCReview() {
 
   if (loading) {
     return (
-      <Card className="shadow-soft">
-        <CardContent className="text-center py-8">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-border border-t-primary"></div>
-          <p className="mt-2 text-muted-foreground">טוען...</p>
-        </CardContent>
-      </Card>
+      <div className="rounded-[8px] border border-black/10 bg-white p-4">
+        <div className="py-8 text-center font-assistant text-[14px] text-[#888888]">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-black/10 border-t-[#1A8C6A]"></div>
+          <p className="mt-2 text-[#888888]">טוען...</p>
+        </div>
+      </div>
     );
   }
 
@@ -173,23 +172,23 @@ export default function AdminKYCReview() {
   return (
     <div className="space-y-4">
       {/* Tabs */}
-      <div className="flex gap-2 border-b border-border">
+      <div className="flex gap-2 border-b border-black/10">
         <button
           onClick={() => setActiveTab("pending")}
-          className={`px-4 py-2 font-medium ${
+          className={`px-4 py-2 font-sans font-bold ${
             activeTab === "pending"
-              ? "border-b-2 border-primary text-primary"
-              : "text-muted-foreground"
+              ? "border-b-2 border-[#1A8C6A] text-[#1A8C6A]"
+              : "text-[#888888]"
           }`}
         >
           בקשות ממתינות ({users.length})
         </button>
         <button
           onClick={() => setActiveTab("audit")}
-          className={`px-4 py-2 font-medium ${
+          className={`px-4 py-2 font-sans font-bold ${
             activeTab === "audit"
-              ? "border-b-2 border-primary text-primary"
-              : "text-muted-foreground"
+              ? "border-b-2 border-[#1A8C6A] text-[#1A8C6A]"
+              : "text-[#888888]"
           }`}
         >
           היסטוריית אישורים ({auditLogs.length})
@@ -200,18 +199,18 @@ export default function AdminKYCReview() {
         <div className="space-y-3">
           {auditLogs.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-muted-foreground">אין היסטוריית אישורים</p>
+              <p className="text-[#888888]">אין היסטוריית אישורים</p>
             </div>
           ) : (
             auditLogs.map((log) => (
-              <Card key={log.id}>
-                <CardContent className="p-4">
+              <div key={log.id} className="rounded-[8px] border border-black/10 bg-white p-4">
+                <div className="font-assistant text-[13px] text-black">
                   <div className="space-y-2">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
                           <span
-                            className={`px-2 py-1 rounded text-xs font-medium ${
+                            className={`px-2 py-1 rounded text-xs font-sans font-bold ${
                               log.action === "APPROVE"
                                 ? "bg-green-100 text-green-800"
                                 : "bg-red-100 text-red-800"
@@ -223,22 +222,22 @@ export default function AdminKYCReview() {
                             {log.targetUserName}
                           </span>
                         </div>
-                        <p className="text-xs text-muted-foreground mt-1">
+                        <p className="text-xs text-[#888888] mt-1">
                           על ידי: {log.adminName}
                         </p>
                         {log.reason && (
-                          <p className="text-xs text-muted-foreground mt-1">
+                          <p className="text-xs text-[#888888] mt-1">
                             סיבה: {log.reason}
                           </p>
                         )}
                       </div>
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-xs text-[#888888]">
                         {formatDate(log.createdAt)}
                       </span>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             ))
           )}
         </div>
@@ -248,7 +247,7 @@ export default function AdminKYCReview() {
         <>
           {users.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-muted-foreground">אין בקשות אימות ממתינות</p>
+              <p className="text-[#888888]">אין בקשות אימות ממתינות</p>
             </div>
           ) : selectedUser ? (
         <div className="space-y-4">
@@ -262,30 +261,30 @@ export default function AdminKYCReview() {
             ← חזור לרשימה
           </Button>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>פרטי משתמש</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm">
+          <div className="rounded-[8px] border border-black/10 bg-white p-4">
+            <div className="mb-2">
+              <h2 className="font-sans text-[15px] font-black text-black">פרטי משתמש</h2>
+            </div>
+            <div className="space-y-2 font-assistant text-[13px] text-black">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">שם:</span>
+                <span className="text-[#888888]">שם:</span>
                 <span>{selectedUser.name}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">תאריך שליחה:</span>
+                <span className="text-[#888888]">תאריך שליחה:</span>
                 <span>{formatDate(selectedUser.kycSubmittedAt)}</span>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>סלפי</CardTitle>
-              </CardHeader>
-              <CardContent>
+            <div className="rounded-[8px] border border-black/10 bg-white p-4">
+              <div className="mb-2">
+                <h2 className="font-sans text-[15px] font-black text-black">סלפי</h2>
+              </div>
+              <div>
                 {selectedUser.kycSelfieUrl ? (
-                  <div className="relative w-full aspect-square rounded-lg overflow-hidden border border-border bg-muted">
+                  <div className="relative w-full aspect-square rounded-lg overflow-hidden border border-black/10 bg-black/[0.03]">
                     <Image
                       src={selectedUser.kycSelfieUrl}
                       alt="Selfie"
@@ -295,18 +294,18 @@ export default function AdminKYCReview() {
                     />
                   </div>
                 ) : (
-                  <p className="text-muted-foreground">לא זמין</p>
+                  <p className="text-[#888888]">לא זמין</p>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>תעודת זהות</CardTitle>
-              </CardHeader>
-              <CardContent>
+            <div className="rounded-[8px] border border-black/10 bg-white p-4">
+              <div className="mb-2">
+                <h2 className="font-sans text-[15px] font-black text-black">תעודת זהות</h2>
+              </div>
+              <div>
                 {selectedUser.kycIdUrl ? (
-                  <div className="relative w-full aspect-square rounded-lg overflow-hidden border border-border bg-muted">
+                  <div className="relative w-full aspect-square rounded-lg overflow-hidden border border-black/10 bg-black/[0.03]">
                     <Image
                       src={selectedUser.kycIdUrl}
                       alt="ID"
@@ -316,19 +315,19 @@ export default function AdminKYCReview() {
                     />
                   </div>
                 ) : (
-                  <p className="text-muted-foreground">לא זמין</p>
+                  <p className="text-[#888888]">לא זמין</p>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>פעולות</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <div className="rounded-[8px] border border-black/10 bg-white p-4">
+            <div className="mb-2">
+              <h2 className="font-sans text-[15px] font-black text-black">פעולות</h2>
+            </div>
+            <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="mb-2 block font-sans text-[13px] font-bold text-black">
                   סיבת דחייה (אופציונלי):
                 </label>
                 <textarea
@@ -357,25 +356,25 @@ export default function AdminKYCReview() {
                   {processing === selectedUser.id ? "דוחה..." : "דחה"}
                 </Button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       ) : (
         <div className="space-y-3">
           {users.map((user) => (
-            <Card key={user.id}>
-              <CardContent className="p-4">
+            <div key={user.id} className="rounded-[8px] border border-black/10 bg-white p-4">
+              <div className="font-assistant text-[13px] text-black">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 space-y-2">
                     <div>
                       <h3 className="font-semibold">{user.name}</h3>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm text-[#888888]">
                         נשלח: {formatDate(user.kycSubmittedAt)}
                       </p>
                     </div>
                     <div className="flex gap-2">
                       {user.kycSelfieUrl && (
-                        <div className="relative w-16 h-16 rounded border border-border overflow-hidden bg-muted">
+                        <div className="relative w-16 h-16 rounded border border-black/10 overflow-hidden bg-black/[0.03]">
                           <Image
                             src={user.kycSelfieUrl}
                             alt="Selfie"
@@ -386,7 +385,7 @@ export default function AdminKYCReview() {
                         </div>
                       )}
                       {user.kycIdUrl && (
-                        <div className="relative w-16 h-16 rounded border border-border overflow-hidden bg-muted">
+                        <div className="relative w-16 h-16 rounded border border-black/10 overflow-hidden bg-black/[0.03]">
                           <Image
                             src={user.kycIdUrl}
                             alt="ID"
@@ -405,8 +404,8 @@ export default function AdminKYCReview() {
                     צפה
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           ))}
           </div>
           )}

@@ -23,36 +23,36 @@ export default async function ReturnPage(props: {
 
   if (!booking) {
     return (
-      <div className="p-4">
-        <p>הזמנה לא נמצאה</p>
-        <Link href="/bookings" className="text-primary underline mt-2 inline-block">חזרה להזמנות</Link>
+      <div className="min-h-screen w-full bg-white pb-24 p-4" dir="rtl">
+        <p className="font-sans font-bold text-black">הזמנה לא נמצאה</p>
+        <Link href="/bookings" className="font-sans font-bold text-[#1A8C6A] underline mt-2 inline-block">חזרה להזמנות</Link>
       </div>
     );
   }
 
   if (booking.status !== "ACTIVE" && booking.status !== "COMPLETED" && booking.status !== "DISPUTE") {
     return (
-      <div className="p-4">
-        <p>רשימת החזרה זמינה רק להזמנה פעילה (אחרי איסוף).</p>
-        <Link href={`/bookings/${id}`} className="text-primary underline mt-2 inline-block">חזרה להזמנה</Link>
+      <div className="min-h-screen w-full bg-white pb-24 p-4" dir="rtl">
+        <p className="font-assistant text-[14px] text-[#888888]">רשימת החזרה זמינה רק להזמנה פעילה (אחרי איסוף).</p>
+        <Link href={`/bookings/${id}`} className="font-sans font-bold text-[#1A8C6A] underline mt-2 inline-block">חזרה להזמנה</Link>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen w-full app-page-bg pb-24" dir="rtl">
-      <PageContainer width="narrow" className="space-y-6">
+    <div className="min-h-screen w-full bg-white pb-24" dir="rtl">
+      <PageContainer width="default" className="space-y-6 lg:max-w-[72rem]">
       <div>
         <Link
           href={`/bookings/${id}`}
-          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+          className="inline-flex items-center gap-1 font-assistant text-[14px] text-[#888888] hover:text-black"
         >
           <ArrowRight className="h-4 w-4" />
           חזרה להזמנה
         </Link>
       </div>
       <h1 className="page-title">רשימת החזרה</h1>
-      <p className="text-sm text-muted-foreground">
+      <p className="font-assistant text-[14px] text-[#888888]">
         {booking.listing?.title} · {new Date(booking.startDate).toLocaleDateString("he-IL")} – {new Date(booking.endDate).toLocaleDateString("he-IL")}
       </p>
       <ReturnChecklistForm bookingId={id} />

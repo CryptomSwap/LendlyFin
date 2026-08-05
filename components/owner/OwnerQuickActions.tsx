@@ -1,6 +1,4 @@
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { List, Calendar, MessageSquare, PlusCircle } from "lucide-react";
 
@@ -28,7 +26,7 @@ const actions = [
     description: "חסום תאריכים מלוח המודעות",
   },
   {
-    href: "/bookings",
+    href: "/owner",
     label: "הזמנות והודעות",
     icon: MessageSquare,
     description: "צפה בהזמנות ופתח שיחות",
@@ -37,34 +35,31 @@ const actions = [
 
 export default function OwnerQuickActions({ className }: OwnerQuickActionsProps) {
   return (
-    <Card className={cn("shadow-soft", className)} dir="rtl">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-base">פעולות מהירות</CardTitle>
-      </CardHeader>
-      <CardContent className="grid grid-cols-1 gap-2 md:grid-cols-2">
+    <div
+      className={cn("rounded-[8px] border border-black/10 bg-white p-5", className)}
+      dir="rtl"
+    >
+      <h2 className="mb-3 font-sans text-[16px] font-black text-black">פעולות מהירות</h2>
+      <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
         {actions.map((action) => {
           const Icon = action.icon;
           return (
-            <Link key={action.href} href={action.href}>
-              <Button
-                variant="outline"
-                className="w-full justify-start gap-3 h-auto py-2.5"
-                asChild
-              >
-                <span>
-                  <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  <span className="flex flex-col items-start text-right">
-                    <span className="font-medium">{action.label}</span>
-                    <span className="text-xs text-muted-foreground font-normal">
-                      {action.description}
-                    </span>
-                  </span>
+            <Link
+              key={`${action.href}-${action.label}`}
+              href={action.href}
+              className="flex items-start gap-3 rounded-[8px] border border-black/10 bg-white px-4 py-3 transition-colors hover:bg-black/[0.02]"
+            >
+              <Icon className="mt-0.5 h-4 w-4 shrink-0 text-[#1A8C6A]" />
+              <span className="flex flex-col items-start text-right">
+                <span className="font-sans text-[14px] font-bold text-black">{action.label}</span>
+                <span className="font-assistant text-[12px] text-[#888888]">
+                  {action.description}
                 </span>
-              </Button>
+              </span>
             </Link>
           );
         })}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

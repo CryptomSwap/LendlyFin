@@ -6,6 +6,7 @@
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { validateRuntimeEnv } from "@/lib/env";
 import type { AuthUser } from "./types";
 import {
   DEV_IMPERSONATE_COOKIE_NAME,
@@ -52,7 +53,11 @@ function toAuthUser(row: {
  * creating the user. Single centralized place for dev-user auto-creation.
  */
 export async function getCurrentUser(): Promise<AuthUser | null> {
-  const bypass = process.env.DEV_AUTH_BYPASS === "true";
+  validateRuntimeEnv();
+  const bypassRequested = process.env.DEV_AUTH_BYPASS === "true";
+  const bypass =
+    bypassRequested &&
+    process.env.NODE_ENV !== "production";
   if (!bypass) return null;
 
   let userId = process.env.DEV_USER_ID ?? "dev-user";

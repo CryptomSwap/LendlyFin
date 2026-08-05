@@ -3,20 +3,15 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Alert } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CATEGORY_LIST, CITIES, getSubcategoriesForCategory } from "@/lib/constants";
 import { formatMoneyIls } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
 import { ArrowLeft, ImagePlus } from "lucide-react";
-import { PageContainer } from "@/components/layout";
+import { PageContainer, SurfaceCard } from "@/components/layout";
+import { RedesignButton } from "@/components/redesign/button";
+import { resolveListingImagePublicUrl } from "@/lib/listing-images";
 
 const TOTAL_STEPS = 5;
 const MAX_TITLE = 80;
@@ -58,12 +53,23 @@ const emptyData: WizardData = {
   rules: "",
 };
 
+const chipClass = (active: boolean, errored?: boolean) =>
+  cn(
+    "rounded-[8px] border px-3 py-2.5 text-right font-assistant text-[14px] transition-colors",
+    active
+      ? "border-[#1A8C6A] bg-[#F0FAF6] font-sans font-bold text-[#1A8C6A]"
+      : "border-black/15 bg-white text-black hover:border-[#1A8C6A]/40",
+    errored && !active && "border-red-400"
+  );
+
 export default function AddListingPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [data, setData] = useState<WizardData>(emptyData);
   const [errors, setErrors] = useState<Record<string, boolean>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const update = (partial: Partial<WizardData>) => {
@@ -119,26 +125,90 @@ export default function AddListingPage() {
     if (step > 1) setStep(step - 1);
   };
 
+  const resizeImageFile = async (file: File): Promise<File> => {
+    const objectUrl = URL.createObjectURL(file);
+    try {
+      const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const el = new window.Image();
+        el.onload = () => resolve(el);
+        el.onerror = () => reject(new Error("Failed to load image"));
+        el.src = objectUrl;
+      });
+      const maxDim = 1200;
+      const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+      const width = Math.max(1, Math.round(img.width * scale));
+      const height = Math.max(1, Math.round(img.height * scale));
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return file;
+      ctx.drawImage(img, 0, 0, width, height);
+      const blob = await new Promise<Blob | null>((resolve) =>
+        canvas.toBlob(resolve, "image/jpeg", 0.82)
+      );
+      if (!blob) return file;
+      return new File([blob], file.name.replace(/\.\w+$/, "") + ".jpg", {
+        type: "image/jpeg",
+      });
+    } catch {
+      return file;
+    } finally {
+      URL.revokeObjectURL(objectUrl);
+    }
+  };
+
+  const uploadListingImage = async (file: File): Promise<string> => {
+    const prepared = await resizeImageFile(file);
+    const form = new FormData();
+    form.append("file", prepared);
+    const res = await fetch("/api/listings/upload", { method: "POST", body: form });
+    const text = await res.text();
+    let body: { url?: string; error?: string };
+    try {
+      body = JSON.parse(text);
+    } catch {
+      throw new Error("Upload failed: invalid server response");
+    }
+    if (!res.ok) {
+      throw new Error(body.error ?? "Upload failed");
+    }
+    if (!body.url) throw new Error("Upload failed: missing URL");
+    return body.url;
+  };
+
+  const previewImageUrl = (stored: string) =>
+    resolveListingImagePublicUrl(stored, { allowInline: true }) ?? stored;
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files?.length) return;
+    setUploading(true);
+    setUploadError(null);
+    const addedUrls: string[] = [];
+    let lastError: string | null = null;
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      if (!file.type.startsWith("image/")) continue;
-      const formData = new FormData();
-      formData.set("file", file);
+      if (file.type && !file.type.startsWith("image/")) continue;
       try {
-        const res = await fetch("/api/listings/upload", {
-          method: "POST",
-          body: formData,
-        });
-        if (!res.ok) continue;
-        const { url } = await res.json();
-        update({ imageUrls: [...data.imageUrls, url] });
-      } catch {
-        // skip failed upload
+        const url = await uploadListingImage(file);
+        addedUrls.push(url);
+      } catch (err) {
+        lastError = err instanceof Error ? err.message : "Upload failed";
+        console.error("[listing-upload]", file.name, lastError);
       }
     }
+    if (addedUrls.length > 0) {
+      setData((prev) => ({ ...prev, imageUrls: [...prev.imageUrls, ...addedUrls] }));
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next.photos;
+        return next;
+      });
+    } else {
+      setUploadError(lastError ?? "לא הצלחנו להעלות את התמונה. נסה קובץ אחר.");
+    }
+    setUploading(false);
     e.target.value = "";
   };
 
@@ -151,32 +221,42 @@ export default function AddListingPage() {
       setStep(1);
       return;
     }
+    const payload = {
+      title: data.title.trim(),
+      description: data.description.trim() || undefined,
+      category: data.category,
+      subcategory: data.subcategory.trim() || undefined,
+      city: data.city.trim(),
+      pricePerDay: Number(data.pricePerDay),
+      deposit: Number(data.deposit),
+      valueEstimate: data.valueEstimate.trim() ? Number(data.valueEstimate) : null,
+      pickupNote: data.pickupNote.trim() || null,
+      rules: data.rules.trim() || null,
+      imageUrls: data.imageUrls,
+    };
     setSubmitting(true);
     try {
       const res = await fetch("/api/listings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: data.title.trim(),
-          description: data.description.trim() || undefined,
-          category: data.category,
-          subcategory: data.subcategory.trim() || undefined,
-          city: data.city.trim(),
-          pricePerDay: Number(data.pricePerDay),
-          deposit: Number(data.deposit),
-          valueEstimate: data.valueEstimate.trim() ? Number(data.valueEstimate) : null,
-          pickupNote: data.pickupNote.trim() || null,
-          rules: data.rules.trim() || null,
-          imageUrls: data.imageUrls,
-        }),
+        body: JSON.stringify(payload),
       });
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        alert(err?.error ?? "שגיאה בשמירת המודעה");
+        const err = await res.json().catch(() => ({} as { error?: string; code?: string }));
+        if (res.status === 401) {
+          alert("נדרש להתחבר מחדש לפני פרסום מודעה.");
+          router.push("/signin?callbackUrl=/add");
+          setSubmitting(false);
+          return;
+        }
+        alert(err?.error ?? `שגיאה בשמירת המודעה (קוד ${res.status})`);
         setSubmitting(false);
         return;
       }
       const listing = await res.json();
+      if (listing?.imagesPersisted === false) {
+        alert("המודעה נשמרה, אך חלק מהתמונות לא נשמרו. אפשר להוסיף תמונות מחדש במסך הניהול.");
+      }
       router.push(`/listing/${listing.id}/manage`);
     } catch {
       alert("שגיאה בשמירת המודעה");
@@ -186,96 +266,115 @@ export default function AddListingPage() {
   };
 
   const header = (
-    <header className="sticky top-0 z-10 bg-card/95 backdrop-blur-sm border-b border-border px-4 py-3 shadow-soft">
+    <header className="sticky top-0 z-10 border-b border-black/10 bg-white/95 px-4 py-3 backdrop-blur-sm">
       <div className="flex items-center justify-between gap-2">
         {step > 1 ? (
-          <button type="button" onClick={handleBack} className="p-2 -m-1 rounded-lg hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring" aria-label="חזור">
+          <button
+            type="button"
+            onClick={handleBack}
+            className="focus-visible:ring-[#1A8C6A]/40 -m-1 rounded-full p-2 hover:bg-black/5 focus-visible:ring-2"
+            aria-label="חזור"
+          >
             <ArrowLeft className="h-5 w-5" />
           </button>
         ) : (
-          <Link href="/" className="p-2 -m-1 rounded-lg hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring inline-flex" aria-label="ביטול">
+          <Link
+            href="/"
+            className="focus-visible:ring-[#1A8C6A]/40 -m-1 inline-flex rounded-full p-2 hover:bg-black/5 focus-visible:ring-2"
+            aria-label="ביטול"
+          >
             <ArrowLeft className="h-5 w-5" />
           </Link>
         )}
-        <h1 className="page-title text-center flex-1 min-w-0">הוספת מודעה</h1>
+        <h1 className="min-w-0 flex-1 text-center font-sans text-[20px] font-black tracking-[-0.5px] text-black md:text-[24px]">
+          הוספת מודעה
+        </h1>
         <div className="w-9 shrink-0" aria-hidden />
       </div>
-      <p className="text-sm text-muted-foreground mt-1.5 text-center">
-        <span className="font-medium text-foreground">שלב {step} מתוך {TOTAL_STEPS}</span>
-        <span className="text-muted-foreground"> · {STEP_LABELS[step] ?? ""}</span>
+      <p className="mt-1.5 text-center font-assistant text-[13px] text-[#888888]">
+        <span className="font-sans font-bold text-black">
+          שלב {step} מתוך {TOTAL_STEPS}
+        </span>
+        <span> · {STEP_LABELS[step] ?? ""}</span>
       </p>
-      <div className="h-2 bg-muted rounded-full mt-2 overflow-hidden" role="progressbar" aria-valuenow={step} aria-valuemin={1} aria-valuemax={TOTAL_STEPS} aria-label={`שלב ${step} מתוך ${TOTAL_STEPS}`}>
-        <div className="h-full bg-primary rounded-full transition-all duration-300" style={{ width: `${progressPct}%` }} />
+      <div
+        className="mt-2 h-2 overflow-hidden rounded-full bg-black/8"
+        role="progressbar"
+        aria-valuenow={step}
+        aria-valuemin={1}
+        aria-valuemax={TOTAL_STEPS}
+        aria-label={`שלב ${step} מתוך ${TOTAL_STEPS}`}
+      >
+        <div
+          className="h-full rounded-full bg-[#1A8C6A] transition-all duration-300"
+          style={{ width: `${progressPct}%` }}
+        />
       </div>
     </header>
   );
 
   return (
-    <div className="min-h-screen flex flex-col pb-24 app-page-bg" dir="rtl">
+    <div className="flex min-h-screen flex-col bg-white pb-24" dir="rtl">
       {header}
 
       <main className="flex-1 py-4">
         <PageContainer width="narrow" className="lg:max-w-[62rem]">
         {/* Step 1: Basic info */}
         {step === 1 && (
-          <Card className="shadow-soft">
-            <CardHeader>
-              <CardTitle className="section-title">מידע בסיסי</CardTitle>
-              <p className="text-sm text-muted-foreground mt-0.5">כותרת, קטגוריה ותיאור. פשוט וממוקד – מלא את השדות הבאים.</p>
-            </CardHeader>
-            <CardContent className="space-y-5">
+          <SurfaceCard padding="lg">
+            <h2 className="font-sans text-[20px] font-black text-black md:text-[24px]">מידע בסיסי</h2>
+            <p className="mt-1 font-assistant text-[14px] text-[#888888]">
+              כותרת, קטגוריה ותיאור. פשוט וממוקד – מלא את השדות הבאים.
+            </p>
+            <div className="mt-5 space-y-5">
               <div>
-                <label className="block text-sm font-medium mb-1" htmlFor="add-title">כותרת *</label>
+                <label className="form-label" htmlFor="add-title">כותרת *</label>
                 <Input
                   id="add-title"
                   value={data.title}
                   onChange={(e) => update({ title: e.target.value.slice(0, MAX_TITLE) })}
                   placeholder="למשל: מצלמת Canon EOS R5"
-                  className={cn(errors.title && "border-destructive")}
                   aria-invalid={errors.title}
                   aria-describedby={errors.title ? "add-title-error" : undefined}
                 />
-                <p className="text-xs text-muted-foreground mt-0.5">{data.title.length}/{MAX_TITLE}</p>
-                {errors.title && <p id="add-title-error" className="text-xs text-destructive mt-1" role="alert">נא להזין כותרת למודעה</p>}
+                <p className="form-helper">{data.title.length}/{MAX_TITLE}</p>
+                {errors.title && (
+                  <p id="add-title-error" className="form-error" role="alert">
+                    נא להזין כותרת למודעה
+                  </p>
+                )}
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">קטגוריה *</label>
+                <label className="form-label">קטגוריה *</label>
                 <div className="grid grid-cols-2 gap-2">
                   {CATEGORY_LIST.map((c) => (
                     <button
                       key={c.slug}
                       type="button"
                       onClick={() => update({ category: c.slug, subcategory: "" })}
-                      className={cn(
-                        "py-2.5 px-3 rounded-lg border text-sm text-right transition-colors",
-                        data.category === c.slug
-                          ? "border-primary bg-primary/10 text-primary"
-                          : "border-border hover:border-primary/50",
-                        errors.category && "border-destructive"
-                      )}
+                      className={chipClass(data.category === c.slug, errors.category)}
                       aria-pressed={data.category === c.slug}
                     >
                       {c.labelHe}
                     </button>
                   ))}
                 </div>
-                {errors.category && <p className="text-xs text-destructive mt-1" role="alert">נא לבחור קטגוריה</p>}
+                {errors.category && (
+                  <p className="form-error" role="alert">נא לבחור קטגוריה</p>
+                )}
               </div>
               {data.category && getSubcategoriesForCategory(data.category).length > 0 && (
                 <div>
-                  <label className="block text-sm font-medium mb-2">תת־קטגוריה (אופציונלי)</label>
+                  <label className="form-label">תת־קטגוריה (אופציונלי)</label>
                   <div className="grid grid-cols-2 gap-2">
                     {getSubcategoriesForCategory(data.category).map((sub) => (
                       <button
                         key={sub.key}
                         type="button"
-                        onClick={() => update({ subcategory: data.subcategory === sub.slug ? "" : sub.slug })}
-                        className={cn(
-                          "py-2.5 px-3 rounded-lg border text-sm text-right transition-colors",
-                          data.subcategory === sub.slug
-                            ? "border-[var(--mint-accent)] bg-[var(--mint-accent)]/10 text-[var(--mint-accent)]"
-                            : "border-border hover:border-[var(--mint-accent)]/50"
-                        )}
+                        onClick={() =>
+                          update({ subcategory: data.subcategory === sub.slug ? "" : sub.slug })
+                        }
+                        className={chipClass(data.subcategory === sub.slug)}
                         aria-pressed={data.subcategory === sub.slug}
                       >
                         {sub.label}
@@ -285,7 +384,7 @@ export default function AddListingPage() {
                 </div>
               )}
               <div>
-                <label className="block text-sm font-medium mb-1" htmlFor="add-desc">תיאור (אופציונלי)</label>
+                <label className="form-label" htmlFor="add-desc">תיאור (אופציונלי)</label>
                 <textarea
                   id="add-desc"
                   value={data.description}
@@ -294,25 +393,25 @@ export default function AddListingPage() {
                   rows={3}
                   className="input-base w-full min-h-[80px] resize-y"
                 />
-                <p className="text-xs text-muted-foreground mt-0.5">{data.description.length}/{MAX_DESCRIPTION}</p>
+                <p className="form-helper">{data.description.length}/{MAX_DESCRIPTION}</p>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </SurfaceCard>
         )}
 
         {/* Step 2: Pricing & deposit */}
         {step === 2 && (
-          <Card className="shadow-soft">
-            <CardHeader>
-              <CardTitle className="section-title">תמחור ומיקום</CardTitle>
-              <p className="text-sm text-muted-foreground mt-0.5">מחיר ליום, פיקדון ועיר. השוכר ישלם לפי המחיר ליום שהגדרת.</p>
-            </CardHeader>
-            <CardContent className="space-y-5">
+          <SurfaceCard padding="lg">
+            <h2 className="font-sans text-[20px] font-black text-black md:text-[24px]">תמחור ומיקום</h2>
+            <p className="mt-1 font-assistant text-[14px] text-[#888888]">
+              מחיר ליום, פיקדון ועיר. השוכר ישלם לפי המחיר ליום שהגדרת.
+            </p>
+            <div className="mt-5 space-y-5">
               <section className="space-y-3" aria-label="תמחור">
-                <h3 className="text-sm font-semibold text-foreground">תמחור</h3>
+                <h3 className="font-sans text-[14px] font-bold text-black">תמחור</h3>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div>
-                    <label className="block text-sm font-medium mb-1" htmlFor="add-price">מחיר ליום (₪) *</label>
+                    <label className="form-label" htmlFor="add-price">מחיר ליום (₪) *</label>
                     <Input
                       id="add-price"
                       type="number"
@@ -320,13 +419,14 @@ export default function AddListingPage() {
                       value={data.pricePerDay}
                       onChange={(e) => update({ pricePerDay: e.target.value })}
                       placeholder="0"
-                      className={cn(errors.pricePerDay && "border-destructive")}
                       aria-invalid={errors.pricePerDay}
                     />
-                    {errors.pricePerDay && <p className="text-xs text-destructive mt-1" role="alert">נא להזין מחיר תקין</p>}
+                    {errors.pricePerDay && (
+                      <p className="form-error" role="alert">נא להזין מחיר תקין</p>
+                    )}
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1" htmlFor="add-deposit">פיקדון (₪) *</label>
+                    <label className="form-label" htmlFor="add-deposit">פיקדון (₪) *</label>
                     <Input
                       id="add-deposit"
                       type="number"
@@ -334,14 +434,15 @@ export default function AddListingPage() {
                       value={data.deposit}
                       onChange={(e) => update({ deposit: e.target.value })}
                       placeholder="0"
-                      className={cn(errors.deposit && "border-destructive")}
                       aria-invalid={errors.deposit}
                     />
-                    {errors.deposit && <p className="text-xs text-destructive mt-1" role="alert">נא להזין פיקדון תקין</p>}
+                    {errors.deposit && (
+                      <p className="form-error" role="alert">נא להזין פיקדון תקין</p>
+                    )}
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1" htmlFor="add-value">שווי משוער (₪) – אופציונלי</label>
+                  <label className="form-label" htmlFor="add-value">שווי משוער (₪) – אופציונלי</label>
                   <Input
                     id="add-value"
                     type="number"
@@ -350,17 +451,17 @@ export default function AddListingPage() {
                     onChange={(e) => update({ valueEstimate: e.target.value })}
                     placeholder="למשל לצורך חישוב פיקדון/ביטוח"
                   />
-                  <p className="text-xs text-muted-foreground mt-0.5">הערכת שווי הפריט (לא חובה)</p>
+                  <p className="form-helper">הערכת שווי הפריט (לא חובה)</p>
                 </div>
               </section>
-              <div className="border-t border-border pt-4">
-                <h3 className="text-sm font-semibold text-foreground mb-3">מיקום</h3>
-                <label className="block text-sm font-medium mb-1" htmlFor="add-city">עיר *</label>
+              <div className="border-t border-black/10 pt-4">
+                <h3 className="mb-3 font-sans text-[14px] font-bold text-black">מיקום</h3>
+                <label className="form-label" htmlFor="add-city">עיר *</label>
                 <select
                   id="add-city"
                   value={data.city}
                   onChange={(e) => update({ city: e.target.value })}
-                  className={cn("input-base w-full", errors.city && "border-destructive")}
+                  className={cn("input-base w-full", errors.city && "border-red-400")}
                   aria-invalid={errors.city}
                 >
                   <option value="">בחר עיר</option>
@@ -368,20 +469,22 @@ export default function AddListingPage() {
                     <option key={city} value={city}>{city}</option>
                   ))}
                 </select>
-                {errors.city && <p className="text-xs text-destructive mt-1" role="alert">נא לבחור עיר</p>}
+                {errors.city && (
+                  <p className="form-error" role="alert">נא לבחור עיר</p>
+                )}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </SurfaceCard>
         )}
 
         {/* Step 3: Photos */}
         {step === 3 && (
-          <Card className="shadow-soft">
-            <CardHeader>
-              <CardTitle className="section-title">תמונות</CardTitle>
-              <p className="text-sm text-muted-foreground mt-0.5">תמונה טובה מעלה סיכוי להשכרה. העלה לפחות תמונה אחת (ניתן להוסיף כמה).</p>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <SurfaceCard padding="lg">
+            <h2 className="font-sans text-[20px] font-black text-black md:text-[24px]">תמונות</h2>
+            <p className="mt-1 font-assistant text-[14px] text-[#888888]">
+              תמונה טובה מעלה סיכוי להשכרה. העלה לפחות תמונה אחת (ניתן להוסיף כמה).
+            </p>
+            <div className="mt-5 space-y-4">
               <input
                 ref={fileInputRef}
                 type="file"
@@ -392,22 +495,36 @@ export default function AddListingPage() {
               />
               <button
                 type="button"
+                disabled={uploading}
                 onClick={() => fileInputRef.current?.click()}
-                className="w-full border-2 border-dashed border-border rounded-xl py-8 flex flex-col items-center gap-2 text-muted-foreground hover:border-primary/50 hover:bg-primary/5 hover:text-primary transition-colors"
+                className="flex w-full flex-col items-center gap-2 rounded-[8px] border border-dashed border-black/20 py-8 font-assistant text-[#888888] transition-colors hover:border-[#1A8C6A]/50 hover:bg-[#F0FAF6] hover:text-[#1A8C6A] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <ImagePlus className="h-10 w-10" aria-hidden />
-                <span className="text-sm font-medium">הוסף תמונות</span>
-                <span className="text-xs">לחיצה לבחירת קבצים מהמכשיר</span>
+                <span className="font-sans text-[14px] font-bold">
+                  {uploading ? "מעלה תמונות..." : "הוסף תמונות"}
+                </span>
+                <span className="text-[12px]">לחיצה לבחירת קבצים מהמכשיר</span>
               </button>
+              {uploadError && <Alert variant="error">{uploadError}</Alert>}
               {data.imageUrls.length > 0 && (
                 <ul className="space-y-2">
                   {data.imageUrls.map((url, i) => (
-                    <li key={url} className="flex items-center gap-3 rounded-lg border border-border p-3 bg-muted/20">
-                      <div className="h-14 w-14 rounded-lg bg-muted overflow-hidden shrink-0">
-                        <img src={url} alt="" className="w-full h-full object-cover" />
+                    <li
+                      key={i}
+                      className="flex items-center gap-3 rounded-[8px] border border-black/10 bg-white p-3"
+                    >
+                      <div className="h-14 w-14 shrink-0 overflow-hidden rounded-[8px] bg-black/5">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={previewImageUrl(url)} alt="" className="h-full w-full object-cover" />
                       </div>
-                      <span className="text-sm text-muted-foreground flex-1">תמונה {i + 1}</span>
-                      <button type="button" onClick={() => removePhoto(i)} className="text-destructive text-sm font-medium py-1 px-2 rounded hover:bg-destructive/10">
+                      <span className="flex-1 font-assistant text-[14px] text-[#888888]">
+                        תמונה {i + 1}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => removePhoto(i)}
+                        className="rounded-full px-3 py-1 font-sans text-[13px] font-bold text-red-500 hover:bg-red-50"
+                      >
                         הסר
                       </button>
                     </li>
@@ -417,20 +534,22 @@ export default function AddListingPage() {
               {errors.photos && (
                 <Alert variant="error">נא להעלות לפחות תמונה אחת</Alert>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </SurfaceCard>
         )}
 
         {/* Step 4: Extra (pickup / rules / availability placeholder) */}
         {step === 4 && (
-          <Card className="shadow-soft">
-            <CardHeader>
-              <CardTitle className="section-title">איסוף, כללים וזמינות</CardTitle>
-              <p className="text-sm text-muted-foreground mt-0.5">כמעט סיימנו. פרטים אלה אופציונליים – ניתן לעדכן גם אחרי הפרסום.</p>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <SurfaceCard padding="lg">
+            <h2 className="font-sans text-[20px] font-black text-black md:text-[24px]">
+              איסוף, כללים וזמינות
+            </h2>
+            <p className="mt-1 font-assistant text-[14px] text-[#888888]">
+              כמעט סיימנו. פרטים אלה אופציונליים – ניתן לעדכן גם אחרי הפרסום.
+            </p>
+            <div className="mt-5 space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-1" htmlFor="add-pickup">הוראות איסוף (אופציונלי)</label>
+                <label className="form-label" htmlFor="add-pickup">הוראות איסוף (אופציונלי)</label>
                 <Input
                   id="add-pickup"
                   value={data.pickupNote}
@@ -439,7 +558,7 @@ export default function AddListingPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1" htmlFor="add-rules">כללים (אופציונלי)</label>
+                <label className="form-label" htmlFor="add-rules">כללים (אופציונלי)</label>
                 <textarea
                   id="add-rules"
                   value={data.rules}
@@ -449,38 +568,38 @@ export default function AddListingPage() {
                   className="input-base w-full min-h-[80px] resize-y"
                 />
               </div>
-              <div className="rounded-xl border border-border bg-muted/30 p-4 text-sm text-muted-foreground space-y-2">
-                <p className="font-medium text-foreground">ניהול זמינות</p>
+              <div className="space-y-2 rounded-[8px] border border-[#1A8C6A]/15 bg-[#F0FAF6] p-4 font-assistant text-[13px] text-[#888888]">
+                <p className="font-sans text-[14px] font-bold text-black">ניהול זמינות</p>
                 <p>
                   אחרי פרסום המודעה תוכל לנהל תאריכים חסומים (מתי הפריט לא זמין להשכרה) בעמוד ניהול המודעה.
                   כרגע המודעה תהיה זמינה בכל התאריכים עד שתגדיר חסימות.
                 </p>
-                <p className="text-xs">
+                <p className="text-[12px] text-[#AAAAAA]">
                   מיד לאחר שליחת המודעה תועבר לעמוד ניהול זמינות.
                 </p>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </SurfaceCard>
         )}
 
         {/* Step 5: Review & submit */}
         {step === 5 && (
-          <Card className="shadow-soft">
-            <CardHeader>
-              <CardTitle className="section-title">סיכום ושליחה</CardTitle>
-              <p className="text-sm text-muted-foreground mt-0.5">בדוק שהכל מדויק ולחץ לפרסום. המודעה תעבור לאישור לפני שהיא תופיע בחיפוש.</p>
-            </CardHeader>
-            <CardContent className="space-y-5">
+          <SurfaceCard padding="lg">
+            <h2 className="font-sans text-[20px] font-black text-black md:text-[24px]">סיכום ושליחה</h2>
+            <p className="mt-1 font-assistant text-[14px] text-[#888888]">
+              בדוק שהכל מדויק ולחץ לפרסום. המודעה תעבור לאישור לפני שהיא תופיע בחיפוש.
+            </p>
+            <div className="mt-5 space-y-5">
               <section className="space-y-3">
-                <h3 className="text-sm font-semibold text-foreground">מידע בסיסי</h3>
+                <h3 className="font-sans text-[14px] font-bold text-black">מידע בסיסי</h3>
                 <div className="space-y-2">
                   <div>
-                    <p className="text-xs text-muted-foreground">כותרת</p>
-                    <p className="font-medium text-foreground">{data.title || "—"}</p>
+                    <p className="font-assistant text-[12px] text-[#888888]">כותרת</p>
+                    <p className="font-sans font-bold text-black">{data.title || "—"}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">קטגוריה</p>
-                    <p className="font-medium text-foreground">
+                    <p className="font-assistant text-[12px] text-[#888888]">קטגוריה</p>
+                    <p className="font-sans font-bold text-black">
                       {CATEGORY_LIST.find((c) => c.slug === data.category)?.labelHe ?? (data.category || "—")}
                       {data.subcategory
                         ? ` · ${getSubcategoriesForCategory(data.category).find((s) => s.slug === data.subcategory)?.label ?? data.subcategory}`
@@ -489,71 +608,84 @@ export default function AddListingPage() {
                   </div>
                   {data.description && (
                     <div>
-                      <p className="text-xs text-muted-foreground">תיאור</p>
-                      <p className="text-sm text-foreground line-clamp-3">{data.description}</p>
+                      <p className="font-assistant text-[12px] text-[#888888]">תיאור</p>
+                      <p className="line-clamp-3 font-assistant text-[14px] text-black">{data.description}</p>
                     </div>
                   )}
                 </div>
               </section>
-              <div className="border-t border-border pt-4 space-y-3">
-                <h3 className="text-sm font-semibold text-foreground">תמחור ומיקום</h3>
+              <div className="space-y-3 border-t border-black/10 pt-4">
+                <h3 className="font-sans text-[14px] font-bold text-black">תמחור ומיקום</h3>
                 <div className="flex flex-wrap gap-4">
                   <div>
-                    <p className="text-xs text-muted-foreground">מחיר ליום</p>
-                    <p className="font-medium text-foreground">{formatMoneyIls(Number(data.pricePerDay) || 0)}</p>
+                    <p className="font-assistant text-[12px] text-[#888888]">מחיר ליום</p>
+                    <p className="font-sans font-bold text-black">
+                      {formatMoneyIls(Number(data.pricePerDay) || 0)}
+                    </p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">פיקדון</p>
-                    <p className="font-medium text-foreground">{formatMoneyIls(Number(data.deposit) || 0)}</p>
+                    <p className="font-assistant text-[12px] text-[#888888]">פיקדון</p>
+                    <p className="font-sans font-bold text-black">
+                      {formatMoneyIls(Number(data.deposit) || 0)}
+                    </p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">עיר</p>
-                    <p className="font-medium text-foreground">{data.city || "—"}</p>
+                    <p className="font-assistant text-[12px] text-[#888888]">עיר</p>
+                    <p className="font-sans font-bold text-black">{data.city || "—"}</p>
                   </div>
                   {data.valueEstimate.trim() && (
                     <div>
-                      <p className="text-xs text-muted-foreground">שווי משוער</p>
-                      <p className="font-medium text-foreground">{formatMoneyIls(Number(data.valueEstimate) || 0)}</p>
+                      <p className="font-assistant text-[12px] text-[#888888]">שווי משוער</p>
+                      <p className="font-sans font-bold text-black">
+                        {formatMoneyIls(Number(data.valueEstimate) || 0)}
+                      </p>
                     </div>
                   )}
                 </div>
               </div>
-              <div className="border-t border-border pt-4">
-                <p className="text-xs text-muted-foreground">תמונות</p>
-                <p className="font-medium text-foreground">{data.imageUrls.length} תמונות</p>
+              <div className="border-t border-black/10 pt-4">
+                <p className="font-assistant text-[12px] text-[#888888]">תמונות</p>
+                <p className="font-sans font-bold text-black">{data.imageUrls.length} תמונות</p>
               </div>
               {(data.pickupNote.trim() || data.rules.trim()) && (
-                <div className="border-t border-border pt-4 space-y-3">
-                  <h3 className="text-sm font-semibold text-foreground">פרטים נוספים</h3>
+                <div className="space-y-3 border-t border-black/10 pt-4">
+                  <h3 className="font-sans text-[14px] font-bold text-black">פרטים נוספים</h3>
                   {data.pickupNote.trim() && (
                     <div>
-                      <p className="text-xs text-muted-foreground">הוראות איסוף</p>
-                      <p className="text-sm text-foreground">{data.pickupNote}</p>
+                      <p className="font-assistant text-[12px] text-[#888888]">הוראות איסוף</p>
+                      <p className="font-assistant text-[14px] text-black">{data.pickupNote}</p>
                     </div>
                   )}
                   {data.rules.trim() && (
                     <div>
-                      <p className="text-xs text-muted-foreground">כללים</p>
-                      <p className="text-sm text-foreground whitespace-pre-wrap">{data.rules}</p>
+                      <p className="font-assistant text-[12px] text-[#888888]">כללים</p>
+                      <p className="whitespace-pre-wrap font-assistant text-[14px] text-black">
+                        {data.rules}
+                      </p>
                     </div>
                   )}
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </SurfaceCard>
         )}
         </PageContainer>
       </main>
 
-      <div className="sticky bottom-16 md:bottom-4 inset-x-0 z-10 bg-card border-t border-border shadow-cta-strip px-4 py-4 max-w-md md:max-w-4xl mx-auto w-full">
+      <div className="sticky bottom-16 inset-x-0 z-10 mx-auto w-full max-w-md border-t border-black/10 bg-white px-4 py-4 md:bottom-4 md:max-w-4xl">
         {step < TOTAL_STEPS ? (
-          <Button className="w-full" size="lg" onClick={handleNext}>
+          <RedesignButton className="w-full" size="lg" onClick={handleNext}>
             המשך
-          </Button>
+          </RedesignButton>
         ) : (
-          <Button variant="gradient" size="lg" className="w-full" onClick={handleSubmit} disabled={submitting}>
+          <RedesignButton
+            className="w-full"
+            size="lg"
+            onClick={handleSubmit}
+            disabled={submitting}
+          >
             {submitting ? "שולח..." : "פרסם מודעה"}
-          </Button>
+          </RedesignButton>
         )}
       </div>
     </div>

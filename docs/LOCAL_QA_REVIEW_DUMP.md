@@ -10,7 +10,7 @@ Single audit file for designing and implementing a safe local QA/dev testing sys
 - **Framework/runtime:** Next.js 16.1.0, React 19.2.3, Node.
 - **App structure summary:** Next.js App Router. Root `app/` with `(main)` route group; `app/api/` for API routes. Shared layout wraps content in `AppShell` (header + bottom nav). RTL Hebrew UI.
 - **Auth stack:** NextAuth v4 with JWT strategy. Google OAuth only. Session stores `lendlyUserId` (Prisma User id). No DB session tables (Session/Account/VerificationToken not in Prisma). Optional dev bypass: `DEV_AUTH_BYPASS=true` + `DEV_USER_ID` (or impersonation cookie) use `lib/auth/dev-adapter.ts`; otherwise `lib/auth/session-adapter.ts`.
-- **DB stack:** Prisma 7.x, SQLite (provider `"sqlite"` in schema; seed uses `file:./prisma/dev.db`). No `url` in schema — Prisma default or env.
+- **DB stack:** Prisma 7.x, PostgreSQL (`provider = "postgresql"` in schema; connection URL in `prisma.config.ts` via `DATABASE_URL`). Seed uses `pg` adapter + `prisma/seed-db.ts`.
 - **Email stack:** Resend. `lib/email/send.ts` + `lib/email/client.ts`. Env: `RESEND_API_KEY`, optional `EMAIL_FROM`, `APP_BASE_URL`, `ADMIN_EMAIL`. Best-effort send; failures logged, never block flows.
 - **Storage/upload stack:** Local filesystem. Listing images: `app/api/listings/upload/route.ts` → `public/uploads/listings/{uuid}.{ext}`. KYC: `app/api/kyc/upload/route.ts` → `public/uploads/kyc/{userId}/{type}.{ext}`. Comment in code: replace with S3/Cloudinary in production.
 - **Admin implementation summary:** Role-based via `User.isAdmin` (Boolean). No separate Admin model. `requireAdmin()` in `lib/auth/session-adapter.ts` (and dev-adapter) checks `user.isAdmin`. Admin pages under `app/(main)/admin/`; API under `app/api/admin/`. Audit log: `AuditLog` model used for KYC, listing, user, dispute, override actions.
@@ -232,7 +232,7 @@ docs/
 
 **File path:** `prisma/schema.prisma`
 
-**Datasource:** `provider = "sqlite"` (no `url` in schema; seed uses `file:./prisma/dev.db`).
+**Datasource:** `provider = "postgresql"`; URL from `prisma.config.ts` / `DATABASE_URL`.
 
 **Relevant models and enums (exact snippets):**
 
@@ -721,7 +721,7 @@ REQUESTED → (payment/Bit) → admin confirms payment → CONFIRMED → pickup 
 
 ### Current seed files
 
-- **prisma/seed.ts:** Uses Prisma with `PrismaBetterSqlite3` and `file:./prisma/dev.db`. Deletes in order: Booking, ListingImage, Listing, User. Then creates: dev-user, admin-user, roythejewboy; email-based admin@, lender@, renter@; qa-renter, qa-kyc-submitted, qa-kyc-rejected. Creates 3 listings (Sony, tent, drill) with images (Unsplash URLs). Creates 2 bookings for qa-renter (ACTIVE, COMPLETED). No Prisma migrate/push inside seed — assumes DB exists.
+- **prisma/seed.ts:** Uses Prisma with `@prisma/adapter-pg` via `createSeedClient()` in `prisma/seed-db.ts` and `DATABASE_URL`. Deletes in dependency order (messages, conversations, reviews, etc., then listings, users). Then creates QA users, listings, bookings, disputes as documented. No migrate inside seed — assumes schema is applied (`migrate deploy` / `migrate dev`).
 - **prisma/seed-test-users.ts:** Only upserts the three email-based users (admin@, lender@, renter@). Script: `npm run db:seed-test-users`.
 
 ### Test/demo data generation
@@ -786,7 +786,7 @@ REQUESTED → (payment/Bit) → admin confirms payment → CONFIRMED → pickup 
 
 - **Files:** New script e.g. `prisma/seed-qa.ts` or extend `prisma/seed.ts` with a dedicated QA mode (e.g. env `SEED_QA=1`).
 - **Why:** Current seed is already deterministic (fixed ids, fixed bookings). A separate QA seed or flag can add more scenarios (e.g. REQUESTED booking for admin confirm, DISPUTE for resolve) without changing default seed behavior.
-- **Risks:** Seed currently deletes Booking, ListingImage, Listing, User — ensure QA seed doesn’t run against production; use same DB path as dev (e.g. `file:./prisma/dev.db`).
+- **Risks:** Seed wipes data in dependency order — never run `db seed` against production; use a dedicated dev/staging `DATABASE_URL`.
 
 ### Dev-only impersonation
 
@@ -816,7 +816,7 @@ REQUESTED → (payment/Bit) → admin confirms payment → CONFIRMED → pickup 
 
 ## 11. Open questions / risks
 
-1. **DB URL in production:** Schema has no `url`; Prisma may use `DATABASE_URL` or default. Confirm production DB is never pointed at the same file as dev (e.g. `file:./prisma/dev.db`).
+1. **DB URL in production:** Set `DATABASE_URL` in the host environment (e.g. Vercel); never reuse a dev-only database for production without an explicit decision.
 2. **Middleware and /dev:** Current matcher excludes `api/`; page routes like `/dev/qa` are protected only if under a path that `isProtectedPath` returns true. `/dev` is not in PUBLIC_PATHS and not in isProtectedPath, so middleware will still require auth (and onboarding) if user hits `/dev/qa`. Decide whether /dev/qa should be public when DEV_AUTH_BYPASS is on (e.g. allow /dev in middleware when bypass) or require “logged in” dev user.
 3. **Impersonation cookie scope:** Cookie is set path `/`, httpOnly, sameSite lax. Ensure production never sets DEV_AUTH_BYPASS so this cookie and the impersonation API are never active.
 4. **Seed idempotency:** Main seed deletes then creates; it is not idempotent for “add more data.” seed-test-users is upsert-only. A QA seed that adds REQUESTED booking or DISPUTE may need to avoid wiping if you want to keep existing users and only add scenarios.

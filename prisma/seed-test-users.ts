@@ -3,14 +3,9 @@
  * Run: npm run db:seed-test-users
  */
 
-import { PrismaClient } from "@prisma/client";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { createSeedClient } from "./seed-db";
 
-const adapter = new PrismaBetterSqlite3({
-  url: "file:./prisma/dev.db",
-});
-
-const prisma = new PrismaClient({ adapter });
+const { prisma, pool } = createSeedClient();
 
 async function main() {
   await prisma.user.upsert({
@@ -74,9 +69,13 @@ async function main() {
 }
 
 main()
-  .then(async () => await prisma.$disconnect())
+  .then(async () => {
+    await prisma.$disconnect();
+    await pool.end();
+  })
   .catch(async (e) => {
     console.error(e);
     await prisma.$disconnect();
+    await pool.end();
     process.exit(1);
   });

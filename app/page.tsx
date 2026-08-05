@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/admin";
 
+export const dynamic = "force-dynamic";
+
 /**
  * Root route: signed-in users go to search (their home); signed-out go to marketing homepage.
  */

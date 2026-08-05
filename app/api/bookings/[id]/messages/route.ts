@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireBookingMessagesAccess } from "@/lib/booking-auth";
 import { needsOnboarding } from "@/lib/auth/onboarding";
+import { checkRateLimit } from "@/lib/rate-limit";
+import { AUDIT_ENTITY } from "@/lib/audit";
 
 export const runtime = "nodejs";
 
@@ -66,6 +68,21 @@ export async function POST(
     return NextResponse.json(
       { error: "Complete your profile (name, phone, city) to send messages", code: "ONBOARDING_REQUIRED" },
       { status: 403 }
+    );
+  }
+  const messageRate = await checkRateLimit(req, {
+    keyPrefix: "booking:messages",
+    windowMs: 60_000,
+    limit: 30,
+    identifier: user.id,
+    auditEntityType: AUDIT_ENTITY.BOOKING,
+    auditEntityId: bookingId,
+    auditTargetDisplayName: "booking:messages",
+  });
+  if (!messageRate.ok) {
+    return NextResponse.json(
+      { error: "Too many messages. Please wait and try again." },
+      { status: 429, headers: { "Retry-After": String(messageRate.retryAfterSec) } }
     );
   }
 

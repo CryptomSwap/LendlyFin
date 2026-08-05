@@ -53,21 +53,21 @@ export default async function BookingMessagesPage(props: {
   const bookingRef = context?.bookingRef ?? null;
 
   return (
-    <div className="min-h-screen w-full app-page-bg pb-24" dir="rtl">
-      <PageContainer width="narrow" className="space-y-4 lg:max-w-[72rem]">
+    <div className="min-h-screen w-full bg-white pb-24" dir="rtl">
+      <PageContainer width="default" className="space-y-4 lg:max-w-[72rem]">
       <div className="flex items-center gap-2">
         <Link
           href={`/bookings/${bookingId}`}
-          className="p-1 rounded-lg hover:bg-muted flex items-center gap-1 text-sm text-muted-foreground"
+          className="p-1 rounded-full hover:bg-black/5 flex items-center gap-1 font-assistant text-[14px] text-[#888888]"
         >
           <ArrowRight className="h-4 w-4" />
           חזרה להזמנה
         </Link>
       </div>
       <header>
-        <h1 className="section-title">הודעות – {title}</h1>
+        <h1 className="page-title">הודעות – {title}</h1>
         {bookingRef && (
-          <p className="text-sm text-muted-foreground mt-0.5 font-mono" dir="ltr">
+          <p className="font-assistant text-[14px] text-[#888888] mt-1 font-mono" dir="ltr">
             הזמנה {bookingRef}
           </p>
         )}
@@ -76,7 +76,6 @@ export default async function BookingMessagesPage(props: {
         bookingId={bookingId}
         initialMessages={data.messages}
         currentUserId={data.currentUserId}
-        bookingRef={bookingRef}
       />
       </PageContainer>
     </div>

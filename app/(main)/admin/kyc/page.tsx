@@ -30,19 +30,21 @@ export default async function AdminKYCPage() {
   }
 
   const me = meData.user || meData;
-  
+
   if (!me.isAdmin) {
     redirect("/profile");
   }
 
   return (
-    <div className="min-h-screen w-full app-page-bg pb-24">
-      <PageContainer width="wide" className="space-y-6">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="page-title">אימות זהות - ביקורת מנהל</h1>
-        <AdminNav />
-      </div>
-      <AdminKYCReview />
+    <div className="min-h-screen w-full app-page-bg pb-24" dir="rtl">
+      <PageContainer width="wide" className="space-y-4">
+        <div className="flex items-center justify-between gap-4">
+          <h1 className="font-sans text-[28px] font-black tracking-[-1px] text-black md:text-[36px]">
+            אימות זהות - ביקורת מנהל
+          </h1>
+          <AdminNav />
+        </div>
+        <AdminKYCReview />
       </PageContainer>
     </div>
   );

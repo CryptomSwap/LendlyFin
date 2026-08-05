@@ -4,6 +4,9 @@
  */
 
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
+import { listingCoverImageUrl } from "@/lib/listing-images";
+import { CATEGORY_SLUGS } from "@/lib/constants";
 
 const PUBLIC_LISTING_STATUS = "ACTIVE" as const;
 
@@ -14,7 +17,7 @@ export type FeaturedListingItem = {
   city: string;
   category: string;
   subcategory?: string | null;
-  images: { url: string }[];
+  coverImageUrl: string | null;
   owner: { id: string; kycStatus: string | null; phoneNumber: string | null } | null;
   completedBookingsCount: number;
   reviewsCount: number;
@@ -47,14 +50,25 @@ export async function getFeaturedListings(limit: number = 6): Promise<FeaturedLi
       where: { listingId: { in: listingIds }, status: "COMPLETED" },
       _count: { id: true },
     }),
-    prisma.review.findMany({
-      where: { booking: { listingId: { in: listingIds } } },
-      select: {
-        rating: true,
-        targetUserId: true,
-        booking: { select: { listingId: true } },
-      },
-    }),
+    (async () => {
+      try {
+        return await prisma.review.findMany({
+          where: { booking: { listingId: { in: listingIds } } },
+          select: {
+            rating: true,
+            targetUserId: true,
+            booking: { select: { listingId: true } },
+          },
+        });
+      } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+          if (error.code === "P2021" || error.code === "P2022" || error.code === "P2010") {
+            return [];
+          }
+        }
+        throw error;
+      }
+    })(),
   ]);
 
   const completedByListingId = new Map(
@@ -73,7 +87,7 @@ export async function getFeaturedListings(limit: number = 6): Promise<FeaturedLi
   }
 
   return rawItems.map((listing) => {
-    const { owner, ...rest } = listing;
+    const { owner, images, ...rest } = listing;
     const completed = completedByListingId.get(listing.id) ?? 0;
     const rev = reviewsForOwnerByListing[listing.id];
     const reviewsCount = rev?.count ?? 0;
@@ -82,9 +96,36 @@ export async function getFeaturedListings(limit: number = 6): Promise<FeaturedLi
     return {
       ...rest,
       owner,
+      coverImageUrl: listingCoverImageUrl(images),
       completedBookingsCount: completed,
       reviewsCount,
       averageRating,
     };
   });
+}
+
+export type CategoryListingCount = {
+  slug: string;
+  count: number;
+};
+
+/**
+ * Count ACTIVE listings per category slug for homepage discovery UI.
+ * Returns every taxonomy slug (including zeros) so the carousel stays complete.
+ */
+export async function getActiveListingCountsByCategory(): Promise<CategoryListingCount[]> {
+  const rows = await prisma.listing.groupBy({
+    by: ["category"],
+    where: { status: PUBLIC_LISTING_STATUS },
+    _count: { _all: true },
+  });
+
+  const countBySlug = new Map(
+    rows.map((row) => [String(row.category).toLowerCase(), Number(row._count._all ?? 0)])
+  );
+
+  return CATEGORY_SLUGS.map((slug) => ({
+    slug,
+    count: countBySlug.get(slug) ?? 0,
+  }));
 }

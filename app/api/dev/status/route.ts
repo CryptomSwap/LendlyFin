@@ -6,7 +6,10 @@ import { getCurrentUser } from "@/lib/admin";
  * Only when DEV_AUTH_BYPASS=true.
  */
 export async function GET() {
-  if (process.env.DEV_AUTH_BYPASS !== "true") {
+  if (
+    process.env.NODE_ENV === "production" ||
+    process.env.DEV_AUTH_BYPASS !== "true"
+  ) {
     return NextResponse.json({ impersonationAvailable: false }, { status: 404 });
   }
 

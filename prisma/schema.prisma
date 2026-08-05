@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 model User {
@@ -26,6 +26,8 @@ model User {
   kycSubmittedAt    DateTime?
   kycRejectedReason String?
   isAdmin           Boolean     @default(false)
+
+  mangopayUserId    String?   @unique
 
   suspendedAt       DateTime?
   suspensionReason  String?
@@ -117,22 +119,10 @@ model Booking {
   endDate   DateTime
 
   status    BookingStatus
-  cancelledAt DateTime?
-  cancelledByUserId String?
-  cancellationReasonCode String?
-  cancellationNote String?
-  cancellationPenaltyAmount Int?
-  refundAmount Int?
-  noShowMarkedAt DateTime?
-  noShowMarkedByUserId String?
-  noShowReason String?
   returnedAt DateTime?
   disputeWindowEndsAt DateTime?
   nonReturnMarkedAt DateTime?
   nonReturnReason String?
-  policyVersion String?
-  graceMinutesSnapshot Int?
-  cancelWindowHoursSnapshot Int?
   riskFlagged Boolean @default(false)
   riskReason String?
 
@@ -142,7 +132,6 @@ model Booking {
   pickupChecklist   PickupChecklist?
   returnChecklist   ReturnChecklist?
   checklistPhotos   BookingChecklistPhoto[]
-  handoffProofs     BookingHandoffProof[]
   dispute           Dispute?
   conversation      Conversation?
   reviews           Review[]
@@ -155,7 +144,6 @@ model Booking {
   @@index([listingId, status, endDate])
   @@index([status, createdAt])
   @@index([status, disputeWindowEndsAt])
-  @@index([status, cancelledAt])
 }
 
 model AnalyticsEvent {
@@ -269,12 +257,9 @@ model Dispute {
   bookingId        String        @unique
   booking          Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   reason           String        // "damage" | "missing_items" | "manual"
-  userReasonCode   String?
   adminReasonCode  String?
   resolutionOutcome String?
   evidenceChecklist String?      // JSON array for pilot auditing
-  evidenceSummary  String?
-  evidenceSubmittedAt DateTime?
   financialActionNote String?
   resolvedByAdminId String?
   status           DisputeStatus @default(OPEN)
@@ -288,35 +273,6 @@ model Dispute {
   @@index([status])
   @@index([bookingId])
   @@index([status, createdAt])
-  @@index([userReasonCode, createdAt])
-}
-
-model PolicyConfig {
-  id                       String   @id @default(cuid())
-  version                  String   @unique
-  isActive                 Boolean  @default(false)
-  lateReturnGraceMinutes   Int      @default(30)
-  cancelPenaltyWindowHours Int      @default(6)
-  noShowPenaltyMode        String   @default("PARTIAL_DEPOSIT")
-  maxLateFeePercent        Int      @default(100)
-  createdAt                DateTime @default(now())
-  updatedAt                DateTime @updatedAt
-
-  @@index([isActive, createdAt])
-}
-
-model BookingHandoffProof {
-  id         String   @id @default(cuid())
-  bookingId  String
-  booking    Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  type       String   // "pickup" | "return"
-  lat        Float?
-  lng        Float?
-  source     String   @default("user_device") // "user_device" | "manual_override"
-  capturedAt DateTime @default(now())
-  createdAt  DateTime @default(now())
-
-  @@index([bookingId, type, capturedAt])
 }
 
 model PickupChecklist {
@@ -388,15 +344,12 @@ enum BookingStatus {
   REQUESTED
   CONFIRMED
   ACTIVE
-  CANCELLED_BY_RENTER
-  CANCELLED_BY_OWNER
-  NO_SHOW_RENTER
-  NO_SHOW_OWNER
   RETURNED
   IN_DISPUTE
   NON_RETURN_PENDING
   NON_RETURN_CONFIRMED
   COMPLETED
+  CANCELLED
   DISPUTE // legacy compatibility; new flows use IN_DISPUTE
 }
 

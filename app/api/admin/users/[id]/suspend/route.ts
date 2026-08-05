@@ -50,9 +50,9 @@ export async function POST(
     entityId: targetUserId,
     action: "suspend",
     adminUserId: adminUser!.id,
-    adminName: adminUser!.name,
+    adminName: adminUser!.name ?? "Admin",
     reason: body.reason?.trim() || null,
-    targetDisplayName: targetUser.name,
+    targetDisplayName: targetUser.name ?? targetUser.id,
   });
 
   return NextResponse.json({

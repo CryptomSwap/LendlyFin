@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/admin";
 import { measurePerf } from "@/lib/perf";
+import { kycUrlsForApiResponse } from "@/lib/kyc-stored-ref";
 
 export const runtime = "nodejs";
 
@@ -58,10 +59,18 @@ export async function GET() {
     const reviewsCount = reviewsAggregate._count.id;
     const averageRating = Math.round((reviewsAggregate._avg.rating ?? 0) * 10) / 10;
 
+    const kycPublic = kycUrlsForApiResponse(
+      fullUser.id,
+      fullUser.kycSelfieUrl,
+      fullUser.kycIdUrl
+    );
+
     return NextResponse.json(
       {
         user: {
           ...fullUser,
+          kycSelfieUrl: kycPublic.kycSelfieUrl,
+          kycIdUrl: kycPublic.kycIdUrl,
           completedBookingsCount,
           reviewsCount,
           averageRating,

@@ -2,9 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -70,14 +68,14 @@ export default function ResolveDisputeForm({ disputeId }: { disputeId: string })
   };
 
   return (
-    <Card className="shadow-soft">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-base">סגור מחלוקת</CardTitle>
-        <p className="text-sm text-muted-foreground">
+    <div className="rounded-[8px] border border-black/10 bg-white p-4">
+      <div className="mb-2">
+        <h2 className="font-sans text-[15px] font-black text-black">סגור מחלוקת</h2>
+        <p className="font-assistant text-[13px] text-[#888888]">
           בחר החלטה, קוד סיבה ונימוק החלטה. הנתונים ישמרו ביומן בקרה.
         </p>
-      </CardHeader>
-      <CardContent>
+      </div>
+      <div>
         <form onSubmit={handleSubmit} className="space-y-5" dir="rtl">
           {error && <Alert variant="error">{error}</Alert>}
           <div className="form-group">
@@ -90,9 +88,9 @@ export default function ResolveDisputeForm({ disputeId }: { disputeId: string })
                   value="owner"
                   checked={resolution === "owner"}
                   onChange={() => setResolution("owner")}
-                  className="rounded-full border-border text-primary focus:ring-ring"
+                  className="rounded-full border-black/15 text-[#1A8C6A] focus:ring-[#1A8C6A]/20"
                 />
-                <span className="text-sm">לטובת בעלים (שחרור פיקדון לבעלים)</span>
+                <span className="font-assistant text-[13px] text-black">לטובת בעלים (שחרור פיקדון לבעלים)</span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
@@ -101,9 +99,9 @@ export default function ResolveDisputeForm({ disputeId }: { disputeId: string })
                   value="renter"
                   checked={resolution === "renter"}
                   onChange={() => setResolution("renter")}
-                  className="rounded-full border-border text-primary focus:ring-ring"
+                  className="rounded-full border-black/15 text-[#1A8C6A] focus:ring-[#1A8C6A]/20"
                 />
-                <span className="text-sm">לטובת שוכר (שחרור פיקדון לשוכר)</span>
+                <span className="font-assistant text-[13px] text-black">לטובת שוכר (שחרור פיקדון לשוכר)</span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
@@ -112,9 +110,9 @@ export default function ResolveDisputeForm({ disputeId }: { disputeId: string })
                   value="split"
                   checked={resolution === "split"}
                   onChange={() => setResolution("split")}
-                  className="rounded-full border-border text-primary focus:ring-ring"
+                  className="rounded-full border-black/15 text-[#1A8C6A] focus:ring-[#1A8C6A]/20"
                 />
-                <span className="text-sm">פיצול (חלוקת פיקדון ידנית)</span>
+                <span className="font-assistant text-[13px] text-black">פיצול (חלוקת פיקדון ידנית)</span>
               </label>
             </div>
           </div>
@@ -194,17 +192,21 @@ export default function ResolveDisputeForm({ disputeId }: { disputeId: string })
               disabled={submitting}
             />
           </div>
-          <div className="rounded-lg border border-border/70 bg-muted/30 p-3 text-xs text-muted-foreground">
-            <p className="font-medium text-foreground mb-1">סיכום פעולה לפני שליחה</p>
+          <div className="rounded-[8px] border border-black/10 bg-black/[0.02] p-3 font-assistant text-[12px] text-[#888888]">
+            <p className="mb-1 font-sans text-[13px] font-bold text-black">סיכום פעולה לפני שליחה</p>
             <p>תוצאה: {resolution === "owner" ? "לטובת בעלים" : resolution === "renter" ? "לטובת שוכר" : "פיצול"}</p>
             <p>קוד סיבה: {adminReasonCode}</p>
             <p>פעולה: סגירת מחלוקת והעברת הזמנה לסטטוס הושלמה.</p>
           </div>
-          <Button type="submit" disabled={submitting}>
+          <button
+            type="submit"
+            disabled={submitting}
+            className="rounded-full bg-[#1A8C6A] px-6 py-2.5 font-sans text-[14px] font-bold text-white transition-colors hover:bg-[#157A5A] disabled:opacity-50"
+          >
             {submitting ? "שומר..." : "סגור מחלוקת והעבר להזמנה הושלמה"}
-          </Button>
+          </button>
         </form>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

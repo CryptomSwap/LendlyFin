@@ -1,27 +1,38 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
-import MarketingNavbar from "@/components/home/MarketingNavbar";
+import { Search, Upload } from "lucide-react";
 import { HeroCategories } from "@/components/home/HeroCategories";
 import HowItWorks from "@/components/home/HowItWorks";
-import OwnerCTA from "@/components/home/OwnerCTA";
-import RedesignFooter from "@/components/layout/redesign-footer";
-import TrustStrip from "@/components/home/TrustStrip";
+import RedesignOwnerCTA from "@/components/home/RedesignOwnerCTA";
+import { TrustStrip } from "@/components/home/TrustStrip";
+import { WhyLendly } from "@/components/home/WhyLendly";
 import ListingCard from "@/components/listing-card";
 import RecommendationsSection from "@/components/home/RecommendationsSection";
 import ScrollRevealTitle from "@/components/home/ScrollRevealTitle";
 import { EmptyState } from "@/components/ui/empty-state";
-import type { FeaturedListingItem } from "@/lib/listings";
+import { FAQBlock } from "@/components/ui/faq-block";
+import { HOME_FAQ_ITEMS } from "@/lib/copy/help-reassurance";
+import type { CategoryListingCount, FeaturedListingItem } from "@/lib/listings";
 
 const HERO_EASE = "cubic-bezier(0.34, 1.56, 0.64, 1)";
+const HERO_IMAGE = "/images/hero/camping-studio-v3.png";
 
 type RedesignHomePageProps = {
   listings: FeaturedListingItem[];
+  categoryCounts: CategoryListingCount[];
   publishHref: string;
+  isSignedIn: boolean;
 };
 
-export function RedesignHomePage({ listings, publishHref }: RedesignHomePageProps) {
+export function RedesignHomePage({
+  listings,
+  categoryCounts,
+  publishHref,
+  isSignedIn,
+}: RedesignHomePageProps) {
   const [heroReady, setHeroReady] = useState(false);
 
   useEffect(() => {
@@ -44,8 +55,10 @@ export function RedesignHomePage({ listings, publishHref }: RedesignHomePageProp
     };
   }, []);
 
+  const heroCtaLabel = isSignedIn ? "פרסום מודעה להשכרה" : "התחברו עם Google";
+
   return (
-    <div className="min-h-screen bg-white pt-4 pb-8 md:pb-0">
+    <div className="bg-white pb-8 md:pb-0">
       <style
         dangerouslySetInnerHTML={{
           __html: `
@@ -74,20 +87,32 @@ export function RedesignHomePage({ listings, publishHref }: RedesignHomePageProp
         }}
       />
 
-      <MarketingNavbar />
+      <section
+        dir="ltr"
+        className="relative w-full overflow-visible bg-[#F9EFE8] pb-1 md:overflow-visible"
+      >
+        <div className="pointer-events-none absolute inset-0" aria-hidden>
+          <Image
+            src={HERO_IMAGE}
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            className="object-contain object-left-bottom md:object-left"
+          />
+        </div>
 
-      <section dir="ltr" className="relative w-full overflow-x-hidden bg-[#F7F6F3]">
-        <div className="relative mx-auto flex min-h-[420px] max-w-[1420px] flex-col items-stretch md:h-[520px] md:flex-row md:items-start">
+        <div className="relative mx-auto max-w-[1420px] px-5 pb-12 pt-24 md:min-h-[min(92vh,820px)] md:px-8 md:pb-0 md:pt-28 lg:px-5">
           <div
             dir="rtl"
-            className="flex w-full flex-col items-end justify-start gap-5 px-5 pb-10 pt-10 md:w-[70%] md:pl-[60px] md:pr-8 md:pt-14"
+            className="relative z-10 mx-auto flex w-full max-w-3xl flex-col items-center justify-center gap-5 text-center pointer-events-none md:absolute md:inset-0 md:mx-auto md:max-w-none md:px-16"
           >
-            <h1 className="w-full text-right leading-[1.15]">
+            <h1 className="w-full text-center leading-[1.15]">
               <span
                 className="block font-sans text-[40px] font-black text-black transition-all duration-700 md:text-[64px]"
                 style={{
                   opacity: heroReady ? 1 : 0,
-                  transform: heroReady ? "translateX(0)" : "translateX(40px)",
+                  transform: heroReady ? "translateY(0)" : "translateY(24px)",
                   transitionTimingFunction: HERO_EASE,
                   transitionDelay: "0ms",
                 }}
@@ -98,64 +123,74 @@ export function RedesignHomePage({ listings, publishHref }: RedesignHomePageProp
                 className="block font-sans text-[40px] font-black text-black transition-all duration-700 md:text-[64px]"
                 style={{
                   opacity: heroReady ? 1 : 0,
-                  transform: heroReady ? "translateX(0)" : "translateX(40px)",
+                  transform: heroReady ? "translateY(0)" : "translateY(24px)",
                   transitionTimingFunction: HERO_EASE,
                   transitionDelay: "150ms",
                 }}
               >
-                אם אפשר
+                כשאפשר
               </span>
               <span
                 className="block font-sans text-[40px] font-black text-[#1A8C6A] transition-all duration-700 md:text-[64px]"
                 style={{
                   opacity: heroReady ? 1 : 0,
-                  transform: heroReady ? "translateX(0)" : "translateX(40px)",
+                  transform: heroReady ? "translateY(0)" : "translateY(24px)",
                   transitionTimingFunction: HERO_EASE,
                   transitionDelay: "300ms",
                 }}
               >
-                להשכיר?
+                לשכור?
               </span>
             </h1>
 
             <p
-              className="w-full text-right font-assistant text-[18px] text-[#888888] transition-opacity duration-[600ms] ease-in-out md:text-[20px]"
+              className="w-full max-w-xl text-center font-assistant text-[18px] text-[#555555] transition-opacity duration-[600ms] ease-in-out md:text-[20px]"
               style={{
                 opacity: heroReady ? 1 : 0,
                 transitionDelay: "500ms",
               }}
             >
-              השאל, השכר, וחסוך — בקהילה שלך
+              פשוט לשכור ציוד בסביבה, או להשכיר את שלך
             </p>
 
-            <Link
-              href={publishHref}
-              className="rounded-full bg-[#1A8C6A] px-10 py-4 font-sans text-[17px] font-bold text-white shadow-[0_6px_24px_rgba(26,140,106,0.35)] transition-all duration-300 hover:-translate-y-[3px] hover:shadow-[0_10px_32px_rgba(26,140,106,0.45)]"
+            <div
+              className="flex flex-wrap items-center justify-center gap-3"
               style={{
-                transitionTimingFunction: "cubic-bezier(0.2, 0, 0, 1)",
                 opacity: heroReady ? 1 : 0,
-                transitionProperty: "opacity, transform, box-shadow",
                 transitionDelay: heroReady ? "700ms" : "0ms",
               }}
             >
-              התחל להשכיר ←
-            </Link>
+              <Link
+                href="/search"
+                className="glide-slide-button pointer-events-auto shrink-0 px-8 py-3.5 font-sans text-[16px] font-bold tracking-[-0.2px]"
+              >
+                <span className="glide-slide-button__label">חיפוש</span>
+              </Link>
+              <Link
+                href={publishHref}
+                className="glide-slide-button pointer-events-auto shrink-0 px-8 py-3.5 font-sans text-[16px] font-bold tracking-[-0.2px]"
+              >
+                <span className="glide-slide-button__label">{heroCtaLabel} ←</span>
+              </Link>
+            </div>
           </div>
 
-          <HeroCategories />
+          <div className="relative z-20 mt-10 flex w-full justify-center overflow-visible md:absolute md:right-0 md:top-1/2 md:mt-0 md:w-auto md:-translate-y-1/2 md:justify-end lg:right-2">
+            <HeroCategories counts={categoryCounts} />
+          </div>
         </div>
       </section>
 
       <section dir="rtl" className="mx-auto w-full max-w-[1420px] px-5">
         <div className="flex flex-col items-start justify-between gap-4 pt-6 md:flex-row md:items-end">
           <ScrollRevealTitle className="font-sans text-[36px] font-black leading-none tracking-[-2px] text-black md:text-[48px]">
-            הושכר לאחרונה
+            🔥 הושכר לאחרונה
           </ScrollRevealTitle>
           <Link
             href="/search"
             className="glide-slide-button shrink-0 px-8 py-3.5 font-sans text-[16px] font-bold tracking-[-0.2px]"
           >
-            <span className="glide-slide-button__label">עבור אל לוח ההשכרות ←</span>
+            <span className="glide-slide-button__label">כל ההשכרות ←</span>
           </Link>
         </div>
 
@@ -181,7 +216,7 @@ export function RedesignHomePage({ listings, publishHref }: RedesignHomePageProp
                 pricePerDay={item.pricePerDay}
                 averageRating={item.averageRating}
                 reviewsCount={item.reviewsCount}
-                imageUrl={item.images?.[0]?.url}
+                imageUrl={item.coverImageUrl ?? undefined}
                 href={`/listing/${item.id}`}
               />
             ))}
@@ -191,9 +226,56 @@ export function RedesignHomePage({ listings, publishHref }: RedesignHomePageProp
 
       <RecommendationsSection />
       <HowItWorks />
-      <OwnerCTA />
-      <TrustStrip />
-      <RedesignFooter />
+
+      <section dir="rtl" className="mx-auto w-full max-w-[1420px] px-5 py-16">
+        <div className="grid gap-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-start">
+          <WhyLendly />
+          <FAQBlock
+            title="שאלות נפוצות"
+            items={[...HOME_FAQ_ITEMS]}
+            moreLink={{ href: "/help/faq", label: "כל השאלות והתשובות" }}
+            className="border-black/10 shadow-none"
+          />
+        </div>
+      </section>
+
+      <RedesignOwnerCTA publishHref={publishHref} isSignedIn={isSignedIn} />
+
+      <section dir="rtl" className="mx-auto w-full max-w-[1420px] px-5 pb-8">
+        <TrustStrip />
+      </section>
+
+      <section dir="rtl" className="mx-auto w-full max-w-[1420px] px-5 pb-12" aria-label="פעולה ועזרה">
+        <div className="rounded-[12px] border border-[#1A8C6A]/15 bg-[#F0FAF6] px-6 py-12 text-center md:px-10">
+          <h2 className="font-sans text-[28px] font-black text-black md:text-[32px]">
+            אז מה שוכב לך בבית?
+          </h2>
+          <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row sm:flex-wrap">
+            <Link
+              href="/search"
+              className="inline-flex items-center gap-2 rounded-full bg-[#1A8C6A] px-8 py-3.5 font-sans text-[16px] font-bold text-white"
+            >
+              <Search className="h-4 w-4" aria-hidden />
+              חיפוש
+            </Link>
+            <Link
+              href={publishHref}
+              className="inline-flex items-center gap-2 rounded-full border border-black/15 bg-white px-8 py-3.5 font-sans text-[16px] font-bold text-black"
+            >
+              <Upload className="h-4 w-4" aria-hidden />
+              פרסום ציוד
+            </Link>
+            {isSignedIn && (
+              <Link
+                href="/owner"
+                className="inline-flex items-center gap-2 rounded-full border border-black/15 bg-white px-8 py-3.5 font-sans text-[16px] font-bold text-black"
+              >
+                ניהול הזמנות
+              </Link>
+            )}
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

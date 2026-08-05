@@ -18,7 +18,10 @@ export const dynamic = "force-dynamic";
 
 /** Dev-only: QA page is only available when DEV_AUTH_BYPASS=true. */
 function ensureDevMode() {
-  if (process.env.DEV_AUTH_BYPASS !== "true") {
+  if (
+    process.env.NODE_ENV === "production" ||
+    process.env.DEV_AUTH_BYPASS !== "true"
+  ) {
     notFound();
   }
 }

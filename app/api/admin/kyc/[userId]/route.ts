@@ -4,8 +4,27 @@ import { join } from "path";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin";
 import { createAuditLog } from "@/lib/audit";
+import { parseKycStoredRef } from "@/lib/kyc-stored-ref";
+import { deleteKycS3Object } from "@/lib/kyc-s3";
 
 export const runtime = "nodejs";
+
+async function deleteStoredKycMedia(stored: string | null) {
+  if (!stored) return;
+  const parsed = parseKycStoredRef(stored);
+  if (parsed?.kind === "s3") {
+    await deleteKycS3Object(parsed.key);
+    return;
+  }
+  if (stored.startsWith("/uploads/kyc/")) {
+    const filePath = join(process.cwd(), "public", stored.replace(/^\//, ""));
+    try {
+      await unlink(filePath);
+    } catch {
+      // best effort retention cleanup; do not fail KYC decision.
+    }
+  }
+}
 
 export async function POST(
   req: Request,
@@ -26,7 +45,6 @@ export async function POST(
       );
     }
 
-    // Check if user exists
     const targetUser = await prisma.user.findUnique({
       where: { id: userId },
     });
@@ -40,7 +58,6 @@ export async function POST(
       id: targetUser.kycIdUrl,
     };
 
-    // Update user's KYC status and remove stored media references.
     const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: {
@@ -50,8 +67,8 @@ export async function POST(
         ...(action === "reject" && reason
           ? { kycRejectedReason: reason }
           : action === "approve"
-          ? { kycRejectedReason: null }
-          : {}),
+            ? { kycRejectedReason: null }
+            : {}),
       },
       select: {
         id: true,
@@ -61,25 +78,19 @@ export async function POST(
       },
     });
 
-    const deleteLocalKycFile = async (url: string | null) => {
-      if (!url || !url.startsWith("/uploads/kyc/")) return;
-      const filePath = join(process.cwd(), "public", url);
-      try {
-        await unlink(filePath);
-      } catch {
-        // best effort retention cleanup; do not fail KYC decision.
-      }
-    };
-    await Promise.all([deleteLocalKycFile(kycMedia.selfie), deleteLocalKycFile(kycMedia.id)]);
+    await Promise.all([
+      deleteStoredKycMedia(kycMedia.selfie),
+      deleteStoredKycMedia(kycMedia.id),
+    ]);
 
     await createAuditLog({
       entityType: "KYC",
       entityId: userId,
       action: action === "approve" ? "APPROVE" : "REJECT",
-      adminUserId: adminUser.id,
-      adminName: adminUser.name,
+      adminUserId: adminUser!.id,
+      adminName: adminUser!.name ?? "Admin",
       reason: reason || null,
-      targetDisplayName: targetUser.name,
+      targetDisplayName: targetUser.name ?? targetUser.id,
     });
 
     return NextResponse.json({

@@ -50,8 +50,6 @@ export async function GET(
  * - mark_non_return_pending
  * - confirm_non_return
  * - complete_after_dispute_window
- * - mark_no_show_renter
- * - mark_no_show_owner
  */
 export async function PATCH(
   req: Request,
@@ -163,45 +161,34 @@ export async function PATCH(
       payload: { action: "complete_after_dispute_window", completionUpdated: updated.count > 0 },
     });
     await finalizeElapsedReturnedBookings({ limit: 100 });
-  } else if (action === "mark_no_show_renter" || action === "mark_no_show_owner") {
-    if (booking.status === "NO_SHOW_RENTER" || booking.status === "NO_SHOW_OWNER") {
-      return NextResponse.json({ booking: await prisma.booking.findUnique({ where: { id } }), idempotent: true });
+  } else if (action === "force_cancel") {
+    const terminalStatuses = ["COMPLETED", "CANCELLED"];
+    if (terminalStatuses.includes(booking.status)) {
+      return NextResponse.json({ error: "לא ניתן לבטל הזמנה שכבר הסתיימה/בוטלה." }, { status: 400 });
     }
-    if (booking.status !== "CONFIRMED" && booking.status !== "ACTIVE") {
-      return NextResponse.json(
-        { error: "ניתן לסמן אי-הגעה רק להזמנה מאושרת או פעילה." },
-        { status: 400 }
-      );
-    }
-    const nextStatus = action === "mark_no_show_owner" ? "NO_SHOW_OWNER" : "NO_SHOW_RENTER";
     await prisma.booking.update({
       where: { id },
-      data: {
-        status: nextStatus,
-        noShowMarkedAt: new Date(),
-        noShowMarkedByUserId: adminUser.id,
-        noShowReason: note,
-      },
+      data: { status: "CANCELLED" },
     });
     await prisma.adminActionRecord.create({
       data: {
         bookingId: id,
-        action: action.toUpperCase(),
+        action: "FORCE_CANCEL",
         note,
         adminUserId: adminUser.id,
       },
     });
     await trackEvent({
-      eventName: "booking_no_show_marked",
+      eventName: "admin_action_recorded",
       bookingId: id,
       userId: adminUser.id,
-      payload: { action, actor: action === "mark_no_show_owner" ? "owner" : "renter" },
+      payload: { action: "force_cancel", previousStatus: booking.status },
     });
   } else {
     return NextResponse.json(
       {
         error:
-          "Unsupported action. Use: mark_non_return_pending, confirm_non_return, complete_after_dispute_window, mark_no_show_renter, mark_no_show_owner",
+          "Unsupported action. Use: mark_non_return_pending, confirm_non_return, complete_after_dispute_window, force_cancel",
       },
       { status: 400 }
     );

@@ -22,7 +22,7 @@ export default function ThemeToggle() {
   if (!mounted) {
     return (
       <div
-        className="flex rounded-lg border border-border bg-muted/40 p-1 min-h-[2.75rem]"
+        className="flex min-h-[2.75rem] rounded-[8px] border border-black/10 bg-black/[0.02] p-1"
         aria-hidden
       />
     );
@@ -32,7 +32,7 @@ export default function ThemeToggle() {
     <div
       role="radiogroup"
       aria-label="מראה"
-      className="flex flex-wrap gap-1 rounded-lg border border-border bg-muted/40 p-1"
+      className="flex flex-wrap gap-1 rounded-[8px] border border-black/10 bg-black/[0.02] p-1"
     >
       {OPTIONS.map(({ value, label, Icon }) => {
         const selected = theme === value;
@@ -44,11 +44,11 @@ export default function ThemeToggle() {
             aria-checked={selected}
             onClick={() => setTheme(value)}
             className={cn(
-              "inline-flex flex-1 min-w-[4.5rem] items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-medium transition-colors",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+              "inline-flex flex-1 min-w-[4.5rem] items-center justify-center gap-1.5 rounded-full px-2 py-1.5 font-assistant text-[12px] font-medium transition-colors",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1A8C6A]/40",
               selected
-                ? "bg-card text-foreground shadow-sm border border-border"
-                : "text-muted-foreground hover:text-foreground"
+                ? "border border-black/10 bg-white font-sans font-bold text-black shadow-sm"
+                : "text-[#888888] hover:text-black"
             )}
           >
             <Icon className="size-3.5 shrink-0" aria-hidden />

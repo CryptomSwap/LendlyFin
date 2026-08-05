@@ -1,0 +1,53 @@
+name: smoke-api
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build app
+        run: npm run build
+        env:
+          NEXTAUTH_SECRET: ci-secret-not-for-prod
+          NEXTAUTH_URL: http://127.0.0.1:3000
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/postgres
+
+      - name: Start app
+        run: |
+          npm run start > smoke-server.log 2>&1 &
+          echo $! > smoke-server.pid
+          sleep 8
+        env:
+          NEXTAUTH_SECRET: ci-secret-not-for-prod
+          NEXTAUTH_URL: http://127.0.0.1:3000
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/postgres
+
+      - name: Run smoke API checks
+        run: npm run smoke:api
+        env:
+          SMOKE_BASE_URL: http://127.0.0.1:3000
+
+      - name: Print server logs on failure
+        if: failure()
+        run: cat smoke-server.log
+
+      - name: Stop app
+        if: always()
+        run: |
+          kill $(cat smoke-server.pid) || true

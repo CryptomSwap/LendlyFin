@@ -24,7 +24,7 @@ export async function sendEmail(params: SendEmailParams): Promise<{ ok: true } |
   const from = params.from ?? getEmailFrom();
 
   try {
-    const { data, error } = await client.emails.send({
+    const { error } = await client.emails.send({
       from,
       to,
       subject: params.subject,

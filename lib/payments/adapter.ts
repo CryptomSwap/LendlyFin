@@ -1,11 +1,13 @@
 /**
- * Payment adapter: mock implementation for alpha.
- * Replace with Stripe adapter when integrating real payments.
+ * Payment adapter: MangoPay, manual Bit, or mock.
  * All amounts in whole ILS; use lib/pricing for consistency.
  */
 
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { getBookingSummary } from "@/lib/pricing";
+import { getPaymentProvider } from "@/lib/payments/provider";
+import { createMangopayPayIn } from "@/lib/payments/mangopay";
 import type {
   CreateIntentResult,
   ConfirmPaymentResult,
@@ -14,6 +16,53 @@ import type {
 } from "./types";
 
 export type { CreateIntentResult, ConfirmPaymentResult, DepositReleaseResult, PaymentSnapshot } from "./types";
+export { getPaymentProvider } from "@/lib/payments/provider";
+
+async function getBookingWithListingForPayments(bookingId: string) {
+  try {
+    return await prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: { listing: true },
+    });
+  } catch (error) {
+    if (
+      !(error instanceof Prisma.PrismaClientKnownRequestError) ||
+      (error.code !== "P2022" && error.code !== "P2010" && error.code !== "P2021")
+    ) {
+      throw error;
+    }
+  }
+
+  const base = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    select: {
+      id: true,
+      bookingRef: true,
+      listingId: true,
+      startDate: true,
+      endDate: true,
+      rentalSubtotal: true,
+      serviceFee: true,
+      depositAmount: true,
+      totalDue: true,
+      paymentStatus: true,
+      depositStatus: true,
+      paymentMethod: true,
+      paymentLink: true,
+    },
+  });
+  if (!base) return null;
+  const listing = await prisma.listing.findUnique({
+    where: { id: base.listingId },
+    select: { id: true, title: true, pricePerDay: true, deposit: true },
+  });
+  if (!listing) return null;
+
+  return {
+    ...base,
+    listing,
+  };
+}
 
 async function updateDepositAndOptionalStatus(
   bookingId: string,
@@ -33,14 +82,14 @@ const MANUAL_BIT_PAYMENT_URL = process.env.MANUAL_BIT_PAYMENT_URL ?? "";
 
 /**
  * Create a payment intent for a booking.
- * Pilot: manual Bit — snapshots amounts, sets paymentMethod MANUAL_BIT and paymentLink from env, returns link for redirect.
- * Updates booking with rentalSubtotal, serviceFee, depositAmount, totalDue, paymentStatus PENDING.
+ * Routes to MangoPay when configured, otherwise falls back to manual Bit or mock.
  */
 export async function createIntent(bookingId: string): Promise<CreateIntentResult> {
-  const booking = await prisma.booking.findUnique({
-    where: { id: bookingId },
-    include: { listing: true },
-  });
+  if (getPaymentProvider() === "mangopay") {
+    return createMangopayPayIn(bookingId);
+  }
+
+  const booking = await getBookingWithListingForPayments(bookingId);
 
   if (!booking) return { error: "Booking not found" };
 
@@ -80,7 +129,7 @@ export async function createIntent(bookingId: string): Promise<CreateIntentResul
 
 /**
  * Prepare booking for manual Bit payment: snapshot amounts and set payment link.
- * Idempotent; use when checkout needs the link without going through createIntent (e.g. summary already loaded).
+ * Idempotent; use when checkout needs the link without going through createIntent.
  */
 export async function startManualBitPayment(bookingId: string): Promise<{ paymentLink: string } | { error: string }> {
   const url = process.env.MANUAL_BIT_PAYMENT_URL;
@@ -214,10 +263,7 @@ export async function splitDeposit(
  * Uses stored amounts when present, otherwise computes from listing + dates.
  */
 export async function getPaymentSnapshot(bookingId: string): Promise<PaymentSnapshot | null> {
-  const booking = await prisma.booking.findUnique({
-    where: { id: bookingId },
-    include: { listing: true },
-  });
+  const booking = await getBookingWithListingForPayments(bookingId);
   if (!booking) return null;
 
   const hasAmounts =
@@ -258,5 +304,6 @@ export async function getPaymentSnapshot(bookingId: string): Promise<PaymentSnap
     depositStatus: String(booking.depositStatus ?? "PENDING"),
     paymentMethod: booking.paymentMethod ?? null,
     paymentLink: paymentLink || null,
+    paymentProvider: getPaymentProvider(),
   };
 }

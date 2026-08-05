@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { RedesignButton } from "@/components/redesign/button";
 import SelfieCapture from "@/components/selfie-capture";
 import IdCapture from "@/components/id-capture";
 import Image from "next/image";
@@ -14,8 +14,6 @@ export default function KYCFlow() {
   const [step, setStep] = useState<Step>("instructions");
   const [selfieFile, setSelfieFile] = useState<File | null>(null);
   const [idFile, setIdFile] = useState<File | null>(null);
-  const [selfieUrl, setSelfieUrl] = useState<string | null>(null);
-  const [idUrl, setIdUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [checkingStatus, setCheckingStatus] = useState(true);
@@ -30,7 +28,8 @@ export default function KYCFlow() {
           const user = data.user || data;
           const status = user.kycStatus || "PENDING";
           
-          if (status === "SUBMITTED" || status === "APPROVED" || status === "REJECTED") {
+          // Keep rejected users in the flow so they can submit again.
+          if (status === "SUBMITTED" || status === "APPROVED") {
             console.log("[KYC Flow] User already has status:", status);
             router.push("/profile");
             return;
@@ -86,13 +85,11 @@ export default function KYCFlow() {
 
   const handleRetakeSelfie = () => {
     setSelfieFile(null);
-    setSelfieUrl(null);
     setStep("selfie");
   };
 
   const handleRetakeId = () => {
     setIdFile(null);
-    setIdUrl(null);
     setStep("id");
   };
 
@@ -140,7 +137,6 @@ export default function KYCFlow() {
 
       const selfieData = await selfieRes.json();
       console.log("[KYC] Selfie uploaded successfully:", selfieData.url);
-      setSelfieUrl(selfieData.url);
 
       // Upload ID
       console.log("[KYC] Uploading ID...");
@@ -173,7 +169,6 @@ export default function KYCFlow() {
 
       const idData = await idRes.json();
       console.log("[KYC] ID uploaded successfully:", idData.url);
-      setIdUrl(idData.url);
 
       // Submit KYC
       console.log("[KYC] Submitting KYC with URLs:", {
@@ -247,32 +242,36 @@ export default function KYCFlow() {
       case "instructions":
         return (
           <div className="space-y-6">
-            <div className="text-center space-y-2">
-              <h2 className="text-2xl font-semibold">אימות זהות</h2>
-              <p className="text-muted-foreground">
+            <div className="space-y-2 text-center">
+              <h2 className="font-sans text-[22px] font-black text-black">אימות זהות</h2>
+              <p className="font-assistant text-[14px] text-[#888888]">
                 כדי לאמת את זהותך, נדרשות שתי תמונות:
               </p>
             </div>
 
-            <div className="space-y-4">
-              <div className="border border-border rounded-lg p-4 space-y-2 bg-card">
+            <div className="space-y-3">
+              <div className="rounded-[8px] border border-black/10 bg-white p-4">
                 <div className="flex items-start gap-3">
-                  <div className="text-2xl">📸</div>
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[8px] bg-[#F0FAF6] text-lg">
+                    📸
+                  </div>
                   <div>
-                    <h3 className="font-semibold">סלפי</h3>
-                    <p className="text-sm text-muted-foreground">
+                    <h3 className="font-sans text-[15px] font-bold text-black">סלפי</h3>
+                    <p className="font-assistant text-[13px] text-[#888888]">
                       צלם תמונה של עצמך עם הפנים שלך
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="border border-border rounded-lg p-4 space-y-2 bg-card">
+              <div className="rounded-[8px] border border-black/10 bg-white p-4">
                 <div className="flex items-start gap-3">
-                  <div className="text-2xl">🆔</div>
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[8px] bg-[#F0FAF6] text-lg">
+                    🆔
+                  </div>
                   <div>
-                    <h3 className="font-semibold">תעודת זהות</h3>
-                    <p className="text-sm text-muted-foreground">
+                    <h3 className="font-sans text-[15px] font-bold text-black">תעודת זהות</h3>
+                    <p className="font-assistant text-[13px] text-[#888888]">
                       צלם את תעודת הזהות או הדרכון שלך
                     </p>
                   </div>
@@ -280,19 +279,15 @@ export default function KYCFlow() {
               </div>
             </div>
 
-            <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
-              <p className="text-sm text-foreground">
-                <strong>טיפ:</strong> ודא שהתמונות ברורות ומוארות היטב
+            <div className="rounded-[8px] border border-[#1A8C6A]/15 bg-[#F0FAF6] p-4">
+              <p className="font-assistant text-[13px] text-black">
+                <strong className="font-sans">טיפ:</strong> ודא שהתמונות ברורות ומוארות היטב
               </p>
             </div>
 
-            <Button
-              type="button"
-              onClick={handleNext}
-              className="w-full"
-            >
+            <RedesignButton type="button" onClick={handleNext} className="w-full" size="lg">
               התחל
-            </Button>
+            </RedesignButton>
           </div>
         );
 
@@ -316,16 +311,16 @@ export default function KYCFlow() {
         return (
           <div className="space-y-6">
             <div className="text-center">
-              <h2 className="text-xl font-semibold">בדוק את התמונות</h2>
-              <p className="text-sm text-muted-foreground">
+              <h2 className="font-sans text-[20px] font-black text-black">בדוק את התמונות</h2>
+              <p className="mt-1 font-assistant text-[13px] text-[#888888]">
                 ודא שהתמונות ברורות לפני השליחה
               </p>
             </div>
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <h3 className="text-sm font-medium text-center">סלפי</h3>
-                <div className="relative aspect-square rounded-lg overflow-hidden border-2 border-border bg-muted">
+                <h3 className="text-center font-sans text-[13px] font-bold text-black">סלפי</h3>
+                <div className="relative aspect-square overflow-hidden rounded-[8px] border border-black/10 bg-black/[0.03]">
                   {selfieFile && (
                     <Image
                       src={URL.createObjectURL(selfieFile)}
@@ -336,20 +331,20 @@ export default function KYCFlow() {
                     />
                   )}
                 </div>
-                <Button
+                <RedesignButton
                   type="button"
-                  variant="outline"
+                  variant="secondary"
                   size="sm"
                   onClick={handleRetakeSelfie}
                   className="w-full"
                 >
                   צלם שוב
-                </Button>
+                </RedesignButton>
               </div>
 
               <div className="space-y-2">
-                <h3 className="text-sm font-medium text-center">תעודת זהות</h3>
-                <div className="relative aspect-square rounded-lg overflow-hidden border-2 border-border bg-muted">
+                <h3 className="text-center font-sans text-[13px] font-bold text-black">תעודת זהות</h3>
+                <div className="relative aspect-square overflow-hidden rounded-[8px] border border-black/10 bg-black/[0.03]">
                   {idFile && (
                     <Image
                       src={URL.createObjectURL(idFile)}
@@ -360,21 +355,21 @@ export default function KYCFlow() {
                     />
                   )}
                 </div>
-                <Button
+                <RedesignButton
                   type="button"
-                  variant="outline"
+                  variant="secondary"
                   size="sm"
                   onClick={handleRetakeId}
                   className="w-full"
                 >
                   צלם שוב
-                </Button>
+                </RedesignButton>
               </div>
             </div>
 
             {error && (
-            <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-3">
-                <p className="text-sm text-destructive">{error}</p>
+              <div className="rounded-[8px] border border-red-200 bg-red-50 p-3">
+                <p className="font-assistant text-[13px] text-red-600">{error}</p>
               </div>
             )}
           </div>
@@ -382,19 +377,21 @@ export default function KYCFlow() {
 
       case "submitting":
         return (
-          <div className="text-center space-y-4 py-8">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-300 border-t-blue-600"></div>
-            <p className="text-muted-foreground">שולח את המסמכים...</p>
+          <div className="space-y-4 py-8 text-center">
+            <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-black/10 border-t-[#1A8C6A]" />
+            <p className="font-assistant text-[14px] text-[#888888]">שולח את המסמכים...</p>
           </div>
         );
 
       case "success":
         return (
-          <div className="text-center space-y-6 py-8">
-            <div className="text-6xl">✅</div>
+          <div className="space-y-6 py-8 text-center">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#F0FAF6] text-3xl">
+              ✓
+            </div>
             <div className="space-y-2">
-              <h2 className="text-2xl font-semibold">נשלח בהצלחה!</h2>
-              <p className="text-muted-foreground">
+              <h2 className="font-sans text-[22px] font-black text-black">נשלח בהצלחה!</h2>
+              <p className="font-assistant text-[14px] text-[#888888]">
                 המסמכים נשלחו לאימות. נבדוק אותם ונעדכן אותך בקרוב.
               </p>
             </div>
@@ -409,16 +406,11 @@ export default function KYCFlow() {
   const showNavigation = step !== "instructions" && step !== "submitting" && step !== "success";
 
   // Determine if we can proceed to the next step
-  const canProceedToNext = 
-    step === "instructions" ||
-    (step === "selfie" && !!selfieFile) ||
-    (step === "id" && !!idFile);
-
   if (checkingStatus) {
     return (
-      <div className="text-center py-8">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-blue-600"></div>
-        <p className="mt-2 text-gray-600">בודק סטטוס...</p>
+      <div className="py-8 text-center">
+        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-black/10 border-t-[#1A8C6A]" />
+        <p className="mt-2 font-assistant text-[14px] text-[#888888]">בודק סטטוס...</p>
       </div>
     );
   }
@@ -428,7 +420,7 @@ export default function KYCFlow() {
       {/* Progress indicator */}
       {step !== "success" && (
         <div className="flex flex-col gap-2">
-          <p className="text-xs text-gray-500 text-center">
+          <p className="text-center font-assistant text-[12px] text-[#888888]">
             {step === "instructions" && "שלב 1/4 – הוראות"}
             {step === "selfie" && "שלב 2/4 – סלפי"}
             {step === "id" && "שלב 3/4 – תעודת זהות"}
@@ -436,7 +428,6 @@ export default function KYCFlow() {
           </p>
           <div className="flex items-center gap-2">
           {["instructions", "selfie", "id", "review"].map((s, idx) => {
-            const stepNames = ["הוראות", "סלפי", "תעודת זהות", "ביקורת"];
             const isActive = step === s;
             const isCompleted =
               (s === "instructions" && step !== "instructions") ||
@@ -444,29 +435,29 @@ export default function KYCFlow() {
               (s === "id" && step === "review");
 
             return (
-              <div key={s} className="flex-1 flex items-center">
-                <div className="flex-1 flex items-center">
+              <div key={s} className="flex flex-1 items-center">
+                <div className="flex flex-1 items-center">
                   <div
-                    className={`flex-1 h-1 rounded ${
+                    className={`h-1 flex-1 rounded-full ${
                       isCompleted
-                        ? "bg-blue-600"
+                        ? "bg-[#1A8C6A]"
                         : isActive
-                        ? "bg-blue-300"
-                        : "bg-gray-200"
+                        ? "bg-[#1A8C6A]/40"
+                        : "bg-black/10"
                     }`}
                   />
                   <div
-                    className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
+                    className={`flex h-6 w-6 items-center justify-center rounded-full font-sans text-[11px] font-bold ${
                       isCompleted
-                        ? "bg-blue-600 text-white"
+                        ? "bg-[#1A8C6A] text-white"
                         : isActive
-                        ? "bg-blue-300 text-blue-900"
-                        : "bg-gray-200 text-gray-600"
+                        ? "bg-[#F0FAF6] text-[#1A8C6A]"
+                        : "bg-black/8 text-[#888888]"
                     }`}
                   >
                     {isCompleted ? "✓" : idx + 1}
                   </div>
-                  <div className="flex-1 h-1 rounded bg-gray-200" />
+                  <div className="h-1 flex-1 rounded-full bg-black/10" />
                 </div>
               </div>
             );
@@ -481,44 +472,45 @@ export default function KYCFlow() {
       {showNavigation && (
         <div className="flex gap-2 pt-4">
           {step !== "selfie" && (
-            <Button
+            <RedesignButton
               type="button"
-              variant="outline"
+              variant="secondary"
               onClick={handleBack}
               className="flex-1"
             >
               חזור
-            </Button>
+            </RedesignButton>
           )}
           {step === "review" ? (
-            <Button
+            <RedesignButton
               type="button"
               onClick={handleSubmit}
               disabled={uploading}
               className="flex-1"
             >
               שלח לאימות
-            </Button>
+            </RedesignButton>
           ) : (
-            <Button
+            <RedesignButton
               type="button"
               onClick={handleNext}
               className="flex-1"
             >
               הבא
-            </Button>
+            </RedesignButton>
           )}
         </div>
       )}
 
       {step === "success" && (
-        <Button
+        <RedesignButton
           type="button"
           onClick={() => router.push("/profile")}
           className="w-full"
+          size="lg"
         >
           חזור לפרופיל
-        </Button>
+        </RedesignButton>
       )}
     </div>
   );

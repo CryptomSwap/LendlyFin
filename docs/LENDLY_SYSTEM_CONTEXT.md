@@ -223,7 +223,7 @@ Sections in order (top to bottom):
 ### Backend
 
 - **Next.js API routes** — Under `app/api/`: listings (CRUD, search, upload, availability, blocked ranges, reviews), bookings (CRUD, messages, pickup/return checklists, checklist photos, disputes), payments (create-intent, confirm), checkout summary, profile/onboarding, KYC submit/upload, admin (users, listings, bookings, disputes, KYC, metrics).
-- **Database** — SQLite (Prisma); file-based for dev/QA.
+- **Database** — PostgreSQL (Prisma); `DATABASE_URL` in `prisma.config.ts` / environment.
 
 ### Authentication
 

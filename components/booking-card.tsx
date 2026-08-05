@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
-import { StatusPill } from "@/components/ui/status-pill";
+import { RedesignStatusPill, type RedesignStatusVariant } from "@/components/redesign/status-pill";
 import { getBookingStatusLabelDetail, getBookingStatusPillVariant } from "@/lib/status-labels";
 
 export type BookingCardProps = {
@@ -11,10 +10,6 @@ export type BookingCardProps = {
     | "REQUESTED"
     | "CONFIRMED"
     | "ACTIVE"
-    | "CANCELLED_BY_RENTER"
-    | "CANCELLED_BY_OWNER"
-    | "NO_SHOW_RENTER"
-    | "NO_SHOW_OWNER"
     | "RETURNED"
     | "IN_DISPUTE"
     | "NON_RETURN_PENDING"
@@ -26,28 +21,30 @@ export type BookingCardProps = {
   bookingRef?: string | null;
 };
 
+function toRedesignVariant(
+  variant: ReturnType<typeof getBookingStatusPillVariant>
+): RedesignStatusVariant {
+  return variant === "primary" ? "brand" : variant;
+}
+
 export default function BookingCard({ title, subtitle, status, href, bookingRef }: BookingCardProps) {
   const statusLabel = getBookingStatusLabelDetail(status);
-  const pillVariant = getBookingStatusPillVariant(status);
+  const pillVariant = toRedesignVariant(getBookingStatusPillVariant(status));
 
   return (
     <Link href={href} className="block" dir="rtl">
-      <Card className="cursor-pointer transition-shadow hover:shadow-md">
-        <CardHeader className="pb-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <CardTitle className="text-base">{title}</CardTitle>
-            <StatusPill variant={pillVariant}>{statusLabel}</StatusPill>
-          </div>
-          {bookingRef && (
-            <p className="font-mono text-xs text-muted-foreground mt-0.5" dir="ltr">
-              {bookingRef}
-            </p>
-          )}
-        </CardHeader>
-        <CardContent className="text-sm text-muted-foreground pt-0">
-          <p>{subtitle}</p>
-        </CardContent>
-      </Card>
+      <div className="rounded-[8px] border border-black/10 bg-white p-4 md:p-6 transition-shadow hover:shadow-[0_4px_16px_rgba(0,0,0,0.06)]">
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 className="font-sans text-base font-bold text-black">{title}</h2>
+          <RedesignStatusPill variant={pillVariant}>{statusLabel}</RedesignStatusPill>
+        </div>
+        {bookingRef && (
+          <p className="font-mono text-xs text-[#888888] mt-1" dir="ltr">
+            {bookingRef}
+          </p>
+        )}
+        <p className="mt-2 font-assistant text-[14px] text-[#888888]">{subtitle}</p>
+      </div>
     </Link>
   );
 }

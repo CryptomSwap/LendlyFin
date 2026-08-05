@@ -2,7 +2,7 @@
 
 **Product:** Peer-to-peer equipment rental marketplace  
 **Repository:** Lendly Tom (ledly-tom)  
-**Stack:** Next.js 16 App Router, TypeScript, Prisma, SQLite (dev), Tailwind 4, Hebrew RTL, NextAuth (Google)
+**Stack:** Next.js 16 App Router, TypeScript, Prisma, PostgreSQL, Tailwind 4, Hebrew RTL, NextAuth (Google)
 
 ---
 
@@ -12,7 +12,7 @@
 - **Auth:** NextAuth JWT with Google provider. Session carries `lendlyUserId` and `onboardingComplete` (derived from name, phone, city). Middleware enforces auth and onboarding on protected paths; `DEV_AUTH_BYPASS` skips checks. Auth adapter in `lib/auth/adapter.ts` switches between session and dev adapter.
 - **Booking lifecycle (fixed):** REQUESTED → (Bit redirect → admin confirms) → CONFIRMED → pickup checklist → ACTIVE → return checklist → COMPLETED or DISPUTE → admin resolves → COMPLETED. Status and payment/deposit transitions are in API routes and `lib/payments/adapter.ts`; emails are triggered from `lib/notifications/booking-lifecycle.ts`.
 - **Payments:** Manual Bit only. `createIntent` in `lib/payments/adapter.ts` sets amounts and `paymentLink` from `MANUAL_BIT_PAYMENT_URL`; user redirects to Bit; admin confirms via `POST /api/admin/bookings/[id]/confirm-payment`, which sets payment SUCCEEDED, deposit HELD, status CONFIRMED and sends confirmation emails.
-- **Data:** Prisma + SQLite; single `schema.prisma` with User, Listing, Booking, Review, Conversation/Message, Dispute, PickupChecklist, ReturnChecklist, BookingChecklistPhoto, ListingBlockedRange, ListingImage, AuditLog. Booking ref format `LND-XXXXXX` from `lib/booking-ref.ts`.
+- **Data:** Prisma + PostgreSQL (`DATABASE_URL` via `prisma.config.ts`); single `schema.prisma` with User, Listing, Booking, Review, Conversation/Message, Dispute, PickupChecklist, ReturnChecklist, BookingChecklistPhoto, ListingBlockedRange, ListingImage, AuditLog. Booking ref format `LND-XXXXXX` from `lib/booking-ref.ts`.
 
 ---
 
@@ -25,7 +25,7 @@
 | `app/` | Next.js App Router: routes, layouts, API routes |
 | `components/` | Shared React components (app-shell, nav, cards, UI primitives, feature components) |
 | `lib/` | Utilities, auth, payments, pricing, availability, email, notifications, audit, trust |
-| `prisma/` | Schema, migrations, seed, dev.db |
+| `prisma/` | Schema, migrations, seed |
 | `public/` | Static assets and uploads (e.g. `uploads/kyc/`) |
 
 ### App routes
@@ -86,15 +86,15 @@
 
 ### Prisma / schema / migrations
 
-- **Schema:** `prisma/schema.prisma` — SQLite; models: User, Listing, ListingImage, ListingBlockedRange, Booking, Review, Conversation, Message, Dispute, PickupChecklist, ReturnChecklist, BookingChecklistPhoto, AuditLog; enums: ListingStatus, BookingStatus, PaymentStatus, DepositStatus, DisputeStatus, KYCStatus.
-- **Migrations:** Under `prisma/migrations/` (init, payments_fields, listing_images, listing_created_at, lat_lng, kyc_fields, kyc_audit_log, listing_description, value_pickup_rules, listing_status_and_moderation_log, backfill_listing_status_active, unified_audit_log, listing_blocked_ranges, pickup_checklist, return_checklist, dispute, user_suspension, listing_owner, booking_payment_deposit_fields, booking_messages, booking_reviews, user_pilot_fields, booking_manual_bit_payment_fields, booking_ref, pickup_instructions_snapshot).
+- **Schema:** `prisma/schema.prisma` — PostgreSQL provider; models: User, Listing, ListingImage, ListingBlockedRange, Booking, Review, Conversation, Message, Dispute, PickupChecklist, ReturnChecklist, BookingChecklistPhoto, AuditLog; enums: ListingStatus, BookingStatus, PaymentStatus, DepositStatus, DisputeStatus, KYCStatus.
+- **Migrations:** Under `prisma/migrations/` (PostgreSQL baseline + subsequent migrations as added).
 
 ### Auth-related files
 
 - **Config:** `lib/auth/nextauth-options.ts` (Google provider, JWT callbacks, onboarding flag on session).
 - **Adapter:** `lib/auth/adapter.ts` (uses session or dev adapter), `lib/auth/session-adapter.ts`, `lib/auth/dev-adapter.ts`.
 - **Helpers:** `lib/auth/onboarding.ts` (`needsOnboarding`), `lib/auth/types.ts`.
-- **Middleware:** `middleware.ts` — protects `/add`, `/bookings`, `/profile`, `/checkout`, `/manage`; redirects unauthenticated to `/signin`, incomplete onboarding to `/onboarding`; excludes `_next`, static, favicon, uploads, api.
+- **Edge gate:** `proxy.ts` (Next.js 16 convention) — protects `/add`, `/bookings`, `/profile`, `/owner`, `/checkout`, `/manage`, `/admin`; redirects unauthenticated to `/signin`, incomplete onboarding to `/onboarding`; excludes `_next`, static, favicon, uploads, api.
 - **Pages:** `app/(main)/signin/page.tsx`, `app/(main)/onboarding/page.tsx`, `app/(main)/onboarding/onboarding-form.tsx`.
 - **API:** `app/api/auth/[...nextauth]/route.ts`, `app/api/profile/onboarding/route.ts`, `app/api/me/route.ts`.
 

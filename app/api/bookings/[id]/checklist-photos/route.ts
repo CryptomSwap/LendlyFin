@@ -4,7 +4,7 @@ import { join } from "path";
 import { existsSync } from "fs";
 import { randomUUID } from "crypto";
 import { prisma } from "@/lib/prisma";
-import { requireBookingAccess } from "@/lib/booking-auth";
+import { requireBookingParticipantAccess } from "@/lib/booking-auth";
 import { CHECKLIST_PHOTO_TYPES } from "@/lib/booking-auth";
 
 export const runtime = "nodejs";
@@ -17,7 +17,7 @@ export async function POST(
   ctx: { params: Promise<{ id: string }> }
 ) {
   const { id: bookingId } = await ctx.params;
-  const { error, booking } = await requireBookingAccess(bookingId);
+  const { error, booking } = await requireBookingParticipantAccess(bookingId);
   if (error) return error;
   if (!booking) return NextResponse.json({ error: "Not found" }, { status: 404 });
 

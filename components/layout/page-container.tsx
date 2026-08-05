@@ -6,20 +6,20 @@ export interface PageContainerProps {
   className?: string;
   /** Explicit width preset for desktop layouts */
   width?: "narrow" | "default" | "wide";
-  /** Use wider max-width (90rem) for content-heavy pages */
+  /** Use wider max-width for content-heavy pages */
   wide?: boolean;
   /** Omit horizontal padding (e.g. when child has its own) */
   noPadding?: boolean;
 }
 
-const PADDING = "px-4 md:px-8";
-const MAX_WIDTH_NARROW = "max-w-md md:max-w-4xl";
-const MAX_WIDTH_DEFAULT = "max-w-md md:max-w-7xl";
-const MAX_WIDTH_WIDE = "max-w-md md:max-w-7xl lg:max-w-[90rem]";
+const PADDING = "px-5";
+const MAX_WIDTH_NARROW = "max-w-2xl";
+const MAX_WIDTH_DEFAULT = "max-w-[1420px]";
+const MAX_WIDTH_WIDE = "max-w-[1680px]";
 
 /** Single shared inner geometry for search page: hero and results use this so they align exactly. */
 export const SEARCH_PAGE_INNER_CLASS =
-  "w-full max-w-md md:max-w-7xl lg:max-w-[90rem] mx-auto px-4 md:px-8";
+  "w-full max-w-[1420px] mx-auto px-5";
 
 export function PageContainer({
   children,

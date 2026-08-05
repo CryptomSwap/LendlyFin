@@ -4,8 +4,10 @@
  */
 
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { getLenderPayout } from "@/lib/pricing";
 import { measurePerf } from "@/lib/perf";
+import { listingCoverImageUrl } from "@/lib/listing-images";
 
 export interface OwnerDashboardData {
   activeListingsCount: number;
@@ -58,109 +60,112 @@ export interface ListingOverviewItem {
   latestBookingRef: string | null;
 }
 
+const EMPTY_OWNER_DASHBOARD: OwnerDashboardData = {
+  activeListingsCount: 0,
+  pendingBookingRequestsCount: 0,
+  upcomingPickupsCount: 0,
+  activeRentalsCount: 0,
+  completedBookingsCount: 0,
+  earningsIls: 0,
+  attentionBookings: [],
+  upcomingPickups: [],
+  upcomingReturns: [],
+  listings: [],
+};
+
 export async function getOwnerDashboardData(userId: string): Promise<OwnerDashboardData> {
   return measurePerf("owner.dashboard.query", async () => {
-    const now = new Date();
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    try {
+      const now = new Date();
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-    const listings = await prisma.listing.findMany({
-      where: { ownerId: userId },
-      select: {
-        id: true,
-        title: true,
-        status: true,
-        city: true,
-        pricePerDay: true,
-        images: {
-          select: { url: true },
-          orderBy: { order: "asc" },
-          take: 1,
+      const listings = await prisma.listing.findMany({
+        where: { ownerId: userId },
+        select: {
+          id: true,
+          title: true,
+          status: true,
+          city: true,
+          pricePerDay: true,
+          images: {
+            select: { url: true, order: true },
+            orderBy: { order: "asc" },
+            take: 1,
+          },
+          bookings: {
+            select: { status: true, bookingRef: true, createdAt: true },
+            orderBy: { createdAt: "desc" },
+            take: 1,
+          },
+          _count: { select: { bookings: true } },
         },
-        bookings: {
-          select: { status: true, bookingRef: true, createdAt: true },
-          orderBy: { createdAt: "desc" },
-          take: 1,
+        orderBy: { createdAt: "desc" },
+      });
+
+      const listingIds = listings.map((l) => l.id);
+      if (listingIds.length === 0) {
+        return EMPTY_OWNER_DASHBOARD;
+      }
+
+      const [
+        bookingsByStatus,
+        upcomingPickups,
+        upcomingReturns,
+        attentionBookings,
+        completedWithPayment,
+      ] = await Promise.all([
+      prisma.booking.groupBy({
+        by: ["status"],
+        where: { listingId: { in: listingIds } },
+        _count: { _all: true },
+      }),
+      prisma.booking.findMany({
+        where: {
+          listingId: { in: listingIds },
+          status: "CONFIRMED",
+          startDate: { gte: todayStart },
         },
-        _count: { select: { bookings: true } },
-      },
-      orderBy: { createdAt: "desc" },
-    });
-
-    const listingIds = listings.map((l) => l.id);
-    if (listingIds.length === 0) {
-      return {
-        activeListingsCount: 0,
-        pendingBookingRequestsCount: 0,
-        upcomingPickupsCount: 0,
-        activeRentalsCount: 0,
-        completedBookingsCount: 0,
-        earningsIls: 0,
-        attentionBookings: [],
-        upcomingPickups: [],
-        upcomingReturns: [],
-        listings: [],
-      };
-    }
-
-    const [
-      bookingsByStatus,
-      upcomingPickups,
-      upcomingReturns,
-      attentionBookings,
-      completedWithPayment,
-    ] = await Promise.all([
-    prisma.booking.groupBy({
-      by: ["status"],
-      where: { listingId: { in: listingIds } },
-      _count: { _all: true },
-    }),
-    prisma.booking.findMany({
-      where: {
-        listingId: { in: listingIds },
-        status: "CONFIRMED",
-        startDate: { gte: todayStart },
-      },
-      include: {
-        listing: { select: { title: true } },
-        user: { select: { name: true } },
-      },
-      orderBy: { startDate: "asc" },
-      take: 10,
-    }),
-    prisma.booking.findMany({
-      where: {
-        listingId: { in: listingIds },
-        status: "ACTIVE",
-        endDate: { gte: todayStart },
-      },
-      include: {
-        listing: { select: { title: true } },
-        user: { select: { name: true } },
-      },
-      orderBy: { endDate: "asc" },
-      take: 10,
-    }),
-    prisma.booking.findMany({
-      where: {
-        listingId: { in: listingIds },
-        status: { in: ["REQUESTED", "IN_DISPUTE", "DISPUTE"] },
-      },
-      include: {
-        listing: { select: { title: true } },
-        user: { select: { name: true } },
-      },
-      orderBy: { createdAt: "desc" },
-      take: 10,
-    }),
-    prisma.booking.findMany({
-      where: {
-        listingId: { in: listingIds },
-        status: "COMPLETED",
-        paymentStatus: "SUCCEEDED",
-      },
-      select: { rentalSubtotal: true, serviceFee: true },
-    }),
-    ]);
+        include: {
+          listing: { select: { title: true } },
+          user: { select: { name: true } },
+        },
+        orderBy: { startDate: "asc" },
+        take: 10,
+      }),
+      prisma.booking.findMany({
+        where: {
+          listingId: { in: listingIds },
+          status: "ACTIVE",
+          endDate: { gte: todayStart },
+        },
+        include: {
+          listing: { select: { title: true } },
+          user: { select: { name: true } },
+        },
+        orderBy: { endDate: "asc" },
+        take: 10,
+      }),
+      prisma.booking.findMany({
+        where: {
+          listingId: { in: listingIds },
+          status: { in: ["REQUESTED", "IN_DISPUTE", "DISPUTE"] },
+        },
+        include: {
+          listing: { select: { title: true } },
+          user: { select: { name: true } },
+        },
+        orderBy: { createdAt: "desc" },
+        take: 10,
+      }),
+      prisma.booking.findMany({
+        where: {
+          listingId: { in: listingIds },
+          status: "COMPLETED",
+          paymentStatus: "SUCCEEDED",
+        },
+        select: { rentalSubtotal: true, serviceFee: true },
+      }),
+      ]);
 
     const statusCounts = new Map(bookingsByStatus.map((b) => [b.status, b._count._all]));
     const activeListingsCount = listings.filter((l) => l.status === "ACTIVE").length;
@@ -173,51 +178,60 @@ export async function getOwnerDashboardData(userId: string): Promise<OwnerDashbo
       sum + getLenderPayout(b.rentalSubtotal, b.serviceFee)
     ), 0);
 
-    return {
-      activeListingsCount,
-      pendingBookingRequestsCount,
-      upcomingPickupsCount,
-      activeRentalsCount,
-      completedBookingsCount,
-      earningsIls,
-      attentionBookings: attentionBookings.map((b) => ({
-        id: b.id,
-        bookingRef: b.bookingRef,
-        status: b.status,
-        startDate: b.startDate.toISOString(),
-        endDate: b.endDate.toISOString(),
-        listingTitle: b.listing.title,
-        renterName: b.user.name,
-      })),
-      upcomingPickups: upcomingPickups.map((b) => ({
-        id: b.id,
-        bookingRef: b.bookingRef,
-        startDate: b.startDate.toISOString(),
-        endDate: b.endDate.toISOString(),
-        listingTitle: b.listing.title,
-        renterName: b.user.name,
-        status: b.status,
-      })),
-      upcomingReturns: upcomingReturns.map((b) => ({
-        id: b.id,
-        bookingRef: b.bookingRef,
-        startDate: b.startDate.toISOString(),
-        endDate: b.endDate.toISOString(),
-        listingTitle: b.listing.title,
-        renterName: b.user.name,
-        status: b.status,
-      })),
-      listings: listings.map((l) => ({
-        id: l.id,
-        title: l.title,
-        status: l.status,
-        city: l.city,
-        pricePerDay: l.pricePerDay,
-        imageUrl: l.images[0]?.url ?? null,
-        bookingsCount: l._count.bookings,
-        latestBookingStatus: l.bookings[0]?.status ?? null,
-        latestBookingRef: l.bookings[0]?.bookingRef ?? null,
-      })),
-    };
+      return {
+        activeListingsCount,
+        pendingBookingRequestsCount,
+        upcomingPickupsCount,
+        activeRentalsCount,
+        completedBookingsCount,
+        earningsIls,
+        attentionBookings: attentionBookings.map((b) => ({
+          id: b.id,
+          bookingRef: b.bookingRef,
+          status: b.status,
+          startDate: b.startDate.toISOString(),
+          endDate: b.endDate.toISOString(),
+          listingTitle: b.listing.title,
+          renterName: b.user.name,
+        })),
+        upcomingPickups: upcomingPickups.map((b) => ({
+          id: b.id,
+          bookingRef: b.bookingRef,
+          startDate: b.startDate.toISOString(),
+          endDate: b.endDate.toISOString(),
+          listingTitle: b.listing.title,
+          renterName: b.user.name,
+          status: b.status,
+        })),
+        upcomingReturns: upcomingReturns.map((b) => ({
+          id: b.id,
+          bookingRef: b.bookingRef,
+          startDate: b.startDate.toISOString(),
+          endDate: b.endDate.toISOString(),
+          listingTitle: b.listing.title,
+          renterName: b.user.name,
+          status: b.status,
+        })),
+        listings: listings.map((l) => ({
+          id: l.id,
+          title: l.title,
+          status: l.status,
+          city: l.city,
+          pricePerDay: l.pricePerDay,
+          imageUrl: listingCoverImageUrl(l.images),
+          bookingsCount: l._count.bookings,
+          latestBookingStatus: l.bookings[0]?.status ?? null,
+          latestBookingRef: l.bookings[0]?.bookingRef ?? null,
+        })),
+      };
+    } catch (error) {
+      // Keep owner board reachable even if DB schema lags or query paths fail.
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === "P2021" || error.code === "P2022" || error.code === "P2010") {
+          return EMPTY_OWNER_DASHBOARD;
+        }
+      }
+      throw error;
+    }
   });
 }

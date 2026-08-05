@@ -45,5 +45,6 @@ export async function POST(req: Request) {
     paymentStatus: snapshot.paymentStatus,
     paymentMethod: snapshot.paymentMethod ?? undefined,
     paymentLink: snapshot.paymentLink ?? undefined,
+    paymentProvider: snapshot.paymentProvider,
   });
 }

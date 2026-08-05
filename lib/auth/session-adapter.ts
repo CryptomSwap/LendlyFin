@@ -47,13 +47,30 @@ const userSelect = {
 
 export async function getCurrentUser(): Promise<AuthUser | null> {
   const session = await getServerSession(authOptions);
-  const userId = session?.user?.id;
-  if (!userId) return null;
+  const sessionUserId = session?.user?.id?.trim();
+  const sessionEmail = session?.user?.email?.trim().toLowerCase();
 
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: userSelect,
-  });
+  if (!sessionUserId && !sessionEmail) return null;
+
+  // Primary lookup by session user id (expected Prisma id).
+  let user =
+    sessionUserId
+      ? await prisma.user.findUnique({
+          where: { id: sessionUserId },
+          select: userSelect,
+        })
+      : null;
+
+  // Fallback: some sessions may carry non-Prisma ids; recover by email.
+  if (!user && sessionEmail) {
+    user = await prisma.user.findUnique({
+      where: { email: sessionEmail },
+      select: userSelect,
+    });
+  }
+  if (user?.suspendedAt) {
+    return null;
+  }
   return user ? toAuthUser(user) : null;
 }
 

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -16,6 +17,7 @@ import { LoadingBlock } from "@/components/ui/loading-block";
 import { getListingStatusLabel, getListingStatusPillVariant } from "@/lib/status-labels";
 import { StatusPill } from "@/components/ui/status-pill";
 import ListingAvailabilityCalendar from "@/components/listings/ListingAvailabilityCalendar";
+import { CATEGORY_TAXONOMY } from "@/lib/constants";
 
 type BlockedRange = {
   id: string;
@@ -35,12 +37,26 @@ export default function ManageListingAvailability({
   listingId,
   listingTitle,
   listingStatus,
+  description,
+  category,
+  subcategory,
+  city,
+  pricePerDay,
+  deposit,
+  valueEstimate,
   pickupNote,
   rules,
 }: {
   listingId: string;
   listingTitle: string;
   listingStatus: string;
+  description: string;
+  category: string;
+  subcategory: string;
+  city: string;
+  pricePerDay: number;
+  deposit: number;
+  valueEstimate: number | null;
   pickupNote: string;
   rules: string;
 }) {
@@ -59,7 +75,25 @@ export default function ManageListingAvailability({
   const [detailsSuccess, setDetailsSuccess] = useState<string | null>(null);
   const [detailsError, setDetailsError] = useState<string | null>(null);
 
-  const fetchRanges = async () => {
+  const router = useRouter();
+  const [deleting, setDeleting] = useState(false);
+
+  const [editTitle, setEditTitle] = useState(listingTitle);
+  const [editDescription, setEditDescription] = useState(description);
+  const [editCategory, setEditCategory] = useState(category);
+  const [editSubcategory, setEditSubcategory] = useState(subcategory);
+  const [editCity, setEditCity] = useState(city);
+  const [editPrice, setEditPrice] = useState(pricePerDay);
+  const [editDeposit, setEditDeposit] = useState(deposit);
+  const [editValueEstimate, setEditValueEstimate] = useState(valueEstimate ?? 0);
+  const [coreSaving, setCoreSaving] = useState(false);
+  const [coreSuccess, setCoreSuccess] = useState<string | null>(null);
+  const [coreError, setCoreError] = useState<string | null>(null);
+
+  const selectedCategory = CATEGORY_TAXONOMY.find((c) => c.slug === editCategory);
+  const subcategories = selectedCategory?.children ?? [];
+
+  const fetchRanges = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -80,11 +114,11 @@ export default function ManageListingAvailability({
     } finally {
       setLoading(false);
     }
-  };
+  }, [listingId]);
 
   useEffect(() => {
     fetchRanges();
-  }, [listingId]);
+  }, [fetchRanges]);
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -141,6 +175,39 @@ export default function ManageListingAvailability({
     }
   };
 
+  const handleSaveCore = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCoreSaving(true);
+    setCoreSuccess(null);
+    setCoreError(null);
+    try {
+      const res = await fetch(`/api/listings/${listingId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: editTitle.trim(),
+          description: editDescription.trim() || null,
+          category: editCategory,
+          subcategory: editSubcategory || null,
+          city: editCity.trim(),
+          pricePerDay: editPrice,
+          deposit: editDeposit,
+          valueEstimate: editValueEstimate || null,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setCoreError(data?.error ?? "שגיאה בעדכון הפרטים");
+        return;
+      }
+      setCoreSuccess("הפרטים עודכנו בהצלחה");
+    } catch {
+      setCoreError("שגיאה בעדכון הפרטים");
+    } finally {
+      setCoreSaving(false);
+    }
+  };
+
   const statusLabel = getListingStatusLabel(listingStatus);
 
   const handleSaveDetails = async (e: React.FormEvent) => {
@@ -178,6 +245,128 @@ export default function ManageListingAvailability({
           {statusLabel}
         </StatusPill>
       </header>
+
+      <Card className="shadow-soft">
+        <CardHeader>
+          <CardTitle className="text-base">פרטי מודעה</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            עדכון פרטי המודעה. שינויים נשמרים ישירות ללא צורך באישור מחדש.
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {coreError && <Alert variant="error">{coreError}</Alert>}
+          {coreSuccess && <Alert variant="success">{coreSuccess}</Alert>}
+          <form onSubmit={handleSaveCore} className="space-y-5">
+            <div className="form-group">
+              <Label htmlFor="manage-title">כותרת</Label>
+              <Input
+                id="manage-title"
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                required
+                disabled={coreSaving}
+              />
+            </div>
+            <div className="form-group">
+              <Label htmlFor="manage-description">תיאור</Label>
+              <textarea
+                id="manage-description"
+                value={editDescription}
+                onChange={(e) => setEditDescription(e.target.value)}
+                rows={3}
+                className="input-base w-full min-h-[80px] resize-y"
+                disabled={coreSaving}
+              />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="form-group">
+                <Label htmlFor="manage-category">קטגוריה</Label>
+                <select
+                  id="manage-category"
+                  value={editCategory}
+                  onChange={(e) => {
+                    setEditCategory(e.target.value);
+                    setEditSubcategory("");
+                  }}
+                  className="input-base w-full"
+                  disabled={coreSaving}
+                >
+                  {CATEGORY_TAXONOMY.map((c) => (
+                    <option key={c.slug} value={c.slug}>{c.label}</option>
+                  ))}
+                </select>
+              </div>
+              {subcategories.length > 0 && (
+                <div className="form-group">
+                  <Label htmlFor="manage-subcategory">תת-קטגוריה</Label>
+                  <select
+                    id="manage-subcategory"
+                    value={editSubcategory}
+                    onChange={(e) => setEditSubcategory(e.target.value)}
+                    className="input-base w-full"
+                    disabled={coreSaving}
+                  >
+                    <option value="">ללא</option>
+                    {subcategories.map((sc) => (
+                      <option key={sc.slug} value={sc.slug}>{sc.label}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+            <div className="form-group">
+              <Label htmlFor="manage-city">עיר</Label>
+              <Input
+                id="manage-city"
+                value={editCity}
+                onChange={(e) => setEditCity(e.target.value)}
+                required
+                disabled={coreSaving}
+              />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="form-group">
+                <Label htmlFor="manage-price">מחיר ליום (₪)</Label>
+                <Input
+                  id="manage-price"
+                  type="number"
+                  min={0}
+                  value={editPrice}
+                  onChange={(e) => setEditPrice(Number(e.target.value))}
+                  required
+                  disabled={coreSaving}
+                />
+              </div>
+              <div className="form-group">
+                <Label htmlFor="manage-deposit">פיקדון (₪)</Label>
+                <Input
+                  id="manage-deposit"
+                  type="number"
+                  min={0}
+                  value={editDeposit}
+                  onChange={(e) => setEditDeposit(Number(e.target.value))}
+                  required
+                  disabled={coreSaving}
+                />
+              </div>
+              <div className="form-group">
+                <Label htmlFor="manage-value">שווי מוערך (₪)</Label>
+                <Input
+                  id="manage-value"
+                  type="number"
+                  min={0}
+                  value={editValueEstimate}
+                  onChange={(e) => setEditValueEstimate(Number(e.target.value))}
+                  disabled={coreSaving}
+                />
+              </div>
+            </div>
+            <Button type="submit" disabled={coreSaving}>
+              {coreSaving ? "שומר..." : "שמור פרטים"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
 
       <Card className="shadow-soft">
         <CardHeader>
@@ -320,6 +509,43 @@ export default function ManageListingAvailability({
               </ul>
             )}
           </div>
+        </CardContent>
+      </Card>
+
+      <Card className="shadow-soft border-red-200">
+        <CardHeader>
+          <CardTitle className="text-base text-red-600">מחיקת מודעה</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            מחיקת המודעה היא פעולה בלתי הפיכה. לא ניתן למחוק מודעה עם הזמנות פעילות.
+          </p>
+        </CardHeader>
+        <CardContent>
+          {error && deleting && <Alert variant="error" className="mb-3">{error}</Alert>}
+          <Button
+            variant="outline"
+            className="text-red-600 border-red-300 hover:bg-red-50"
+            disabled={deleting}
+            onClick={async () => {
+              if (!window.confirm(`למחוק את המודעה "${listingTitle}"? פעולה זו בלתי הפיכה.`)) return;
+              setDeleting(true);
+              setError(null);
+              try {
+                const res = await fetch(`/api/listings/${listingId}`, { method: "DELETE" });
+                if (!res.ok) {
+                  const err = await res.json().catch(() => ({}));
+                  setError(err?.error ?? "שגיאה במחיקה");
+                  return;
+                }
+                router.push("/owner");
+              } catch {
+                setError("שגיאה במחיקה");
+              } finally {
+                setDeleting(false);
+              }
+            }}
+          >
+            {deleting ? "מוחק..." : "מחק מודעה"}
+          </Button>
         </CardContent>
       </Card>
 

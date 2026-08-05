@@ -44,8 +44,8 @@ export async function POST(
     entityId: targetUserId,
     action: "unsuspend",
     adminUserId: adminUser!.id,
-    adminName: adminUser!.name,
-    targetDisplayName: targetUser.name,
+    adminName: adminUser!.name ?? "Admin",
+    targetDisplayName: targetUser.name ?? targetUser.id,
   });
 
   return NextResponse.json({

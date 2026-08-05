@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { RedesignStatusPill } from "@/components/redesign/status-pill";
 import { getBookingStatusLabel } from "@/lib/status-labels";
 import type { AttentionBooking } from "@/lib/owner/dashboard";
 import { cn } from "@/lib/utils";
@@ -24,43 +24,49 @@ export default function OwnerAttentionList({
 }: OwnerAttentionListProps) {
   if (bookings.length === 0) {
     return (
-      <Card className={cn("shadow-soft", className)} dir="rtl">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base flex items-center gap-2">
-            <AlertCircle className="h-4 w-4 text-muted-foreground" />
-            דורש טיפול
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">אין הזמנות שדורשות טיפול כרגע.</p>
-        </CardContent>
-      </Card>
+      <div
+        className={cn("rounded-[8px] border border-black/10 bg-white p-5", className)}
+        dir="rtl"
+      >
+        <h2 className="mb-3 flex items-center gap-2 font-sans text-[16px] font-black text-black">
+          <AlertCircle className="h-4 w-4 text-[#888888]" />
+          דורש טיפול
+        </h2>
+        <p className="font-assistant text-[14px] text-[#888888]">
+          אין הזמנות שדורשות טיפול כרגע.
+        </p>
+      </div>
     );
   }
 
   return (
-    <Card className={className} id="attention" dir="rtl">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-base flex items-center gap-2">
-          <AlertCircle className="h-4 w-4 text-warning" />
-          דורש טיפול ({bookings.length})
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
+    <div
+      className={cn("rounded-[8px] border border-black/10 bg-white p-5", className)}
+      id="attention"
+      dir="rtl"
+    >
+      <h2 className="mb-3 flex items-center gap-2 font-sans text-[16px] font-black text-black">
+        <AlertCircle className="h-4 w-4 text-amber-600" />
+        דורש טיפול ({bookings.length})
+      </h2>
+      <div className="space-y-3">
         {bookings.map((b) => (
           <Link
             key={b.id}
             href={`/bookings/${b.id}`}
-            className="block rounded-lg border border-border bg-muted/30 p-3 md:p-4 text-sm hover:bg-muted/50 transition-colors"
+            className="block rounded-[8px] border border-black/10 bg-white p-3 transition-colors hover:bg-black/[0.02] md:p-4"
           >
-            <p className="font-medium text-foreground">{b.listingTitle}</p>
-            <p className="text-muted-foreground">
-              {b.renterName} · {getBookingStatusLabel(b.status)}
-            </p>
-            <p className="text-xs text-muted-foreground mt-0.5">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="font-sans text-[14px] font-bold text-black">{b.listingTitle}</p>
+              <RedesignStatusPill variant="warning">
+                {getBookingStatusLabel(b.status)}
+              </RedesignStatusPill>
+            </div>
+            <p className="mt-1 font-assistant text-[13px] text-[#888888]">{b.renterName}</p>
+            <p className="mt-0.5 font-assistant text-[12px] text-[#888888]">
               {fmt(b.startDate)} – {fmt(b.endDate)}
               {b.bookingRef && (
-                <span className="font-mono mr-1" dir="ltr">
+                <span className="mr-1 font-mono" dir="ltr">
                   {" "}
                   {b.bookingRef}
                 </span>
@@ -68,7 +74,7 @@ export default function OwnerAttentionList({
             </p>
           </Link>
         ))}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

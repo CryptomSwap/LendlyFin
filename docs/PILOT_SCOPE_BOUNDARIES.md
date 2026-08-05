@@ -9,7 +9,7 @@
 - Admin auditability for lifecycle overrides/escalations.
 
 ## Out of Scope (Explicit)
-- Stripe / SetupIntent / deposit authorization-capture implementation.
+- MangoPay deposit preauthorization / authorization-capture implementation.
 - Payment processor reconciliation and payout rail automation.
 - Phone + SMS OTP authentication migration.
 

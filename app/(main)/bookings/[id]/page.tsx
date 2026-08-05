@@ -3,9 +3,8 @@ import { headers } from "next/headers";
 import { Button } from "@/components/ui/button";
 import StickyCTA from "@/components/ui/sticky-cta";
 import { TrustCTARow } from "@/components/ui/trust-cta-row";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatMoneyIls } from "@/lib/pricing";
-import { StatusPill } from "@/components/ui/status-pill";
+import { RedesignStatusPill, type RedesignStatusVariant } from "@/components/redesign/status-pill";
 import {
   getBookingStatusLabelDetail,
   getBookingStatusPillVariant,
@@ -21,9 +20,14 @@ import {
   getBookingProgressPercent,
 } from "@/lib/booking-lifecycle-steps";
 import { prisma } from "@/lib/prisma";
-import { BookingLifecycleActions } from "./booking-lifecycle-actions";
+import { Prisma } from "@prisma/client";
 
 export const runtime = "nodejs";
+
+const PRIMARY_BTN =
+  "w-full rounded-full bg-[#1A8C6A] font-sans font-bold text-white shadow-[0_6px_24px_rgba(26,140,106,0.35)] hover:bg-[#167A5C] hover:-translate-y-[2px] hover:shadow-[0_10px_32px_rgba(26,140,106,0.45)] transition-all duration-300";
+const SECONDARY_BTN =
+  "w-full rounded-full border border-black/15 bg-white font-sans font-bold text-black shadow-none hover:bg-black/5";
 
 type Booking = {
   id: string;
@@ -33,21 +37,12 @@ type Booking = {
     | "REQUESTED"
     | "CONFIRMED"
     | "ACTIVE"
-    | "CANCELLED_BY_RENTER"
-    | "CANCELLED_BY_OWNER"
-    | "NO_SHOW_RENTER"
-    | "NO_SHOW_OWNER"
     | "RETURNED"
     | "IN_DISPUTE"
     | "NON_RETURN_PENDING"
     | "NON_RETURN_CONFIRMED"
     | "COMPLETED"
     | "DISPUTE";
-  cancelledAt?: string | Date | null;
-  cancellationPenaltyAmount?: number | null;
-  refundAmount?: number | null;
-  noShowMarkedAt?: string | Date | null;
-  noShowReason?: string | null;
   startDate: string | Date;
   endDate: string | Date;
   listing: { title: string; deposit: number; ownerId?: string | null };
@@ -61,33 +56,50 @@ type Booking = {
   disputeWindowEndsAt?: string | Date | null;
   returnedAt?: string | Date | null;
   pickupInstructionsSnapshot?: string | null;
-  pickupChecklist?: { completedAt: Date | string | null } | null;
+  pickupChecklist?: { completedAt: string | Date | null } | null;
   returnChecklist?: {
-    completedAt: Date | string | null;
+    completedAt: string | Date | null;
     damageReported?: boolean;
     missingItemsReported?: boolean;
   } | null;
   dispute?: { id: string } | null;
 };
 
+function toRedesignVariant(
+  variant: ReturnType<typeof getBookingStatusPillVariant>
+): RedesignStatusVariant {
+  return variant === "primary" ? "brand" : variant;
+}
+
 async function getBooking(id: string): Promise<Booking | null> {
   const me = await getMe();
   if (!me) return null;
 
-  const booking = await prisma.booking.findUnique({
-    where: { id },
-    include: {
-      listing: {
-        include: {
-          images: { orderBy: { order: "asc" } },
+  let booking: Booking | null = null;
+  try {
+    booking = (await prisma.booking.findUnique({
+      where: { id },
+      include: {
+        listing: {
+          include: {
+            images: { orderBy: { order: "asc" } },
+          },
         },
+        pickupChecklist: true,
+        returnChecklist: true,
+        checklistPhotos: true,
+        dispute: true,
       },
-      pickupChecklist: true,
-      returnChecklist: true,
-      checklistPhotos: true,
-      dispute: true,
-    },
-  });
+    })) as unknown as Booking | null;
+  } catch (error) {
+    // Prevent hard crash when deployment DB is behind current Prisma schema.
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2021" || error.code === "P2022" || error.code === "P2010") {
+        return null;
+      }
+    }
+    throw error;
+  }
 
   if (!booking) return null;
   const isRenter = booking.userId === me.id;
@@ -112,24 +124,34 @@ async function getMe() {
 }
 
 async function getReviews(bookingId: string) {
-  const reviews = await prisma.review.findMany({
-    where: { bookingId },
-    orderBy: { createdAt: "desc" },
-    include: {
-      author: { select: { id: true, name: true } },
-      targetUser: { select: { id: true, name: true } },
-    },
-  });
-  return reviews.map((r) => ({
-    id: r.id,
-    rating: r.rating,
-    body: r.body,
-    createdAt: r.createdAt,
-    authorId: r.authorId,
-    authorName: r.author.name,
-    targetUserId: r.targetUserId,
-    targetUserName: r.targetUser.name,
-  }));
+  try {
+    const reviews = await prisma.review.findMany({
+      where: { bookingId },
+      orderBy: { createdAt: "desc" },
+      include: {
+        author: { select: { id: true, name: true } },
+        targetUser: { select: { id: true, name: true } },
+      },
+    });
+    return reviews.map((r) => ({
+      id: r.id,
+      rating: r.rating,
+      body: r.body,
+      createdAt: r.createdAt.toISOString(),
+      authorId: r.authorId,
+      authorName: r.author.name,
+      targetUserId: r.targetUserId,
+      targetUserName: r.targetUser.name,
+    }));
+  } catch (error) {
+    // Keep booking details usable even if review table/query is unavailable.
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2021" || error.code === "P2010") {
+        return [];
+      }
+    }
+    throw error;
+  }
 }
 
 export default async function BookingStatusPage(props: {
@@ -146,21 +168,13 @@ export default async function BookingStatusPage(props: {
     !!me &&
     (booking?.userId === me.id ||
       (booking?.listing as { ownerId?: string } | undefined)?.ownerId === me.id);
-  const participantActor =
-    me && booking
-      ? me.id === booking.userId
-        ? ("renter" as const)
-        : (booking.listing as { ownerId?: string | null })?.ownerId === me.id
-          ? ("owner" as const)
-          : null
-      : null;
   const hasReviewed = !!me && reviews.some((r: { authorId: string }) => r.authorId === me.id);
 
   if (!booking) {
     return (
-      <div className="py-12 text-center" dir="rtl">
-        <p className="text-foreground font-medium">הזמנה לא נמצאה</p>
-        <Link href="/bookings" className="inline-block mt-2 text-primary font-medium hover:underline">
+      <div className="min-h-screen w-full bg-white pb-24 py-12 text-center" dir="rtl">
+        <p className="font-sans font-bold text-black">הזמנה לא נמצאה</p>
+        <Link href="/bookings" className="inline-block mt-2 font-sans font-bold text-[#1A8C6A] hover:underline">
           חזרה להזמנות
         </Link>
       </div>
@@ -179,299 +193,223 @@ export default async function BookingStatusPage(props: {
   );
 
   return (
-    <div className="min-h-screen w-full app-page-bg pb-24" dir="rtl">
-      <PageContainer width="narrow" className="space-y-6 lg:max-w-[72rem]">
-      <h1 className="section-title">סטטוס הזמנה</h1>
+    <div className="min-h-screen w-full bg-white pb-24" dir="rtl">
+      <PageContainer width="default" className="space-y-6 lg:max-w-[72rem]">
+      <h1 className="page-title">סטטוס הזמנה</h1>
 
-      <Card className="shadow-soft">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base">ציר זמן</CardTitle>
-          <p className="text-sm text-muted-foreground mt-1.5 text-center">
-            <span className="font-medium text-foreground">
-              שלב {lifecycleStep.currentStep} מתוך {lifecycleStep.totalSteps}
-            </span>
-            <span className="text-muted-foreground"> · {lifecycleStep.label}</span>
-          </p>
+      <div className="rounded-[8px] border border-black/10 bg-white p-4 md:p-6 space-y-3">
+        <h2 className="font-sans text-base font-bold text-black">ציר זמן</h2>
+        <p className="font-assistant text-[14px] text-[#888888] text-center">
+          <span className="font-sans font-bold text-black">
+            שלב {lifecycleStep.currentStep} מתוך {lifecycleStep.totalSteps}
+          </span>
+          <span> · {lifecycleStep.label}</span>
+        </p>
+        <div
+          className="relative h-2 w-full rounded-full bg-black/8 overflow-hidden"
+          role="progressbar"
+          aria-valuenow={lifecycleStep.currentStep}
+          aria-valuemin={1}
+          aria-valuemax={lifecycleStep.totalSteps}
+          aria-label={`שלב ${lifecycleStep.currentStep} מתוך ${lifecycleStep.totalSteps}: ${lifecycleStep.label}`}
+        >
+          {/* Fill grows from the right edge toward the left (RTL-friendly) */}
           <div
-            className="relative h-2 w-full rounded-full bg-muted mt-2 overflow-hidden"
-            role="progressbar"
-            aria-valuenow={lifecycleStep.currentStep}
-            aria-valuemin={1}
-            aria-valuemax={lifecycleStep.totalSteps}
-            aria-label={`שלב ${lifecycleStep.currentStep} מתוך ${lifecycleStep.totalSteps}: ${lifecycleStep.label}`}
-          >
-            {/* Fill grows from the right edge toward the left (RTL-friendly) */}
-            <div
-              className="absolute inset-y-0 right-0 rounded-full bg-primary transition-all duration-300"
-              style={{ width: `${progressPct}%` }}
-            />
-          </div>
-        </CardHeader>
-        <CardContent className="text-sm text-muted-foreground space-y-1 pt-0">
-          {isShortCircuitedBooking(booking.status) ? (
-            <p className="text-muted-foreground">
-              ההזמנה נסגרה לפני השלמת המחזור ({getBookingStatusLabelDetail(booking.status)}).
-            </p>
-          ) : (
-            <>
-              <p>{dot(booking.status, "REQUESTED")} בקשה</p>
-              <p>{dot(booking.status, "CONFIRMED")} אישור</p>
-              <p>{dot(booking.status, "ACTIVE")} פעילה</p>
-              <p>{dot(booking.status, "RETURNED")} הוחזר</p>
-              <p>{dot(booking.status, "IN_DISPUTE")} מחלוקת</p>
-              <p>{dot(booking.status, "COMPLETED")} הושלמה</p>
-            </>
-          )}
-        </CardContent>
-      </Card>
+            className="absolute inset-y-0 right-0 rounded-full bg-[#1A8C6A] transition-all duration-300"
+            style={{ width: `${progressPct}%` }}
+          />
+        </div>
+        <div className="font-assistant text-[14px] text-[#888888] space-y-1 pt-1">
+          <p>{dot(booking.status, "REQUESTED")} בקשה</p>
+          <p>{dot(booking.status, "CONFIRMED")} אישור</p>
+          <p>{dot(booking.status, "ACTIVE")} פעילה</p>
+          <p>{dot(booking.status, "RETURNED")} הוחזר</p>
+          <p>{dot(booking.status, "IN_DISPUTE")} מחלוקת</p>
+          <p>{dot(booking.status, "COMPLETED")} הושלמה</p>
+        </div>
+      </div>
 
       {isRequestedPendingPayment && (
-        <Card className="border-primary/20 bg-primary/5">
-          <CardContent className="py-4 text-sm">
-            <p className="font-medium text-foreground mb-1">השלב הבא</p>
-            <p className="text-muted-foreground">
-              השלם את התשלום בדף התשלום. לאחר אימות התשלום ההזמנה תאושר ותוכל לראות הוראות איסוף.
-            </p>
-            <Link
-              href={`/checkout?bookingId=${booking.id}`}
-              className="inline-block mt-2 font-medium text-primary hover:underline"
-            >
-              מעבר לתשלום
-            </Link>
-          </CardContent>
-        </Card>
+        <div className="rounded-[8px] border border-[#1A8C6A]/20 bg-[#F0FAF6] p-4 md:p-6 space-y-2">
+          <p className="font-sans font-bold text-black">השלב הבא</p>
+          <p className="font-assistant text-[14px] text-[#888888]">
+            השלם את התשלום בדף התשלום. לאחר אימות התשלום ההזמנה תאושר ותוכל לראות הוראות איסוף.
+          </p>
+          <Link
+            href={`/checkout?bookingId=${booking.id}`}
+            className="inline-block mt-1 font-sans font-bold text-[#1A8C6A] hover:underline"
+          >
+            מעבר לתשלום
+          </Link>
+        </div>
       )}
 
-      <Card>
-        <CardContent className="text-sm text-muted-foreground space-y-3 py-4">
-          <div className="flex flex-wrap items-center gap-2">
-            <StatusPill variant={getBookingStatusPillVariant(booking.status)}>
-              {getBookingStatusLabelDetail(booking.status)}
-            </StatusPill>
-          </div>
-          {booking.bookingRef && (
-            <p>
-              <span className="font-medium text-foreground">מספר הזמנה: </span>
-              <span className="font-mono" dir="ltr">{booking.bookingRef}</span>
-            </p>
-          )}
+      <div className="rounded-[8px] border border-black/10 bg-white p-4 md:p-6 space-y-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <RedesignStatusPill variant={toRedesignVariant(getBookingStatusPillVariant(booking.status))}>
+            {getBookingStatusLabelDetail(booking.status)}
+          </RedesignStatusPill>
+        </div>
+        {booking.bookingRef && (
+          <p className="font-assistant text-[14px] text-[#888888]">
+            <span className="font-sans font-bold text-black">מספר הזמנה: </span>
+            <span className="font-mono" dir="ltr">{booking.bookingRef}</span>
+          </p>
+        )}
+        {booking.paymentStatus && (
+          <p className="font-assistant text-[14px] text-[#888888]">
+            <span className="font-sans font-bold text-black">תשלום: </span>
+            {getPaymentStatusLabel(booking.paymentStatus)}
+          </p>
+        )}
+        <p className="font-sans font-bold text-black">{booking.listing.title}</p>
+        <p className="font-assistant text-[14px] text-[#888888]">
+          {fmt(booking.startDate)} → {fmt(booking.endDate)}
+        </p>
+        <p className="font-assistant text-[14px] text-[#888888]">
+          פיקדון: {formatMoneyIls(booking.depositAmount ?? booking.listing.deposit)}
+        </p>
+      </div>
+
+      {(booking.rentalSubtotal != null || booking.totalDue != null) && (
+        <div className="rounded-[8px] border border-black/10 bg-white p-4 md:p-6 space-y-2">
+          <h2 className="font-sans text-base font-bold text-black">סיכום תשלום</h2>
           {booking.paymentStatus && (
-            <p>
-              <span className="font-medium text-foreground">תשלום: </span>
+            <p className="font-assistant text-[14px] text-[#888888]">
+              <span className="font-sans font-bold text-black">סטטוס תשלום: </span>
               {getPaymentStatusLabel(booking.paymentStatus)}
             </p>
           )}
-          <p>{booking.listing.title}</p>
-          <p>
-            {fmt(booking.startDate)} → {fmt(booking.endDate)}
-          </p>
-          <p>פיקדון: {formatMoneyIls(booking.depositAmount ?? booking.listing.deposit)}</p>
-        </CardContent>
-      </Card>
-
-      {(booking.status === "CANCELLED_BY_RENTER" ||
-        booking.status === "CANCELLED_BY_OWNER" ||
-        booking.status === "NO_SHOW_RENTER" ||
-        booking.status === "NO_SHOW_OWNER") && (
-        <Card className="shadow-soft border-border/80">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">פרטי סגירה</CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm text-muted-foreground space-y-2">
-            {(booking.cancellationPenaltyAmount != null || booking.refundAmount != null) && (
-              <>
-                {booking.cancellationPenaltyAmount != null && booking.cancellationPenaltyAmount > 0 && (
-                  <p>
-                    <span className="font-medium text-foreground">קנס לפי מדיניות: </span>
-                    {formatMoneyIls(booking.cancellationPenaltyAmount)}
-                  </p>
-                )}
-                {booking.refundAmount != null && (
-                  <p>
-                    <span className="font-medium text-foreground">סכום החזר משוער: </span>
-                    {formatMoneyIls(booking.refundAmount)}
-                  </p>
-                )}
-              </>
-            )}
-            {booking.noShowMarkedAt && (
-              <p>
-                סומן אי-הגעה: {new Date(booking.noShowMarkedAt).toLocaleString("he-IL")}
-              </p>
-            )}
-            {booking.noShowReason?.trim() && (
-              <p className="whitespace-pre-wrap">{booking.noShowReason.trim()}</p>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {(booking.rentalSubtotal != null || booking.totalDue != null) && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">סיכום תשלום</CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm space-y-2">
-            {booking.paymentStatus && (
-              <p>
-                <span className="font-medium text-foreground">סטטוס תשלום: </span>
-                <span className="text-muted-foreground">{getPaymentStatusLabel(booking.paymentStatus)}</span>
-              </p>
-            )}
-            {booking.rentalSubtotal != null && (
-              <p className="text-muted-foreground">השכרה: {formatMoneyIls(booking.rentalSubtotal)}</p>
-            )}
-            {booking.serviceFee != null && booking.serviceFee > 0 && (
-              <p className="text-muted-foreground">עמלת פלטפורמה: {formatMoneyIls(booking.serviceFee)}</p>
-            )}
-            {booking.depositAmount != null && (
-              <p className="text-muted-foreground">פיקדון: {formatMoneyIls(booking.depositAmount)}</p>
-            )}
-            {booking.totalDue != null && (
-              <p className="font-medium text-foreground">סה״כ: {formatMoneyIls(booking.totalDue)}</p>
-            )}
-            {booking.depositStatus && booking.depositStatus !== "PENDING" && (
-              <p className="text-muted-foreground">
-                פיקדון: {getDepositStatusLabel(booking.depositStatus)}
-              </p>
-            )}
-            {booking.paymentStatus === "PENDING" && (
-              <p className="text-muted-foreground mt-2">
-                לאחר ביצוע התשלום ההזמנה תאושר לאחר אימות ידני. ניתן לחזור לדף זה כדי לראות עדכון.
-              </p>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {participantActor && (
-        <BookingLifecycleActions bookingId={booking.id} status={booking.status} actor={participantActor} />
+          {booking.rentalSubtotal != null && (
+            <p className="font-assistant text-[14px] text-[#888888]">השכרה: {formatMoneyIls(booking.rentalSubtotal)}</p>
+          )}
+          {booking.serviceFee != null && booking.serviceFee > 0 && (
+            <p className="font-assistant text-[14px] text-[#888888]">עמלת פלטפורמה: {formatMoneyIls(booking.serviceFee)}</p>
+          )}
+          {booking.depositAmount != null && (
+            <p className="font-assistant text-[14px] text-[#888888]">פיקדון: {formatMoneyIls(booking.depositAmount)}</p>
+          )}
+          {booking.totalDue != null && (
+            <p className="font-sans font-bold text-black">סה״כ: {formatMoneyIls(booking.totalDue)}</p>
+          )}
+          {booking.depositStatus && booking.depositStatus !== "PENDING" && (
+            <p className="font-assistant text-[14px] text-[#888888]">
+              פיקדון: {getDepositStatusLabel(booking.depositStatus)}
+            </p>
+          )}
+          {booking.paymentStatus === "PENDING" && (
+            <p className="font-assistant text-[14px] text-[#888888] mt-2">
+              לאחר ביצוע התשלום ההזמנה תאושר לאחר אימות ידני. ניתן לחזור לדף זה כדי לראות עדכון.
+            </p>
+          )}
+        </div>
       )}
 
       {["CONFIRMED", "ACTIVE", "RETURNED", "COMPLETED", "IN_DISPUTE", "DISPUTE", "NON_RETURN_PENDING", "NON_RETURN_CONFIRMED"].includes(booking.status) &&
         booking.pickupInstructionsSnapshot?.trim() && (
-          <Card>
-            <CardHeader>
-              <CardTitle>הוראות איסוף</CardTitle>
-            </CardHeader>
-            <CardContent className="text-sm text-muted-foreground">
-              <p className="whitespace-pre-wrap">{booking.pickupInstructionsSnapshot.trim()}</p>
-            </CardContent>
-          </Card>
+          <div className="rounded-[8px] border border-black/10 bg-white p-4 md:p-6 space-y-2">
+            <h2 className="font-sans text-base font-bold text-black">הוראות איסוף</h2>
+            <p className="font-assistant text-[14px] text-[#888888] whitespace-pre-wrap">
+              {booking.pickupInstructionsSnapshot.trim()}
+            </p>
+          </div>
         )}
 
       {booking.status === "CONFIRMED" && (
-        <Card>
-          <CardHeader>
-            <CardTitle>רשימת איסוף</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {booking.pickupChecklist?.completedAt ? (
-              <p className="text-sm text-muted-foreground">רשימת האיסוף הושלמה. ההזמנה מוכנה להפעלה.</p>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                יש להשלים את רשימת האיסוף (תיעוד מצב הפריט ותמונות) לפני שההזמנה תעבור לפעילה.
-              </p>
-            )}
-            <Link href={`/bookings/${booking.id}/pickup`}>
-              <Button variant={booking.pickupChecklist?.completedAt ? "outline" : "default"} className="w-full">
-                {booking.pickupChecklist?.completedAt ? "צפה ברשימת איסוף" : "השלם רשימת איסוף"}
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
+        <div className="rounded-[8px] border border-black/10 bg-white p-4 md:p-6 space-y-3">
+          <h2 className="font-sans text-base font-bold text-black">רשימת איסוף</h2>
+          {booking.pickupChecklist?.completedAt ? (
+            <p className="font-assistant text-[14px] text-[#888888]">רשימת האיסוף הושלמה. ההזמנה מוכנה להפעלה.</p>
+          ) : (
+            <p className="font-assistant text-[14px] text-[#888888]">
+              יש להשלים את רשימת האיסוף (תיעוד מצב הפריט ותמונות) לפני שההזמנה תעבור לפעילה.
+            </p>
+          )}
+          <Link href={`/bookings/${booking.id}/pickup`}>
+            <Button
+              variant={booking.pickupChecklist?.completedAt ? "outline" : "default"}
+              className={booking.pickupChecklist?.completedAt ? SECONDARY_BTN : PRIMARY_BTN}
+            >
+              {booking.pickupChecklist?.completedAt ? "צפה ברשימת איסוף" : "השלם רשימת איסוף"}
+            </Button>
+          </Link>
+        </div>
       )}
 
       {booking.status === "ACTIVE" && booking.pickupChecklist?.completedAt && !booking.returnChecklist?.completedAt && (
-        <Card>
-          <CardHeader>
-            <CardTitle>רשימת החזרה</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              החזר את הפריט ותעד את מצבו. לאחר השלמת רשימת ההחזרה ההזמנה תעבור להושלמה (או לבדיקה אם דווח נזק/פריטים חסרים).
-            </p>
-            <Link href={`/bookings/${booking.id}/return`}>
-              <Button className="w-full">השלם רשימת החזרה</Button>
-            </Link>
-          </CardContent>
-        </Card>
+        <div className="rounded-[8px] border border-black/10 bg-white p-4 md:p-6 space-y-3">
+          <h2 className="font-sans text-base font-bold text-black">רשימת החזרה</h2>
+          <p className="font-assistant text-[14px] text-[#888888]">
+            החזר את הפריט ותעד את מצבו. לאחר השלמת רשימת ההחזרה ההזמנה תעבור להושלמה (או לבדיקה אם דווח נזק/פריטים חסרים).
+          </p>
+          <Link href={`/bookings/${booking.id}/return`}>
+            <Button className={PRIMARY_BTN}>השלם רשימת החזרה</Button>
+          </Link>
+        </div>
       )}
 
       {booking.status === "ACTIVE" && booking.returnChecklist?.completedAt && (
-        <Card>
-          <CardContent className="py-4 text-sm text-muted-foreground">
-            ✔ רשימת החזרה הושלמה
-          </CardContent>
-        </Card>
+        <div className="rounded-[8px] border border-black/10 bg-white p-4 md:p-6">
+          <p className="font-assistant text-[14px] text-[#888888]">✔ רשימת החזרה הושלמה</p>
+        </div>
       )}
 
       {booking.status === "RETURNED" && (
-        <Card className="shadow-soft">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">הפריט הוחזר</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 text-sm text-muted-foreground">
-            <p>חלון מחלוקת של 48 שעות פתוח לאחר ההחזרה.</p>
-            {booking.disputeWindowEndsAt && (
-              <p>
-                ניתן לפתוח מחלוקת עד{" "}
-                {new Date(booking.disputeWindowEndsAt).toLocaleString("he-IL")}
-              </p>
-            )}
-            <Link href={`/bookings/${booking.id}/dispute`} className="text-primary hover:underline inline-block mt-1 font-medium">
-              פתח מחלוקת
-            </Link>
-          </CardContent>
-        </Card>
+        <div className="rounded-[8px] border border-black/10 bg-white p-4 md:p-6 space-y-2">
+          <h2 className="font-sans text-base font-bold text-black">הפריט הוחזר</h2>
+          <p className="font-assistant text-[14px] text-[#888888]">חלון מחלוקת של 48 שעות פתוח לאחר ההחזרה.</p>
+          {booking.disputeWindowEndsAt && (
+            <p className="font-assistant text-[14px] text-[#888888]">
+              ניתן לפתוח מחלוקת עד{" "}
+              {new Date(booking.disputeWindowEndsAt).toLocaleString("he-IL")}
+            </p>
+          )}
+          <Link href={`/bookings/${booking.id}/dispute`} className="font-sans font-bold text-[#1A8C6A] hover:underline inline-block mt-1">
+            פתח מחלוקת
+          </Link>
+        </div>
       )}
 
       {booking.status === "COMPLETED" && (
         <>
-          <Card className="shadow-soft">
-            <CardContent className="py-4 text-sm text-muted-foreground">
+          <div className="rounded-[8px] border border-black/10 bg-white p-4 md:p-6">
+            <p className="font-assistant text-[14px] text-[#888888]">
               ✔ ההזמנה הושלמה. רשימת ההחזרה תועדה.
-            </CardContent>
-          </Card>
+            </p>
+          </div>
           <section aria-label="ביקורות">
-            <Card className="shadow-soft">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base">ביקורות</CardTitle>
-                <p className="text-sm text-muted-foreground">
+            <div className="rounded-[8px] border border-black/10 bg-white p-4 md:p-6 space-y-4">
+              <div>
+                <h2 className="font-sans text-base font-bold text-black">ביקורות</h2>
+                <p className="font-assistant text-[14px] text-[#888888] mt-1">
                   ביקורות מהמשתתפים בהזמנה. דירוגך עוזר לקהילה.
                 </p>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {reviews.length === 0 ? (
-                  <div className="flex flex-col items-center py-8 text-center">
-                    <p className="font-medium text-foreground">אין ביקורות עדיין</p>
-                    <p className="text-sm text-muted-foreground mt-0.5 max-w-sm">
-                      {isParticipant && !hasReviewed
-                        ? "השאר ביקורת למטה — דירוגך עוזר לאחרים."
-                        : "עדיין לא נכתבו ביקורות להזמנה זו."}
-                    </p>
-                  </div>
-                ) : (
-                  <ul className="space-y-4 list-none p-0 m-0">
-                    {reviews.map((r) => (
-                      <li key={r.id}>
-                        <ReviewCard
-                          authorName={r.authorName}
-                          targetUserName={r.targetUserName}
-                          rating={r.rating}
-                          body={r.body}
-                          createdAt={
-                            r.createdAt instanceof Date
-                              ? r.createdAt.toISOString()
-                              : String(r.createdAt)
-                          }
-                        />
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </CardContent>
-            </Card>
+              </div>
+              {reviews.length === 0 ? (
+                <div className="flex flex-col items-center py-8 text-center">
+                  <p className="font-sans font-bold text-black">אין ביקורות עדיין</p>
+                  <p className="font-assistant text-[14px] text-[#888888] mt-0.5 max-w-sm">
+                    {isParticipant && !hasReviewed
+                      ? "השאר ביקורת למטה — דירוגך עוזר לאחרים."
+                      : "עדיין לא נכתבו ביקורות להזמנה זו."}
+                  </p>
+                </div>
+              ) : (
+                <ul className="space-y-4 list-none p-0 m-0">
+                  {reviews.map((r) => (
+                    <li key={r.id}>
+                      <ReviewCard
+                        authorName={r.authorName}
+                        targetUserName={r.targetUserName}
+                        rating={r.rating}
+                        body={r.body}
+                        createdAt={r.createdAt}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
             {isParticipant && !hasReviewed && (
               <div className="mt-4">
                 <LeaveReviewForm bookingId={booking.id} />
@@ -482,73 +420,63 @@ export default async function BookingStatusPage(props: {
       )}
 
       {(booking.status === "IN_DISPUTE" || booking.status === "DISPUTE") && (
-        <Card className="shadow-soft">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">הזמנה בבדיקה</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            <p className="text-muted-foreground">
-              דווחו נזק או פריטים חסרים בהחזרה. ההזמנה בבדיקה.
-            </p>
-            {booking.returnChecklist?.damageReported && (
-              <p className="text-muted-foreground">· נזק לדיווח</p>
-            )}
-            {booking.returnChecklist?.missingItemsReported && (
-              <p className="text-muted-foreground">· פריטים חסרים לדיווח</p>
-            )}
-            <p className="text-xs text-muted-foreground pt-1 border-t border-border mt-2">
-              הצוות בודק את המחלוקת ויחזור עם החלטה. עקבו אחר העדכונים כאן.
-            </p>
-            {isAdmin && booking.dispute && (
-              <Link href={`/admin/disputes/${booking.dispute.id}`} className="text-primary hover:underline inline-block mt-2 font-medium">
-                צפה במחלוקת (מנהל)
-              </Link>
-            )}
-          </CardContent>
-        </Card>
+        <div className="rounded-[8px] border border-black/10 bg-white p-4 md:p-6 space-y-2">
+          <h2 className="font-sans text-base font-bold text-black">הזמנה בבדיקה</h2>
+          <p className="font-assistant text-[14px] text-[#888888]">
+            דווחו נזק או פריטים חסרים בהחזרה. ההזמנה בבדיקה.
+          </p>
+          {booking.returnChecklist?.damageReported && (
+            <p className="font-assistant text-[14px] text-[#888888]">· נזק לדיווח</p>
+          )}
+          {booking.returnChecklist?.missingItemsReported && (
+            <p className="font-assistant text-[14px] text-[#888888]">· פריטים חסרים לדיווח</p>
+          )}
+          <p className="font-assistant text-[12px] text-[#888888] pt-2 border-t border-black/10 mt-2">
+            הצוות בודק את המחלוקת ויחזור עם החלטה. עקבו אחר העדכונים כאן.
+          </p>
+          {isAdmin && booking.dispute && (
+            <Link href={`/admin/disputes/${booking.dispute.id}`} className="font-sans font-bold text-[#1A8C6A] hover:underline inline-block mt-2">
+              צפה במחלוקת (מנהל)
+            </Link>
+          )}
+        </div>
       )}
 
       {booking.status === "NON_RETURN_PENDING" && (
-        <Card className="shadow-soft">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">אי-החזרה בבדיקה</CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm text-muted-foreground">
+        <div className="rounded-[8px] border border-black/10 bg-white p-4 md:p-6 space-y-2">
+          <h2 className="font-sans text-base font-bold text-black">אי-החזרה בבדיקה</h2>
+          <p className="font-assistant text-[14px] text-[#888888]">
             האירוע סומן לבדיקה על ידי צוות התמיכה. נעדכן בהמשך לגבי החלטה סופית.
-          </CardContent>
-        </Card>
+          </p>
+        </div>
       )}
 
       {booking.status === "NON_RETURN_CONFIRMED" && (
-        <Card className="shadow-soft">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">אי-החזרה אושרה</CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm text-muted-foreground">
+        <div className="rounded-[8px] border border-black/10 bg-white p-4 md:p-6 space-y-2">
+          <h2 className="font-sans text-base font-bold text-black">אי-החזרה אושרה</h2>
+          <p className="font-assistant text-[14px] text-[#888888]">
             ההזמנה הוסלמה לאי-החזרה מאושרת ומטופלת על ידי הנהלת הפיילוט.
-          </CardContent>
-        </Card>
+          </p>
+        </div>
       )}
 
-      <Card className="shadow-soft">
-        <CardContent className="py-4">
-          <Link href={`/bookings/${booking.id}/messages`}>
-            <Button variant="outline" className="w-full justify-center">
-              הודעות / צור קשר
-            </Button>
-          </Link>
-          <p className="text-xs text-muted-foreground mt-2 text-center">
-            תאמו עם המלווה או השוכר לגבי ההזמנה. ההודעות שמורות להקשר ההזמנה.
-          </p>
-        </CardContent>
-      </Card>
+      <div className="rounded-[8px] border border-black/10 bg-white p-4 md:p-6">
+        <Link href={`/bookings/${booking.id}/messages`}>
+          <Button variant="outline" className={SECONDARY_BTN}>
+            הודעות / צור קשר
+          </Button>
+        </Link>
+        <p className="font-assistant text-[12px] text-[#888888] mt-2 text-center">
+          תאמו עם המלווה או השוכר לגבי ההזמנה. ההודעות שמורות להקשר ההזמנה.
+        </p>
+      </div>
 
-      <p className="text-xs text-muted-foreground text-center mb-1">
+      <p className="font-assistant text-[12px] text-[#888888] text-center mb-1">
         פיקדון מוחזר בהתאם למצב הפריט. תמיכה זמינה לכל שאלה.
       </p>
-      <p className="text-xs text-muted-foreground text-center mb-2">
+      <p className="font-assistant text-[12px] text-[#888888] text-center mb-2">
         {BOOKING_HELP_CTA.line}{" "}
-        <Link href={BOOKING_HELP_CTA.href} className="text-primary font-medium hover:underline">
+        <Link href={BOOKING_HELP_CTA.href} className="font-sans font-bold text-[#1A8C6A] hover:underline">
           {BOOKING_HELP_CTA.label}
         </Link>
       </p>
@@ -556,10 +484,10 @@ export default async function BookingStatusPage(props: {
         <div className="space-y-3">
           {cta.href ? (
             <Link href={cta.href}>
-              <Button className="w-full">{cta.label}</Button>
+              <Button className={PRIMARY_BTN}>{cta.label}</Button>
             </Link>
           ) : (
-            <Button className="w-full" disabled>
+            <Button className={PRIMARY_BTN} disabled>
               {cta.label}
             </Button>
           )}
@@ -595,24 +523,7 @@ function getCTA(status: Booking["status"], bookingId: string) {
       return { label: "השאר ביקורת", href: "" };
     case "DISPUTE":
       return { label: "צפה במחלוקת", href: "" };
-    case "CANCELLED_BY_RENTER":
-    case "CANCELLED_BY_OWNER":
-      return { label: "ההזמנה בוטלה", href: "" };
-    case "NO_SHOW_RENTER":
-    case "NO_SHOW_OWNER":
-      return { label: "דווח אי-הגעה", href: "" };
-    default:
-      return { label: "הזמנה", href: `/bookings/${bookingId}` };
   }
-}
-
-function isShortCircuitedBooking(status: Booking["status"]) {
-  return (
-    status === "CANCELLED_BY_RENTER" ||
-    status === "CANCELLED_BY_OWNER" ||
-    status === "NO_SHOW_RENTER" ||
-    status === "NO_SHOW_OWNER"
-  );
 }
 
 function dot(current: Booking["status"], step: Booking["status"]) {
@@ -628,10 +539,7 @@ function dot(current: Booking["status"], step: Booking["status"]) {
     "NON_RETURN_CONFIRMED",
   ];
 
-  const ci = order.indexOf(current);
-  const si = order.indexOf(step);
-  if (ci === -1 || si === -1) return "○";
   if (current === step) return "●";
-  if (ci > si) return "✔";
+  if (order.indexOf(current) > order.indexOf(step)) return "✔";
   return "○";
 }
