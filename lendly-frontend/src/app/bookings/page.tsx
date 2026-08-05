@@ -4,6 +4,7 @@ import { useState } from "react";
 import Button from "@/components/ui/Button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { getBookingStatusLabel } from "@/lib/status-labels";
 
 const MOCK_BOOKINGS = [
   { id: "b1", ref: "LND-2024-00841", title: "מצלמת סוני A7III", status: "CONFIRMED", startDate: "2024-07-10", endDate: "2024-07-13", pricePerDay: 120, totalDue: 1196, image: "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=400&q=80" },
@@ -13,14 +14,14 @@ const MOCK_BOOKINGS = [
 ];
 
 const STATUS_META: Record<string, { label: string; color: string }> = {
-  REQUESTED:           { label: "ממתין לתשלום",       color: "#F59E0B" },
-  CONFIRMED:           { label: "מאושרת",              color: "#1A8C6A" },
-  ACTIVE:              { label: "פעילה",               color: "#1A8C6A" },
-  RETURNED:            { label: "הוחזר",               color: "#888888" },
-  COMPLETED:           { label: "הושלמה",              color: "#888888" },
-  CANCELLED_BY_RENTER: { label: "בוטלה",               color: "#EF4444" },
-  CANCELLED_BY_OWNER:  { label: 'בוטלה ע"י המשכיר',   color: "#EF4444" },
-  IN_DISPUTE:          { label: "במחלוקת",             color: "#EF4444" },
+  REQUESTED:           { label: getBookingStatusLabel("REQUESTED"),       color: "#F59E0B" },
+  CONFIRMED:           { label: getBookingStatusLabel("CONFIRMED"),       color: "#1A8C6A" },
+  ACTIVE:              { label: getBookingStatusLabel("ACTIVE"),               color: "#1A8C6A" },
+  RETURNED:            { label: getBookingStatusLabel("RETURNED"),               color: "#888888" },
+  COMPLETED:           { label: getBookingStatusLabel("COMPLETED"),              color: "#888888" },
+  CANCELLED_BY_RENTER: { label: getBookingStatusLabel("CANCELLED_BY_RENTER"),       color: "#EF4444" },
+  CANCELLED_BY_OWNER:  { label: getBookingStatusLabel("CANCELLED_BY_OWNER"),     color: "#EF4444" },
+  IN_DISPUTE:          { label: getBookingStatusLabel("IN_DISPUTE"),             color: "#EF4444" },
 };
 
 const ACTIVE_STATUSES  = new Set(["REQUESTED", "CONFIRMED", "ACTIVE", "RETURNED"]);
@@ -69,7 +70,7 @@ export default function BookingsPage() {
 
         {/* Heading */}
         <h1 className="font-sans text-[32px] font-black text-black mb-6">
-          ההזמנות שלי
+          הזמנות
         </h1>
 
         {/* Filter tabs */}
@@ -153,13 +154,13 @@ export default function BookingsPage() {
           /* Empty state */
           <div className="flex flex-col items-center justify-center py-24 gap-3 text-center">
             <p className="font-sans text-[18px] font-black text-black">
-              אין הזמנות כאן
+              אין הזמנות בסטטוס זה
             </p>
             <p className="font-assistant text-[14px] text-[#666666]">
-              לא נמצאו הזמנות בקטגוריה זו
+              נסה לבחור סטטוס אחר או הצג את כל ההזמנות.
             </p>
-            <Button variant="primary" size="md" asChild>
-              <a href="/search">לחיפוש</a>
+            <Button variant="primary" size="md" onClick={() => setActiveTab("הכל")}>
+              הצג את כל ההזמנות
             </Button>
           </div>
         )}

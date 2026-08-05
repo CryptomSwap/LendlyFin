@@ -84,7 +84,7 @@ export default function BookingSuccessPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4, duration: 0.4, ease: "easeOut" }}
       >
-        ההזמנה אושרה!
+        התשלום התקבל
       </motion.h1>
 
       <motion.p
@@ -93,7 +93,7 @@ export default function BookingSuccessPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.55, duration: 0.4, ease: "easeOut" }}
       >
-        אישור נשלח למייל שלך. המשכיר יצור איתך קשר בקרוב.
+        הצוות יאמת ויאשר. עקבו אחר הסטטוס בדף ההזמנה.
       </motion.p>
 
       {/* Booking summary card */}
@@ -117,7 +117,7 @@ export default function BookingSuccessPage() {
           </span>
         </div>
         <div className="flex items-center justify-between border-t border-black/8 pt-2">
-          <span className="font-assistant text-[13px] text-[#666666]">סה"כ</span>
+          <span className="font-assistant text-[13px] text-[#666666]">סה״כ</span>
           <span className="font-sans text-[20px] font-black text-black">
             ₪{MOCK_BOOKING.total}
           </span>
@@ -138,13 +138,13 @@ export default function BookingSuccessPage() {
           href="/bookings"
           className="flex items-center justify-center rounded-full bg-[#1A8C6A] py-3.5 font-sans text-[15px] font-black text-white transition-colors duration-200 hover:bg-[#158060]"
         >
-          לצ&apos;אט עם המשכיר
+          שאל שאלה / הודעות
         </Link>
         <Link
           href="/bookings"
           className="flex items-center justify-center rounded-full border border-black/15 py-3.5 font-sans text-[14px] font-black text-black transition-colors duration-200 hover:bg-black/5"
         >
-          לטיולים שלי
+          להזמנות שלי
         </Link>
       </motion.div>
       </div>

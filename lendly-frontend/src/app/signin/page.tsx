@@ -58,11 +58,6 @@ export default function SignInPage() {
           </svg>
           המשך עם Google
         </button>
-
-        {/* Fine print */}
-        <p className="font-assistant text-[11px] text-[#AAAAAA]">
-          בהתחברות אתם מאשרים את תנאי השימוש
-        </p>
       </div>
       </div>
       <Footer />

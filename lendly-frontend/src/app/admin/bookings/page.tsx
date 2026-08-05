@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { getBookingStatusLabel } from "@/lib/status-labels";
 
 const MOCK_BOOKINGS = [
   { id: "b1", ref: "LND-2024-00841", listingTitle: "מצלמת סוני A7III",  userName: "דנה לוי",       status: "CONFIRMED",          createdAt: "2024-07-01", pickupDone: true  },
@@ -14,12 +15,12 @@ const MOCK_BOOKINGS = [
 ];
 
 const STATUS_LABEL: Record<string, string> = {
-  REQUESTED:           "ממתין לתשלום",
-  CONFIRMED:           "מאושרת",
-  ACTIVE:              "פעילה",
-  COMPLETED:           "הושלמה",
-  CANCELLED_BY_RENTER: "בוטלה",
-  IN_DISPUTE:          "במחלוקת",
+  REQUESTED:           getBookingStatusLabel("REQUESTED"),
+  CONFIRMED:           getBookingStatusLabel("CONFIRMED"),
+  ACTIVE:              getBookingStatusLabel("ACTIVE"),
+  COMPLETED:           getBookingStatusLabel("COMPLETED"),
+  CANCELLED_BY_RENTER: getBookingStatusLabel("CANCELLED_BY_RENTER"),
+  IN_DISPUTE:          getBookingStatusLabel("IN_DISPUTE"),
 };
 
 const STATUS_COLOR: Record<string, string> = {
@@ -36,6 +37,7 @@ const NAV = [
   { label: "הזמנות",  href: "/admin/bookings",   active: true  },
   { label: "מודעות",  href: "/admin/listings",   active: false },
   { label: "משתמשים", href: "/admin/users",       active: false },
+  { label: "אימות זהות", href: "/admin/kyc",       active: false },
   { label: "מחלוקות", href: "/admin/disputes",    active: false },
 ];
 
@@ -72,7 +74,7 @@ export default function AdminBookingsPage() {
 
         {/* Top bar */}
         <div className="flex items-center justify-between flex-wrap gap-4">
-          <h1 className="font-sans text-[32px] font-black text-black">לוח בקרה</h1>
+          <h1 className="font-sans text-[32px] font-black text-black">הזמנות – מנהל</h1>
           <nav className="flex gap-2 flex-wrap">
             {NAV.map(item => (
               <Link
@@ -125,7 +127,7 @@ export default function AdminBookingsPage() {
           {/* Rows */}
           {filtered.length === 0 ? (
             <div className="py-16 text-center font-assistant text-[14px] text-[#888888]">
-              לא נמצאו הזמנות
+              אין הזמנות. ההזמנות יופיעו כאן.
             </div>
           ) : (
             filtered.map(b => {

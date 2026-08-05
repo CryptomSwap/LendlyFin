@@ -21,7 +21,7 @@ const SEARCH_CATEGORIES = ["צילום וידאו", "כלי עבודה", "קמפ
 function findNearestCategory(q: string): string {
   const scored = SEARCH_CATEGORIES.map((c) => ({
     cat: c,
-    score: [...q].filter((ch) => ch !== " " && c.includes(ch)).length,
+    score: Array.from(q).filter((ch) => ch !== " " && c.includes(ch)).length,
   }));
   scored.sort((a, b) => b.score - a.score);
   return scored[0]?.cat ?? SEARCH_CATEGORIES[0];

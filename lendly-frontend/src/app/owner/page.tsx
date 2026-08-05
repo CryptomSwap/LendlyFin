@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { getBookingStatusLabel, getListingStatusLabel } from "@/lib/status-labels";
 
 const MOCK = {
   ownerName: "יוסי כהן",
@@ -28,14 +29,14 @@ const MOCK = {
 };
 
 const LISTING_STATUS: Record<string, { label: string; color: string }> = {
-  ACTIVE:           { label: "פעיל",           color: "#1A8C6A" },
-  PENDING_APPROVAL: { label: "ממתין לאישור",   color: "#F59E0B" },
-  PAUSED:           { label: "מושהה",           color: "#888888" },
+  ACTIVE:           { label: getListingStatusLabel("ACTIVE"),           color: "#1A8C6A" },
+  PENDING_APPROVAL: { label: getListingStatusLabel("PENDING_APPROVAL"), color: "#F59E0B" },
+  PAUSED:           { label: getListingStatusLabel("PAUSED"),           color: "#888888" },
 };
 
 const BOOKING_STATUS: Record<string, { label: string; color: string }> = {
-  REQUESTED: { label: "ממתין לתשלום", color: "#F59E0B" },
-  CONFIRMED: { label: "מאושרת",       color: "#1A8C6A" },
+  REQUESTED: { label: getBookingStatusLabel("REQUESTED"), color: "#F59E0B" },
+  CONFIRMED: { label: getBookingStatusLabel("CONFIRMED"), color: "#1A8C6A" },
 };
 
 function hexToRgb(hex: string) {
@@ -78,7 +79,7 @@ const STATS = [
   },
   {
     icon: <Banknote className="h-5 w-5 text-[#1A8C6A]" />,
-    label: "הכנסות",
+    label: "הכנסות (שולמו)",
     value: `₪${MOCK.stats.earningsIls.toLocaleString()}`,
     alert: false,
   },
@@ -88,25 +89,25 @@ const ACTIONS = [
   {
     icon: <PlusCircle className="h-4 w-4 text-[#1A8C6A]" />,
     title: "הוסף מודעה",
-    desc: "פרסם פריט חדש",
+    desc: "פרסם פריט חדש להשכרה",
     href: "/add",
   },
   {
     icon: <List className="h-4 w-4 text-[#1A8C6A]" />,
     title: "המודעות שלי",
-    desc: "נהל מודעות",
+    desc: "נהל מודעות וזמינות",
     href: "/owner/listings",
   },
   {
     icon: <Calendar className="h-4 w-4 text-[#1A8C6A]" />,
     title: "ניהול זמינות",
-    desc: "חסום תאריכים",
+    desc: "חסום תאריכים מלוח המודעות",
     href: "/owner/availability",
   },
   {
     icon: <MessageSquare className="h-4 w-4 text-[#1A8C6A]" />,
-    title: "הזמנות",
-    desc: "צפה בהזמנות",
+    title: "הזמנות והודעות",
+    desc: "צפה בהזמנות ופתח שיחות",
     href: "/bookings",
   },
 ];
@@ -123,7 +124,11 @@ export default function OwnerDashboardPage() {
         <div>
           <h1 className="font-sans text-[32px] font-black text-black">לוח מלווה</h1>
           <p className="font-assistant text-[14px] text-[#888888] mt-1">
-            {stats.activeListings} מודעות פעילות · {stats.pendingRequests} בקשות ממתינות
+            סיכום המודעות, ההזמנות והפעולות הבאות
+          </p>
+          <p className="font-assistant text-[12px] text-[#AAAAAA] mt-1">
+            {stats.activeListings} מודעות פעילות
+            {stats.pendingRequests > 0 && ` · ${stats.pendingRequests} בקשות ממתינות`}
           </p>
         </div>
 
